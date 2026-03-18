@@ -14,7 +14,257 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      colleges: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      departments: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          year_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          year_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          year_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "departments_year_id_fkey"
+            columns: ["year_id"]
+            isOneToOne: false
+            referencedRelation: "years"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      doubts: {
+        Row: {
+          answer: string | null
+          answered_at: string | null
+          answered_by: string | null
+          claimed_by: string | null
+          created_at: string
+          id: string
+          question: string
+          student_college: string
+          student_department: string
+          student_name: string
+          student_reg_no: string
+          student_year: number
+          subject_name: string
+        }
+        Insert: {
+          answer?: string | null
+          answered_at?: string | null
+          answered_by?: string | null
+          claimed_by?: string | null
+          created_at?: string
+          id?: string
+          question: string
+          student_college: string
+          student_department: string
+          student_name: string
+          student_reg_no: string
+          student_year: number
+          subject_name: string
+        }
+        Update: {
+          answer?: string | null
+          answered_at?: string | null
+          answered_by?: string | null
+          claimed_by?: string | null
+          created_at?: string
+          id?: string
+          question?: string
+          student_college?: string
+          student_department?: string
+          student_name?: string
+          student_reg_no?: string
+          student_year?: number
+          subject_name?: string
+        }
+        Relationships: []
+      }
+      students: {
+        Row: {
+          college_name: string
+          created_at: string
+          department: string
+          dob: string
+          id: string
+          name: string
+          registration_number: string
+          year: number
+        }
+        Insert: {
+          college_name: string
+          created_at?: string
+          department: string
+          dob: string
+          id?: string
+          name: string
+          registration_number: string
+          year: number
+        }
+        Update: {
+          college_name?: string
+          created_at?: string
+          department?: string
+          dob?: string
+          id?: string
+          name?: string
+          registration_number?: string
+          year?: number
+        }
+        Relationships: []
+      }
+      subjects: {
+        Row: {
+          created_at: string
+          department_id: string
+          id: string
+          name: string
+          semester: string
+        }
+        Insert: {
+          created_at?: string
+          department_id: string
+          id?: string
+          name: string
+          semester: string
+        }
+        Update: {
+          created_at?: string
+          department_id?: string
+          id?: string
+          name?: string
+          semester?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subjects_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teachers: {
+        Row: {
+          college_name: string
+          created_at: string
+          dob: string
+          id: string
+          name: string
+          staff_id: string
+          subject_name: string
+        }
+        Insert: {
+          college_name: string
+          created_at?: string
+          dob: string
+          id?: string
+          name: string
+          staff_id: string
+          subject_name: string
+        }
+        Update: {
+          college_name?: string
+          created_at?: string
+          dob?: string
+          id?: string
+          name?: string
+          staff_id?: string
+          subject_name?: string
+        }
+        Relationships: []
+      }
+      videos: {
+        Row: {
+          added_at: string
+          id: string
+          subject_id: string
+          title: string
+          url: string
+        }
+        Insert: {
+          added_at?: string
+          id?: string
+          subject_id: string
+          title: string
+          url: string
+        }
+        Update: {
+          added_at?: string
+          id?: string
+          subject_id?: string
+          title?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "videos_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      years: {
+        Row: {
+          college_id: string
+          created_at: string
+          id: string
+          year_number: number
+        }
+        Insert: {
+          college_id: string
+          created_at?: string
+          id?: string
+          year_number: number
+        }
+        Update: {
+          college_id?: string
+          created_at?: string
+          id?: string
+          year_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "years_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
