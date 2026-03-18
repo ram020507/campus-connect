@@ -5,20 +5,22 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Shield } from "lucide-react";
 
-const ADMIN_PASSWORD = "admin2024";
+const ADMIN_USERNAME = "ram";
+const ADMIN_PASSWORD = "ram20507";
 
 const AdminLogin = () => {
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === ADMIN_PASSWORD) {
+    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
       sessionStorage.setItem("admin-auth", "true");
       navigate("/admin/dashboard");
     } else {
-      setError("Incorrect password");
+      setError("Incorrect username or password");
     }
   };
 
@@ -30,14 +32,22 @@ const AdminLogin = () => {
             <Shield className="h-7 w-7" />
           </div>
           <CardTitle className="font-display text-2xl">Admin Login</CardTitle>
-          <CardDescription>Enter admin password to continue</CardDescription>
+          <CardDescription>Enter admin credentials to continue</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <Input
+                type="text"
+                placeholder="Username"
+                value={username}
+                onChange={(e) => { setUsername(e.target.value); setError(""); }}
+              />
+            </div>
+            <div>
+              <Input
                 type="password"
-                placeholder="Admin Password"
+                placeholder="Password"
                 value={password}
                 onChange={(e) => { setPassword(e.target.value); setError(""); }}
               />
