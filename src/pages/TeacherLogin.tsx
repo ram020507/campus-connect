@@ -4,44 +4,43 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { GraduationCap } from "lucide-react";
-import { findTeacher } from "@/lib/supabase-helpers";
+import { useAppStore } from "@/store/useAppStore";
 
 const TeacherLogin = () => {
   const [staffId, setStaffId] = useState("");
   const [dob, setDob] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const teachers = useAppStore((s) => s.teachers);
 
   const handleStaffIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setStaffId(e.target.value.replace(/\D/g, ""));
+    const val = e.target.value.replace(/\D/g, "");
+    setStaffId(val);
     setError("");
   };
 
   const handleDobChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let val = e.target.value.replace(/\D/g, "");
     if (val.length > 8) val = val.slice(0, 8);
-    if (val.length >= 5) val = val.slice(0, 2) + "-" + val.slice(2, 4) + "-" + val.slice(4);
-    else if (val.length >= 3) val = val.slice(0, 2) + "-" + val.slice(2);
+    if (val.length >= 5) {
+      val = val.slice(0, 2) + "-" + val.slice(2, 4) + "-" + val.slice(4);
+    } else if (val.length >= 3) {
+      val = val.slice(0, 2) + "-" + val.slice(2);
+    }
     setDob(val);
     setError("");
   };
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    try {
-      const teacher = await findTeacher(staffId, dob);
-      if (teacher) {
-        sessionStorage.setItem("teacher-auth", JSON.stringify(teacher));
-        navigate("/teacher/dashboard");
-      } else {
-        setError("Invalid credentials. Contact your admin.");
-      }
-    } catch {
-      setError("Connection error. Please try again.");
-    } finally {
-      setLoading(false);
+    const teacher = teachers.find(
+      (t) => t.staffId === staffId && t.dob === dob
+    );
+    if (teacher) {
+      sessionStorage.setItem("teacher-auth", JSON.stringify(teacher));
+      navigate("/teacher/dashboard");
+    } else {
+      setError("Invalid credentials. Contact your admin.");
     }
   };
 
@@ -57,10 +56,21 @@ const TeacherLogin = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
-            <Input placeholder="Staff ID (numbers only)" value={staffId} onChange={handleStaffIdChange} inputMode="numeric" />
-            <Input placeholder="Date of Birth (DD-MM-YYYY)" value={dob} onChange={handleDobChange} inputMode="numeric" maxLength={10} />
+            <Input
+              placeholder="Staff ID (numbers only)"
+              value={staffId}
+              onChange={handleStaffIdChange}
+              inputMode="numeric"
+            />
+            <Input
+              placeholder="Date of Birth (DD-MM-YYYY)"
+              value={dob}
+              onChange={handleDobChange}
+              inputMode="numeric"
+              maxLength={10}
+            />
             {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" className="w-full" disabled={loading}>{loading ? "Signing in..." : "Sign In"}</Button>
+            <Button type="submit" className="w-full">Sign In</Button>
           </form>
         </CardContent>
       </Card>
