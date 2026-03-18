@@ -3,41 +3,50 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { GraduationCap } from "lucide-react";
-import { useAppStore } from "@/store/useAppStore";
+import { GraduationCap, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const TeacherLogin = () => {
   const [staffId, setStaffId] = useState("");
   const [dob, setDob] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const teachers = useAppStore((s) => s.teachers);
 
   const handleStaffIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value.replace(/\D/g, "");
-    setStaffId(val);
+    setStaffId(e.target.value.replace(/\D/g, ""));
     setError("");
   };
 
   const handleDobChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let val = e.target.value.replace(/\D/g, "");
     if (val.length > 8) val = val.slice(0, 8);
-    if (val.length >= 5) {
-      val = val.slice(0, 2) + "-" + val.slice(2, 4) + "-" + val.slice(4);
-    } else if (val.length >= 3) {
-      val = val.slice(0, 2) + "-" + val.slice(2);
-    }
+    if (val.length >= 5) val = val.slice(0, 2) + "-" + val.slice(2, 4) + "-" + val.slice(4);
+    else if (val.length >= 3) val = val.slice(0, 2) + "-" + val.slice(2);
     setDob(val);
     setError("");
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const teacher = teachers.find(
-      (t) => t.staffId === staffId && t.dob === dob
-    );
-    if (teacher) {
-      sessionStorage.setItem("teacher-auth", JSON.stringify(teacher));
+    setLoading(true);
+    const { data } = await supabase
+      .from("teachers")
+      .select("*")
+      .eq("staff_id", staffId)
+      .eq("dob", dob)
+      .maybeSingle();
+    setLoading(false);
+
+    if (data) {
+      sessionStorage.setItem("teacher-auth", JSON.stringify({
+        id: data.id,
+        staffId: data.staff_id,
+        name: data.name,
+        dob: data.dob,
+        collegeName: data.college_name,
+        subjectName: data.subject_name,
+      }));
       navigate("/teacher/dashboard");
     } else {
       setError("Invalid credentials. Contact your admin.");
@@ -56,21 +65,12 @@ const TeacherLogin = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
-            <Input
-              placeholder="Staff ID (numbers only)"
-              value={staffId}
-              onChange={handleStaffIdChange}
-              inputMode="numeric"
-            />
-            <Input
-              placeholder="Date of Birth (DD-MM-YYYY)"
-              value={dob}
-              onChange={handleDobChange}
-              inputMode="numeric"
-              maxLength={10}
-            />
+            <Input placeholder="Staff ID (numbers only)" value={staffId} onChange={handleStaffIdChange} inputMode="numeric" />
+            <Input placeholder="Date of Birth (DD-MM-YYYY)" value={dob} onChange={handleDobChange} inputMode="numeric" maxLength={10} />
             {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" className="w-full">Sign In</Button>
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading && <Loader2 className="h-4 w-4 mr-1 animate-spin" />} Sign In
+            </Button>
           </form>
         </CardContent>
       </Card>

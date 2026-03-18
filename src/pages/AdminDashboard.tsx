@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAppStore } from "@/store/useAppStore";
+import { useSupabaseData } from "@/hooks/useSupabaseData";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Building2, ChevronRight, Plus, Trash2, LogOut, Users, GraduationCap,
-  FolderOpen, BookOpen, Video, ArrowLeft
+  FolderOpen, BookOpen, Video, ArrowLeft, Loader2
 } from "lucide-react";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -16,7 +16,7 @@ type View = "colleges" | "years" | "departments" | "subjects" | "videos" | "stud
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const store = useAppStore();
+  const store = useSupabaseData();
 
   const [view, setView] = useState<View>("colleges");
   const [selectedCollege, setSelectedCollege] = useState<string>("");
@@ -82,6 +82,14 @@ const AdminDashboard = () => {
     if (v.length >= 3) return v.slice(0, 2) + "-" + v.slice(2);
     return v;
   };
+
+  if (store.loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
