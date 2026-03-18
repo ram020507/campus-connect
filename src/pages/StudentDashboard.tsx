@@ -36,24 +36,15 @@ const StudentDashboard = () => {
   const [doubtSubject, setDoubtSubject] = useState("");
   const [doubtText, setDoubtText] = useState("");
 
-  if (!student) {
-    navigate("/student/login");
-    return null;
-  }
-
-  // Find matching department to load subjects
   const loadSubjects = useCallback(async () => {
+    if (!student) return;
     try {
-      // Find college -> year -> department chain
       const { data: colleges } = await supabase.from('colleges').select('id').eq('name', student.college_name);
       if (!colleges?.length) return;
-
       const { data: years } = await supabase.from('years').select('id').eq('college_id', colleges[0].id).eq('year_number', student.year);
       if (!years?.length) return;
-
       const { data: depts } = await supabase.from('departments').select('id').eq('year_id', years[0].id).eq('name', student.department);
       if (!depts?.length) return;
-
       const subs = await db.fetchSubjects(depts[0].id);
       setSubjects(subs);
     } catch (e: any) { toast.error(e.message); }
@@ -64,6 +55,11 @@ const StudentDashboard = () => {
   }, []);
 
   useEffect(() => { loadSubjects(); loadDoubts(); }, []);
+
+  if (!student) {
+    navigate("/student/login");
+    return null;
+  }
 
   const filteredSubjects = subjects.filter((s) => s.semester === selectedSemester);
 

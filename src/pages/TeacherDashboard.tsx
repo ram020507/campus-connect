@@ -20,16 +20,16 @@ const TeacherDashboard = () => {
   const [doubts, setDoubts] = useState<Doubt[]>([]);
   const [replyTexts, setReplyTexts] = useState<Record<string, string>>({});
 
-  if (!teacher) {
-    navigate("/teacher/login");
-    return null;
-  }
-
   const loadDoubts = useCallback(async () => {
     try { setDoubts(await db.fetchDoubts()); } catch (e: any) { toast.error(e.message); }
   }, []);
 
   useEffect(() => { loadDoubts(); }, []);
+
+  if (!teacher) {
+    navigate("/teacher/login");
+    return null;
+  }
 
   const handleLogout = () => { sessionStorage.removeItem("teacher-auth"); navigate("/"); };
 
