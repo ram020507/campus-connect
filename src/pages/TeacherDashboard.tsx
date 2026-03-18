@@ -1,16 +1,16 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAppStore, type TeacherAccount } from "@/store/useAppStore";
+import { useSupabaseData, type TeacherAccount } from "@/hooks/useSupabaseData";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
-  GraduationCap, LogOut, MessageCircle, Send, CheckCircle2, Clock
+  GraduationCap, LogOut, MessageCircle, Send, CheckCircle2, Clock, Loader2
 } from "lucide-react";
 
 const TeacherDashboard = () => {
   const navigate = useNavigate();
-  const store = useAppStore();
+  const store = useSupabaseData();
 
   const teacher: TeacherAccount | null = (() => {
     try {
@@ -30,7 +30,6 @@ const TeacherDashboard = () => {
     navigate("/");
   };
 
-  // Get doubts for this teacher's subject that are unclaimed or claimed by this teacher
   const pendingDoubts = store.doubts.filter(
     (d) =>
       d.subjectName.toLowerCase() === teacher.subjectName.toLowerCase() &&
@@ -54,6 +53,14 @@ const TeacherDashboard = () => {
     }
   };
 
+  if (store.loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card px-4 py-3 flex items-center justify-between">
@@ -70,7 +77,6 @@ const TeacherDashboard = () => {
       </header>
 
       <div className="max-w-3xl mx-auto p-4 space-y-6">
-        {/* Pending Doubts */}
         <div>
           <h2 className="font-display font-semibold text-lg flex items-center gap-2 mb-4">
             <Clock className="h-5 w-5 text-accent" />
@@ -95,7 +101,6 @@ const TeacherDashboard = () => {
                       </span>
                     </div>
                     <p className="text-sm font-medium mb-3">{d.question}</p>
-
                     {!d.claimedBy ? (
                       <Button size="sm" variant="outline" onClick={() => handleClaim(d.id)}>
                         Open & Claim
@@ -108,8 +113,7 @@ const TeacherDashboard = () => {
                           onChange={(e) => setReplyTexts((prev) => ({ ...prev, [d.id]: e.target.value }))}
                           rows={3}
                         />
-                        <Button size="sm" onClick={() => handleReply(d.id)}
-                          disabled={!replyTexts[d.id]?.trim()}>
+                        <Button size="sm" onClick={() => handleReply(d.id)} disabled={!replyTexts[d.id]?.trim()}>
                           <Send className="h-4 w-4 mr-1" /> Send Reply
                         </Button>
                       </div>
@@ -120,7 +124,6 @@ const TeacherDashboard = () => {
           )}
         </div>
 
-        {/* Answered Doubts */}
         <div>
           <h2 className="font-display font-semibold text-lg flex items-center gap-2 mb-4">
             <CheckCircle2 className="h-5 w-5 text-success" />

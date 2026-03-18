@@ -1,12 +1,12 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAppStore, type StudentAccount } from "@/store/useAppStore";
+import { useSupabaseData, type StudentAccount } from "@/hooks/useSupabaseData";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  BookOpen, Video, LogOut, MessageCircle, ArrowLeft, Send, CheckCircle2, Play
+  BookOpen, Video, LogOut, MessageCircle, ArrowLeft, Send, CheckCircle2, Play, Loader2
 } from "lucide-react";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -16,7 +16,7 @@ type View = "dashboard" | "subjects" | "videos" | "video-player" | "doubts" | "s
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
-  const store = useAppStore();
+  const store = useSupabaseData();
 
   const student: StudentAccount | null = (() => {
     try {
@@ -29,8 +29,6 @@ const StudentDashboard = () => {
   const [selectedSubjectId, setSelectedSubjectId] = useState("");
   const [selectedVideoUrl, setSelectedVideoUrl] = useState("");
   const [selectedVideoTitle, setSelectedVideoTitle] = useState("");
-
-  // Doubt form
   const [doubtSubject, setDoubtSubject] = useState("");
   const [doubtText, setDoubtText] = useState("");
 
@@ -39,14 +37,12 @@ const StudentDashboard = () => {
     return null;
   }
 
-  // Find matching college data
   const college = store.colleges.find((c) => c.name === student.collegeName);
   const year = college?.years.find((y) => y.yearNumber === student.year);
   const dept = year?.departments.find((d) => d.name === student.department);
   const subjects = dept?.subjects.filter((s) => s.semester === selectedSemester) || [];
   const currentSubject = dept?.subjects.find((s) => s.id === selectedSubjectId);
 
-  // Shared knowledge: answered doubts for same year & dept
   const answeredDoubts = store.doubts.filter(
     (d) => d.answer && d.studentYear === student.year && d.studentDepartment === student.department
   );
@@ -72,12 +68,19 @@ const StudentDashboard = () => {
     }
   };
 
-  // Extract video ID for embedding
   const getEmbedUrl = (url: string) => {
     const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&]+)/);
     if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}`;
     return url;
   };
+
+  if (store.loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -95,7 +98,6 @@ const StudentDashboard = () => {
       </header>
 
       <div className="max-w-4xl mx-auto p-4">
-        {/* DASHBOARD */}
         {view === "dashboard" && (
           <div className="space-y-6 animate-fade-in">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -124,7 +126,6 @@ const StudentDashboard = () => {
           </div>
         )}
 
-        {/* SUBJECTS */}
         {view === "subjects" && (
           <div className="space-y-4 animate-fade-in">
             <div className="flex items-center gap-2">
@@ -158,7 +159,6 @@ const StudentDashboard = () => {
           </div>
         )}
 
-        {/* VIDEOS LIST */}
         {view === "videos" && currentSubject && (
           <div className="space-y-4 animate-fade-in">
             <div className="flex items-center gap-2">
@@ -188,7 +188,6 @@ const StudentDashboard = () => {
           </div>
         )}
 
-        {/* VIDEO PLAYER */}
         {view === "video-player" && (
           <div className="space-y-4 animate-fade-in">
             <Button variant="ghost" size="sm" onClick={() => setView("videos")}>
@@ -206,7 +205,6 @@ const StudentDashboard = () => {
           </div>
         )}
 
-        {/* ASK DOUBT */}
         {view === "doubts" && (
           <div className="space-y-4 animate-fade-in">
             <Button variant="ghost" size="sm" onClick={() => setView("dashboard")}>
@@ -217,24 +215,14 @@ const StudentDashboard = () => {
                 <CardTitle className="font-display text-lg">Ask a Doubt</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Input
-                  placeholder="Subject Name (e.g., M3)"
-                  value={doubtSubject}
-                  onChange={(e) => setDoubtSubject(e.target.value)}
-                />
-                <Textarea
-                  placeholder="Type your doubt here..."
-                  value={doubtText}
-                  onChange={(e) => setDoubtText(e.target.value)}
-                  rows={4}
-                />
+                <Input placeholder="Subject Name (e.g., M3)" value={doubtSubject} onChange={(e) => setDoubtSubject(e.target.value)} />
+                <Textarea placeholder="Type your doubt here..." value={doubtText} onChange={(e) => setDoubtText(e.target.value)} rows={4} />
                 <Button onClick={handleSendDoubt} disabled={!doubtSubject.trim() || !doubtText.trim()}>
                   <Send className="h-4 w-4 mr-1" /> Send Doubt
                 </Button>
               </CardContent>
             </Card>
 
-            {/* My sent doubts */}
             <h3 className="font-display font-semibold">My Doubts</h3>
             {store.doubts
               .filter((d) => d.studentRegNo === student.registrationNumber)
@@ -267,7 +255,6 @@ const StudentDashboard = () => {
           </div>
         )}
 
-        {/* SHARED KNOWLEDGE */}
         {view === "shared-knowledge" && (
           <div className="space-y-4 animate-fade-in">
             <Button variant="ghost" size="sm" onClick={() => setView("dashboard")}>
