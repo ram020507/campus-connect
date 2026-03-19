@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Building2, ChevronRight, Plus, Trash2, LogOut, Users, GraduationCap,
-  FolderOpen, BookOpen, Video, ArrowLeft, Loader2
+  FolderOpen, BookOpen, Video, ArrowLeft, Loader2, RefreshCw
 } from "lucide-react";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -99,9 +99,17 @@ const AdminDashboard = () => {
           <Building2 className="h-6 w-6 text-primary" />
           <h1 className="text-xl font-bold font-display text-foreground">Admin Panel</h1>
         </div>
-        <Button variant="ghost" size="sm" onClick={handleLogout}>
-          <LogOut className="h-4 w-4 mr-1" /> Logout
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="sm" onClick={() => navigate("/")}>
+            <ArrowLeft className="h-4 w-4 mr-1" /> Back
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => window.location.reload()}>
+            <RefreshCw className="h-4 w-4 mr-1" /> Refresh
+          </Button>
+          <Button variant="ghost" size="sm" onClick={handleLogout}>
+            <LogOut className="h-4 w-4 mr-1" /> Logout
+          </Button>
+        </div>
       </header>
 
       {/* Navigation Tabs */}

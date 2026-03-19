@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { BookOpen, Loader2 } from "lucide-react";
+import { BookOpen, Loader2, ArrowLeft, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const StudentLogin = () => {
@@ -55,7 +55,16 @@ const StudentLogin = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+    <div className="min-h-screen flex flex-col bg-background px-4">
+      <div className="flex items-center gap-2 p-4">
+        <Button variant="ghost" size="sm" onClick={() => navigate("/")}>
+          <ArrowLeft className="h-4 w-4 mr-1" /> Back
+        </Button>
+        <Button variant="ghost" size="sm" onClick={() => window.location.reload()}>
+          <RefreshCw className="h-4 w-4 mr-1" /> Refresh
+        </Button>
+      </div>
+      <div className="flex-1 flex items-center justify-center">
       <Card className="w-full max-w-sm animate-fade-in">
         <CardHeader className="text-center">
           <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-full bg-success text-success-foreground">
@@ -75,6 +84,7 @@ const StudentLogin = () => {
           </form>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 };
