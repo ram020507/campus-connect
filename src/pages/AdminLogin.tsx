@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Shield } from "lucide-react";
+import { Shield, ArrowLeft, RefreshCw } from "lucide-react";
 
 const ADMIN_USERNAME = "ram";
 const ADMIN_PASSWORD = "ram20507";
