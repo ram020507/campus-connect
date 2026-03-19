@@ -83,6 +83,7 @@ const TeacherLogin = () => {
           </form>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 };

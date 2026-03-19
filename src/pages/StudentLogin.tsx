@@ -84,6 +84,7 @@ const StudentLogin = () => {
           </form>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 };

@@ -68,6 +68,7 @@ const AdminLogin = () => {
           </form>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 };

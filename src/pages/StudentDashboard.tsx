@@ -92,9 +92,17 @@ const StudentDashboard = () => {
             <p className="text-xs text-muted-foreground">{student.name} · {student.department} · Year {student.year}</p>
           </div>
         </div>
-        <Button variant="ghost" size="sm" onClick={handleLogout}>
-          <LogOut className="h-4 w-4 mr-1" /> Logout
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="sm" onClick={() => navigate("/")}>
+            <ArrowLeft className="h-4 w-4 mr-1" /> Back
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => window.location.reload()}>
+            <RefreshCw className="h-4 w-4 mr-1" /> Refresh
+          </Button>
+          <Button variant="ghost" size="sm" onClick={handleLogout}>
+            <LogOut className="h-4 w-4 mr-1" /> Logout
+          </Button>
+        </div>
       </header>
 
       <div className="max-w-4xl mx-auto p-4">
