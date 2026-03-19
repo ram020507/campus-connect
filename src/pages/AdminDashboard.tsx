@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Building2, ChevronRight, Plus, Trash2, LogOut, Users, GraduationCap,
-  FolderOpen, BookOpen, Video, ArrowLeft, Loader2
+  FolderOpen, BookOpen, Video, ArrowLeft, Loader2, RefreshCw
 } from "lucide-react";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
