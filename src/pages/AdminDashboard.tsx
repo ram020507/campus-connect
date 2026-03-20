@@ -403,14 +403,48 @@ const AdminDashboard = () => {
               <h3 className="font-display font-semibold text-lg">Student Accounts ({store.students.length})</h3>
               {store.students.map((s) => (
                 <Card key={s.id}>
-                  <CardContent className="p-3 flex items-center justify-between">
-                    <div className="text-sm">
-                      <p className="font-medium">{s.name} <span className="text-muted-foreground">#{s.registrationNumber}</span></p>
-                      <p className="text-xs text-muted-foreground">{s.collegeName} · {s.department} · Year {s.year}</p>
-                    </div>
-                    <Button variant="ghost" size="icon" onClick={() => store.removeStudent(s.id)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
+                  <CardContent className="p-3">
+                    {editingStudent === s.id ? (
+                      <div className="space-y-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          <Input placeholder="Registration Number" value={editStudentData.registrationNumber ?? ""} onChange={(e) => setEditStudentData(d => ({ ...d, registrationNumber: e.target.value.replace(/\D/g, "") }))} inputMode="numeric" />
+                          <Input placeholder="Name" value={editStudentData.name ?? ""} onChange={(e) => setEditStudentData(d => ({ ...d, name: e.target.value }))} />
+                          <Input placeholder="DOB (DD-MM-YYYY)" value={editStudentData.dob ?? ""} maxLength={10} inputMode="numeric" onChange={(e) => setEditStudentData(d => ({ ...d, dob: formatDob(e.target.value) }))} />
+                          <Input placeholder="Department" value={editStudentData.department ?? ""} onChange={(e) => setEditStudentData(d => ({ ...d, department: e.target.value }))} />
+                          <Select value={editStudentData.collegeName ?? ""} onValueChange={(v) => setEditStudentData(d => ({ ...d, collegeName: v }))}>
+                            <SelectTrigger><SelectValue placeholder="College" /></SelectTrigger>
+                            <SelectContent>{store.colleges.map((c) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}</SelectContent>
+                          </Select>
+                          <Select value={String(editStudentData.year ?? "")} onValueChange={(v) => setEditStudentData(d => ({ ...d, year: Number(v) }))}>
+                            <SelectTrigger><SelectValue placeholder="Year" /></SelectTrigger>
+                            <SelectContent>{[1,2,3,4].map((y) => <SelectItem key={y} value={String(y)}>Year {y}</SelectItem>)}</SelectContent>
+                          </Select>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button size="sm" onClick={async () => { await store.updateStudent(s.id, editStudentData); setEditingStudent(null); }}>
+                            <Check className="h-4 w-4 mr-1" /> Save
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={() => setEditingStudent(null)}>
+                            <X className="h-4 w-4 mr-1" /> Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm">
+                          <p className="font-medium">{s.name} <span className="text-muted-foreground">#{s.registrationNumber}</span></p>
+                          <p className="text-xs text-muted-foreground">{s.collegeName} · {s.department} · Year {s.year}</p>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button variant="ghost" size="icon" onClick={() => { setEditingStudent(s.id); setEditStudentData({ registrationNumber: s.registrationNumber, name: s.name, dob: s.dob, collegeName: s.collegeName, department: s.department, year: s.year }); }}>
+                            <Pencil className="h-4 w-4 text-primary" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => store.removeStudent(s.id)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               ))}
