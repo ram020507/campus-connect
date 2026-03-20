@@ -491,14 +491,44 @@ const AdminDashboard = () => {
               <h3 className="font-display font-semibold text-lg">Teacher Accounts ({store.teachers.length})</h3>
               {store.teachers.map((t) => (
                 <Card key={t.id}>
-                  <CardContent className="p-3 flex items-center justify-between">
-                    <div className="text-sm">
-                      <p className="font-medium">{t.name} <span className="text-muted-foreground">#{t.staffId}</span></p>
-                      <p className="text-xs text-muted-foreground">{t.collegeName} · {t.subjectName}</p>
-                    </div>
-                    <Button variant="ghost" size="icon" onClick={() => store.removeTeacher(t.id)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
+                  <CardContent className="p-3">
+                    {editingTeacher === t.id ? (
+                      <div className="space-y-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          <Input placeholder="Staff ID" value={editTeacherData.staffId ?? ""} onChange={(e) => setEditTeacherData(d => ({ ...d, staffId: e.target.value.replace(/\D/g, "") }))} inputMode="numeric" />
+                          <Input placeholder="Name" value={editTeacherData.name ?? ""} onChange={(e) => setEditTeacherData(d => ({ ...d, name: e.target.value }))} />
+                          <Input placeholder="DOB (DD-MM-YYYY)" value={editTeacherData.dob ?? ""} maxLength={10} inputMode="numeric" onChange={(e) => setEditTeacherData(d => ({ ...d, dob: formatDob(e.target.value) }))} />
+                          <Select value={editTeacherData.collegeName ?? ""} onValueChange={(v) => setEditTeacherData(d => ({ ...d, collegeName: v }))}>
+                            <SelectTrigger><SelectValue placeholder="College" /></SelectTrigger>
+                            <SelectContent>{store.colleges.map((c) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}</SelectContent>
+                          </Select>
+                          <Input placeholder="Subject Name" value={editTeacherData.subjectName ?? ""} onChange={(e) => setEditTeacherData(d => ({ ...d, subjectName: e.target.value }))} />
+                        </div>
+                        <div className="flex gap-2">
+                          <Button size="sm" onClick={async () => { await store.updateTeacher(t.id, editTeacherData); setEditingTeacher(null); }}>
+                            <Check className="h-4 w-4 mr-1" /> Save
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={() => setEditingTeacher(null)}>
+                            <X className="h-4 w-4 mr-1" /> Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm">
+                          <p className="font-medium">{t.name} <span className="text-muted-foreground">#{t.staffId}</span></p>
+                          <p className="text-xs text-muted-foreground">{t.collegeName} · {t.subjectName}</p>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button variant="ghost" size="icon" onClick={() => { setEditingTeacher(t.id); setEditTeacherData({ staffId: t.staffId, name: t.name, dob: t.dob, collegeName: t.collegeName, subjectName: t.subjectName }); }}>
+                            <Pencil className="h-4 w-4 text-primary" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => store.removeTeacher(t.id)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               ))}
