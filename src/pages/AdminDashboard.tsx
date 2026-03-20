@@ -48,6 +48,11 @@ const AdminDashboard = () => {
   const [teacherCollege, setTeacherCollege] = useState("");
   const [teacherSubject, setTeacherSubject] = useState("");
 
+  // Edit states
+  const [editingStudent, setEditingStudent] = useState<string | null>(null);
+  const [editStudentData, setEditStudentData] = useState<Partial<Omit<StudentAccount, "id">>>({});
+  const [editingTeacher, setEditingTeacher] = useState<string | null>(null);
+  const [editTeacherData, setEditTeacherData] = useState<Partial<Omit<TeacherAccount, "id">>>({});
   const handleLogout = () => {
     sessionStorage.removeItem("admin-auth");
     navigate("/");
