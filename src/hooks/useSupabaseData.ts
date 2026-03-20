@@ -365,8 +365,8 @@ export function useSupabaseData() {
     addDepartment, removeDepartment,
     addSubject, removeSubject,
     addVideo, removeVideo,
-    addStudent, removeStudent,
-    addTeacher, removeTeacher,
+    addStudent, removeStudent, updateStudent,
+    addTeacher, removeTeacher, updateTeacher,
     addDoubt, claimDoubt, answerDoubt,
     refetch: fetchAll,
   };
