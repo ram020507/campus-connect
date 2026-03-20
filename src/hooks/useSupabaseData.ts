@@ -260,6 +260,43 @@ export function useSupabaseData() {
     await fetchAll();
   };
 
+  const syncStudentDoubts = async (
+    currentStudent: StudentAccount,
+    updates: Partial<Omit<StudentAccount, "id">>
+  ) => {
+    const nextStudentData = {
+      student_reg_no: updates.registrationNumber ?? currentStudent.registrationNumber,
+      student_name: updates.name ?? currentStudent.name,
+      student_college: updates.collegeName ?? currentStudent.collegeName,
+      student_department: updates.department ?? currentStudent.department,
+      student_year: updates.year ?? currentStudent.year,
+    };
+
+    await supabase
+      .from("doubts")
+      .update(nextStudentData)
+      .eq("student_reg_no", currentStudent.registrationNumber);
+  };
+
+  const syncTeacherDoubts = async (
+    currentTeacher: TeacherAccount,
+    updates: Partial<Omit<TeacherAccount, "id">>
+  ) => {
+    const nextTeacherName = updates.name ?? currentTeacher.name;
+    const nextTeacherStaffId = updates.staffId ?? currentTeacher.staffId;
+
+    await Promise.all([
+      supabase
+        .from("doubts")
+        .update({ answered_by: nextTeacherName })
+        .eq("answered_by", currentTeacher.name),
+      supabase
+        .from("doubts")
+        .update({ claimed_by: nextTeacherStaffId })
+        .eq("claimed_by", currentTeacher.staffId),
+    ]);
+  };
+
   const addStudent = async (student: Omit<StudentAccount, "id">) => {
     const { error } = await supabase.from("students").insert({
       registration_number: student.registrationNumber,
@@ -273,8 +310,7 @@ export function useSupabaseData() {
   };
 
   const removeStudent = async (id: string) => {
-    // Find student to get reg number for deleting their doubts
-    const student = students.find(s => s.id === id);
+    const student = students.find((s) => s.id === id);
     if (student) {
       await supabase.from("doubts").delete().eq("student_reg_no", student.registrationNumber);
     }
@@ -283,14 +319,22 @@ export function useSupabaseData() {
   };
 
   const updateStudent = async (id: string, updates: Partial<Omit<StudentAccount, "id">>) => {
+    const student = students.find((s) => s.id === id);
     const mapped: Record<string, unknown> = {};
+
     if (updates.registrationNumber !== undefined) mapped.registration_number = updates.registrationNumber;
     if (updates.name !== undefined) mapped.name = updates.name;
     if (updates.dob !== undefined) mapped.dob = updates.dob;
     if (updates.collegeName !== undefined) mapped.college_name = updates.collegeName;
     if (updates.department !== undefined) mapped.department = updates.department;
     if (updates.year !== undefined) mapped.year = updates.year;
+
     await supabase.from("students").update(mapped).eq("id", id);
+
+    if (student) {
+      await syncStudentDoubts(student, updates);
+    }
+
     await fetchAll();
   };
 
@@ -306,28 +350,36 @@ export function useSupabaseData() {
   };
 
   const removeTeacher = async (id: string) => {
-    // Find teacher to clear their answers from doubts
-    const teacher = teachers.find(t => t.id === id);
+    const teacher = teachers.find((t) => t.id === id);
     if (teacher) {
-      // Delete doubts that were answered by this teacher (clear from shared knowledge)
-      await supabase.from("doubts").update({ answer: null, answered_by: null, answered_at: null, claimed_by: null })
-        .eq("answered_by", teacher.name);
-      // Also unclaim doubts claimed by this teacher
-      await supabase.from("doubts").update({ claimed_by: null })
-        .eq("claimed_by", teacher.staffId);
+      await Promise.all([
+        supabase
+          .from("doubts")
+          .update({ answer: null, answered_by: null, answered_at: null, claimed_by: null })
+          .eq("answered_by", teacher.name),
+        supabase.from("doubts").update({ claimed_by: null }).eq("claimed_by", teacher.staffId),
+      ]);
     }
     await supabase.from("teachers").delete().eq("id", id);
     await fetchAll();
   };
 
   const updateTeacher = async (id: string, updates: Partial<Omit<TeacherAccount, "id">>) => {
+    const teacher = teachers.find((t) => t.id === id);
     const mapped: Record<string, unknown> = {};
+
     if (updates.staffId !== undefined) mapped.staff_id = updates.staffId;
     if (updates.name !== undefined) mapped.name = updates.name;
     if (updates.dob !== undefined) mapped.dob = updates.dob;
     if (updates.collegeName !== undefined) mapped.college_name = updates.collegeName;
     if (updates.subjectName !== undefined) mapped.subject_name = updates.subjectName;
+
     await supabase.from("teachers").update(mapped).eq("id", id);
+
+    if (teacher) {
+      await syncTeacherDoubts(teacher, updates);
+    }
+
     await fetchAll();
   };
 
