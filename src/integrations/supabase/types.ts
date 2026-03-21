@@ -64,12 +64,14 @@ export type Database = {
       doubts: {
         Row: {
           answer: string | null
+          answer_image_url: string | null
           answered_at: string | null
           answered_by: string | null
           claimed_by: string | null
           created_at: string
           id: string
           question: string
+          question_image_url: string | null
           student_college: string
           student_department: string
           student_name: string
@@ -79,12 +81,14 @@ export type Database = {
         }
         Insert: {
           answer?: string | null
+          answer_image_url?: string | null
           answered_at?: string | null
           answered_by?: string | null
           claimed_by?: string | null
           created_at?: string
           id?: string
           question: string
+          question_image_url?: string | null
           student_college: string
           student_department: string
           student_name: string
@@ -94,12 +98,14 @@ export type Database = {
         }
         Update: {
           answer?: string | null
+          answer_image_url?: string | null
           answered_at?: string | null
           answered_by?: string | null
           claimed_by?: string | null
           created_at?: string
           id?: string
           question?: string
+          question_image_url?: string | null
           student_college?: string
           student_department?: string
           student_name?: string
@@ -115,6 +121,7 @@ export type Database = {
           created_at: string
           department: string
           dob: string
+          email: string | null
           id: string
           name: string
           registration_number: string
@@ -125,6 +132,7 @@ export type Database = {
           created_at?: string
           department: string
           dob: string
+          email?: string | null
           id?: string
           name: string
           registration_number: string
@@ -135,6 +143,7 @@ export type Database = {
           created_at?: string
           department?: string
           dob?: string
+          email?: string | null
           id?: string
           name?: string
           registration_number?: string
@@ -179,6 +188,7 @@ export type Database = {
           college_name: string
           created_at: string
           dob: string
+          email: string | null
           id: string
           name: string
           staff_id: string
@@ -188,6 +198,7 @@ export type Database = {
           college_name: string
           created_at?: string
           dob: string
+          email?: string | null
           id?: string
           name: string
           staff_id: string
@@ -197,12 +208,48 @@ export type Database = {
           college_name?: string
           created_at?: string
           dob?: string
+          email?: string | null
           id?: string
           name?: string
           staff_id?: string
           subject_name?: string
         }
         Relationships: []
+      }
+      video_files: {
+        Row: {
+          file_name: string
+          file_type: string
+          file_url: string
+          id: string
+          uploaded_at: string
+          video_id: string
+        }
+        Insert: {
+          file_name: string
+          file_type: string
+          file_url: string
+          id?: string
+          uploaded_at?: string
+          video_id: string
+        }
+        Update: {
+          file_name?: string
+          file_type?: string
+          file_url?: string
+          id?: string
+          uploaded_at?: string
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_files_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       videos: {
         Row: {
