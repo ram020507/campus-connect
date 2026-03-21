@@ -458,7 +458,7 @@ export function useSupabaseData() {
   };
 
   const addDoubt = async (doubt: Omit<Doubt, "id" | "createdAt">) => {
-    const { error } = await supabase.from("doubts").insert({
+    const { error, data } = await supabase.from("doubts").insert({
       student_name: doubt.studentName,
       student_reg_no: doubt.studentRegNo,
       student_year: doubt.studentYear,
@@ -467,8 +467,12 @@ export function useSupabaseData() {
       subject_name: doubt.subjectName,
       question: doubt.question,
       question_image_url: doubt.questionImageUrl || null,
-    });
-    if (!error) await fetchAll();
+    }).select("id").single();
+    if (!error && data) {
+      // Fire-and-forget email notification
+      supabase.functions.invoke("notify-doubt", { body: { type: "new_doubt", doubtId: data.id } }).catch(console.error);
+      await fetchAll();
+    }
   };
 
   const claimDoubt = async (doubtId: string, teacherStaffId: string) => {
