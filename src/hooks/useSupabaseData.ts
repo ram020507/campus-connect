@@ -487,6 +487,8 @@ export function useSupabaseData() {
       answered_at: new Date().toISOString(),
       answer_image_url: answerImageUrl || null,
     }).eq("id", doubtId);
+    // Fire-and-forget email notification
+    supabase.functions.invoke("notify-doubt", { body: { type: "doubt_answered", doubtId } }).catch(console.error);
     await fetchAll();
   };
 
