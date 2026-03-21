@@ -7,6 +7,16 @@ export interface VideoLecture {
   title: string;
   url: string;
   addedAt: string;
+  files: VideoFile[];
+}
+
+export interface VideoFile {
+  id: string;
+  videoId: string;
+  fileName: string;
+  fileUrl: string;
+  fileType: string;
+  uploadedAt: string;
 }
 
 export interface Subject {
@@ -39,6 +49,7 @@ export interface StudentAccount {
   registrationNumber: string;
   name: string;
   dob: string;
+  email: string;
   collegeName: string;
   department: string;
   year: number;
@@ -49,6 +60,7 @@ export interface TeacherAccount {
   staffId: string;
   name: string;
   dob: string;
+  email: string;
   collegeName: string;
   subjectName: string;
 }
@@ -62,7 +74,9 @@ export interface Doubt {
   studentCollege: string;
   subjectName: string;
   question: string;
+  questionImageUrl?: string;
   answer?: string;
+  answerImageUrl?: string;
   answeredBy?: string;
   claimedBy?: string;
   createdAt: string;
@@ -78,20 +92,28 @@ export function useSupabaseData() {
 
   const fetchAll = useCallback(async () => {
     try {
-      // Fetch all data in parallel
-      const [collegesRes, yearsRes, deptsRes, subjectsRes, videosRes, studentsRes, teachersRes, doubtsRes] =
+      const [collegesRes, yearsRes, deptsRes, subjectsRes, videosRes, videoFilesRes, studentsRes, teachersRes, doubtsRes] =
         await Promise.all([
           supabase.from("colleges").select("*"),
           supabase.from("years").select("*"),
           supabase.from("departments").select("*"),
           supabase.from("subjects").select("*"),
           supabase.from("videos").select("*"),
+          supabase.from("video_files").select("*"),
           supabase.from("students").select("*"),
           supabase.from("teachers").select("*"),
           supabase.from("doubts").select("*"),
         ]);
 
-      // Build nested college structure
+      const videoFilesData = (videoFilesRes.data || []).map((f: any) => ({
+        id: f.id,
+        videoId: f.video_id,
+        fileName: f.file_name,
+        fileUrl: f.file_url,
+        fileType: f.file_type,
+        uploadedAt: f.uploaded_at,
+      }));
+
       const videosData = videosRes.data || [];
       const subjectsData = (subjectsRes.data || []).map((s) => ({
         id: s.id,
@@ -99,7 +121,13 @@ export function useSupabaseData() {
         semester: s.semester as "odd" | "even",
         videos: videosData
           .filter((v) => v.subject_id === s.id)
-          .map((v) => ({ id: v.id, title: v.title, url: v.url, addedAt: v.added_at })),
+          .map((v) => ({
+            id: v.id,
+            title: v.title,
+            url: v.url,
+            addedAt: v.added_at,
+            files: videoFilesData.filter((f: VideoFile) => f.videoId === v.id),
+          })),
       }));
       const deptsData = (deptsRes.data || []).map((d) => ({
         id: d.id,
@@ -134,6 +162,7 @@ export function useSupabaseData() {
           registrationNumber: s.registration_number,
           name: s.name,
           dob: s.dob,
+          email: s.email || "",
           collegeName: s.college_name,
           department: s.department,
           year: s.year,
@@ -146,6 +175,7 @@ export function useSupabaseData() {
           staffId: t.staff_id,
           name: t.name,
           dob: t.dob,
+          email: t.email || "",
           collegeName: t.college_name,
           subjectName: t.subject_name,
         }))
@@ -161,7 +191,9 @@ export function useSupabaseData() {
           studentCollege: d.student_college,
           subjectName: d.subject_name,
           question: d.question,
+          questionImageUrl: d.question_image_url || undefined,
           answer: d.answer || undefined,
+          answerImageUrl: d.answer_image_url || undefined,
           answeredBy: d.answered_by || undefined,
           claimedBy: d.claimed_by || undefined,
           createdAt: d.created_at,
@@ -179,6 +211,17 @@ export function useSupabaseData() {
     fetchAll();
   }, [fetchAll]);
 
+  // Realtime subscription for doubts
+  useEffect(() => {
+    const channel = supabase
+      .channel("doubts-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "doubts" }, () => {
+        fetchAll();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [fetchAll]);
+
   // ---- MUTATIONS ----
 
   const addCollege = async (name: string) => {
@@ -187,7 +230,6 @@ export function useSupabaseData() {
   };
 
   const removeCollege = async (id: string) => {
-    // Delete cascade: years -> departments -> subjects -> videos
     const yearsRes = await supabase.from("years").select("id").eq("college_id", id);
     for (const y of yearsRes.data || []) {
       const deptsRes = await supabase.from("departments").select("id").eq("year_id", y.id);
@@ -260,6 +302,34 @@ export function useSupabaseData() {
     await fetchAll();
   };
 
+  const uploadVideoFile = async (videoId: string, file: File) => {
+    const ext = file.name.split(".").pop();
+    const path = `${videoId}/${Date.now()}-${file.name}`;
+    const { error: uploadError } = await supabase.storage.from("video-files").upload(path, file);
+    if (uploadError) { console.error("Upload error:", uploadError); return; }
+    const { data: urlData } = supabase.storage.from("video-files").getPublicUrl(path);
+    await supabase.from("video_files").insert({
+      video_id: videoId,
+      file_name: file.name,
+      file_url: urlData.publicUrl,
+      file_type: ext || "unknown",
+    });
+    await fetchAll();
+  };
+
+  const removeVideoFile = async (fileId: string) => {
+    await supabase.from("video_files").delete().eq("id", fileId);
+    await fetchAll();
+  };
+
+  const uploadDoubtImage = async (file: File): Promise<string | null> => {
+    const path = `${Date.now()}-${file.name}`;
+    const { error } = await supabase.storage.from("doubt-images").upload(path, file);
+    if (error) { console.error("Upload error:", error); return null; }
+    const { data } = supabase.storage.from("doubt-images").getPublicUrl(path);
+    return data.publicUrl;
+  };
+
   const syncStudentDoubts = async (
     currentStudent: StudentAccount,
     updates: Partial<Omit<StudentAccount, "id">>
@@ -302,6 +372,7 @@ export function useSupabaseData() {
       registration_number: student.registrationNumber,
       name: student.name,
       dob: student.dob,
+      email: student.email || null,
       college_name: student.collegeName,
       department: student.department,
       year: student.year,
@@ -325,6 +396,7 @@ export function useSupabaseData() {
     if (updates.registrationNumber !== undefined) mapped.registration_number = updates.registrationNumber;
     if (updates.name !== undefined) mapped.name = updates.name;
     if (updates.dob !== undefined) mapped.dob = updates.dob;
+    if (updates.email !== undefined) mapped.email = updates.email || null;
     if (updates.collegeName !== undefined) mapped.college_name = updates.collegeName;
     if (updates.department !== undefined) mapped.department = updates.department;
     if (updates.year !== undefined) mapped.year = updates.year;
@@ -343,6 +415,7 @@ export function useSupabaseData() {
       staff_id: teacher.staffId,
       name: teacher.name,
       dob: teacher.dob,
+      email: teacher.email || null,
       college_name: teacher.collegeName,
       subject_name: teacher.subjectName,
     });
@@ -355,7 +428,7 @@ export function useSupabaseData() {
       await Promise.all([
         supabase
           .from("doubts")
-          .update({ answer: null, answered_by: null, answered_at: null, claimed_by: null })
+          .update({ answer: null, answered_by: null, answered_at: null, answer_image_url: null, claimed_by: null })
           .eq("answered_by", teacher.name),
         supabase.from("doubts").update({ claimed_by: null }).eq("claimed_by", teacher.staffId),
       ]);
@@ -371,6 +444,7 @@ export function useSupabaseData() {
     if (updates.staffId !== undefined) mapped.staff_id = updates.staffId;
     if (updates.name !== undefined) mapped.name = updates.name;
     if (updates.dob !== undefined) mapped.dob = updates.dob;
+    if (updates.email !== undefined) mapped.email = updates.email || null;
     if (updates.collegeName !== undefined) mapped.college_name = updates.collegeName;
     if (updates.subjectName !== undefined) mapped.subject_name = updates.subjectName;
 
@@ -392,6 +466,7 @@ export function useSupabaseData() {
       student_college: doubt.studentCollege,
       subject_name: doubt.subjectName,
       question: doubt.question,
+      question_image_url: doubt.questionImageUrl || null,
     });
     if (!error) await fetchAll();
   };
@@ -401,11 +476,12 @@ export function useSupabaseData() {
     await fetchAll();
   };
 
-  const answerDoubt = async (doubtId: string, answer: string, teacherName: string) => {
+  const answerDoubt = async (doubtId: string, answer: string, teacherName: string, answerImageUrl?: string) => {
     await supabase.from("doubts").update({
       answer,
       answered_by: teacherName,
       answered_at: new Date().toISOString(),
+      answer_image_url: answerImageUrl || null,
     }).eq("id", doubtId);
     await fetchAll();
   };
@@ -417,6 +493,8 @@ export function useSupabaseData() {
     addDepartment, removeDepartment,
     addSubject, removeSubject,
     addVideo, removeVideo,
+    uploadVideoFile, removeVideoFile,
+    uploadDoubtImage,
     addStudent, removeStudent, updateStudent,
     addTeacher, removeTeacher, updateTeacher,
     addDoubt, claimDoubt, answerDoubt,

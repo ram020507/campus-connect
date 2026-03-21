@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSupabaseData, type StudentAccount } from "@/hooks/useSupabaseData";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  BookOpen, Video, LogOut, MessageCircle, ArrowLeft, Send, CheckCircle2, Play, Loader2, RefreshCw
+  BookOpen, Video, LogOut, MessageCircle, ArrowLeft, Send, CheckCircle2, Play, Loader2, RefreshCw, ImagePlus, X, Download, FileText
 } from "lucide-react";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -29,8 +29,13 @@ const StudentDashboard = () => {
   const [selectedSubjectId, setSelectedSubjectId] = useState("");
   const [selectedVideoUrl, setSelectedVideoUrl] = useState("");
   const [selectedVideoTitle, setSelectedVideoTitle] = useState("");
+  const [selectedVideoId, setSelectedVideoId] = useState("");
   const [doubtSubject, setDoubtSubject] = useState("");
   const [doubtText, setDoubtText] = useState("");
+  const [doubtImage, setDoubtImage] = useState<File | null>(null);
+  const [doubtImagePreview, setDoubtImagePreview] = useState<string | null>(null);
+  const [sending, setSending] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!student) {
     navigate("/student/login");
@@ -42,6 +47,7 @@ const StudentDashboard = () => {
   const dept = year?.departments.find((d) => d.name === student.department);
   const subjects = dept?.subjects.filter((s) => s.semester === selectedSemester) || [];
   const currentSubject = dept?.subjects.find((s) => s.id === selectedSubjectId);
+  const currentVideo = currentSubject?.videos.find((v) => v.id === selectedVideoId);
 
   const answeredDoubts = store.doubts.filter(
     (d) => d.answer && d.studentYear === student.year && d.studentDepartment === student.department
@@ -52,9 +58,29 @@ const StudentDashboard = () => {
     navigate("/");
   };
 
-  const handleSendDoubt = () => {
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setDoubtImage(file);
+      setDoubtImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const clearImage = () => {
+    setDoubtImage(null);
+    setDoubtImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleSendDoubt = async () => {
     if (doubtSubject.trim() && doubtText.trim()) {
-      store.addDoubt({
+      setSending(true);
+      let imageUrl: string | undefined;
+      if (doubtImage) {
+        const url = await store.uploadDoubtImage(doubtImage);
+        if (url) imageUrl = url;
+      }
+      await store.addDoubt({
         studentName: student.name,
         studentRegNo: student.registrationNumber,
         studentYear: student.year,
@@ -62,9 +88,12 @@ const StudentDashboard = () => {
         studentCollege: student.collegeName,
         subjectName: doubtSubject.trim(),
         question: doubtText.trim(),
+        questionImageUrl: imageUrl,
       });
       setDoubtText("");
       setDoubtSubject("");
+      clearImage();
+      setSending(false);
     }
   };
 
@@ -180,13 +209,16 @@ const StudentDashboard = () => {
             ) : (
               currentSubject.videos.map((v, i) => (
                 <Card key={v.id} className="cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => { setSelectedVideoUrl(v.url); setSelectedVideoTitle(v.title); setView("video-player"); }}>
+                  onClick={() => { setSelectedVideoUrl(v.url); setSelectedVideoTitle(v.title); setSelectedVideoId(v.id); setView("video-player"); }}>
                   <CardContent className="p-4 flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-bold">
                       {i + 1}
                     </div>
                     <div className="flex-1">
                       <p className="font-medium text-sm">{v.title}</p>
+                      {v.files.length > 0 && (
+                        <p className="text-xs text-muted-foreground">{v.files.length} file(s) attached</p>
+                      )}
                     </div>
                     <Play className="h-5 w-5 text-primary" />
                   </CardContent>
@@ -210,6 +242,20 @@ const StudentDashboard = () => {
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               />
             </div>
+            {/* Downloadable files */}
+            {currentVideo && currentVideo.files.length > 0 && (
+              <div className="space-y-2">
+                <h3 className="font-display font-semibold text-sm">Attached Files</h3>
+                {currentVideo.files.map((f) => (
+                  <a key={f.id} href={f.fileUrl} target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-2 p-2 rounded border bg-card hover:bg-accent/10 transition-colors">
+                    <FileText className="h-4 w-4 text-primary" />
+                    <span className="text-sm flex-1">{f.fileName}</span>
+                    <Download className="h-4 w-4 text-muted-foreground" />
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -225,8 +271,24 @@ const StudentDashboard = () => {
               <CardContent className="space-y-3">
                 <Input placeholder="Subject Name (e.g., M3)" value={doubtSubject} onChange={(e) => setDoubtSubject(e.target.value)} />
                 <Textarea placeholder="Type your doubt here..." value={doubtText} onChange={(e) => setDoubtText(e.target.value)} rows={4} />
-                <Button onClick={handleSendDoubt} disabled={!doubtSubject.trim() || !doubtText.trim()}>
-                  <Send className="h-4 w-4 mr-1" /> Send Doubt
+                
+                {/* Image upload */}
+                <input type="file" accept="image/*" ref={fileInputRef} className="hidden" onChange={handleImageSelect} />
+                {doubtImagePreview ? (
+                  <div className="relative inline-block">
+                    <img src={doubtImagePreview} alt="Doubt attachment" className="max-h-40 rounded border" />
+                    <button onClick={clearImage} className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1">
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+                    <ImagePlus className="h-4 w-4 mr-1" /> Attach Photo
+                  </Button>
+                )}
+
+                <Button onClick={handleSendDoubt} disabled={!doubtSubject.trim() || !doubtText.trim() || sending}>
+                  {sending ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Send className="h-4 w-4 mr-1" />} Send Doubt
                 </Button>
               </CardContent>
             </Card>
@@ -251,10 +313,16 @@ const StudentDashboard = () => {
                       )}
                     </div>
                     <p className="text-sm font-medium mt-2">{d.question}</p>
+                    {d.questionImageUrl && (
+                      <img src={d.questionImageUrl} alt="Doubt attachment" className="mt-2 max-h-48 rounded border" />
+                    )}
                     {d.answer && (
                       <div className="mt-3 p-3 rounded bg-success/10 text-sm">
                         <p className="text-xs text-muted-foreground mb-1">Answer by {d.answeredBy}:</p>
                         <p>{d.answer}</p>
+                        {d.answerImageUrl && (
+                          <img src={d.answerImageUrl} alt="Answer attachment" className="mt-2 max-h-48 rounded border" />
+                        )}
                       </div>
                     )}
                   </CardContent>
@@ -285,9 +353,15 @@ const StudentDashboard = () => {
                         <span className="text-xs text-muted-foreground">by {d.studentName}</span>
                       </div>
                       <p className="text-sm font-medium">{d.question}</p>
+                      {d.questionImageUrl && (
+                        <img src={d.questionImageUrl} alt="Doubt attachment" className="mt-2 max-h-48 rounded border" />
+                      )}
                       <div className="mt-3 p-3 rounded bg-success/10 text-sm">
                         <p className="text-xs text-muted-foreground mb-1">Answer by {d.answeredBy}:</p>
                         <p>{d.answer}</p>
+                        {d.answerImageUrl && (
+                          <img src={d.answerImageUrl} alt="Answer attachment" className="mt-2 max-h-48 rounded border" />
+                        )}
                       </div>
                     </CardContent>
                   </Card>

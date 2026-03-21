@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSupabaseData, StudentAccount, TeacherAccount } from "@/hooks/useSupabaseData";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Building2, ChevronRight, Plus, Trash2, LogOut, Users, GraduationCap,
-  FolderOpen, BookOpen, Video, ArrowLeft, Loader2, RefreshCw, Pencil, X, Check
+  FolderOpen, BookOpen, Video, ArrowLeft, Loader2, RefreshCw, Pencil, X, Check, Upload, FileText
 } from "lucide-react";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -33,13 +33,14 @@ const AdminDashboard = () => {
   const [newVideoTitle, setNewVideoTitle] = useState("");
   const [newVideoUrl, setNewVideoUrl] = useState("");
 
-  // Student form
+  // Student form - now with college selection first
   const [studentRegNo, setStudentRegNo] = useState("");
   const [studentName, setStudentName] = useState("");
   const [studentDob, setStudentDob] = useState("");
   const [studentCollege, setStudentCollege] = useState("");
   const [studentDept, setStudentDept] = useState("");
   const [studentYear, setStudentYear] = useState("");
+  const [studentEmail, setStudentEmail] = useState("");
 
   // Teacher form
   const [teacherStaffId, setTeacherStaffId] = useState("");
@@ -47,12 +48,18 @@ const AdminDashboard = () => {
   const [teacherDob, setTeacherDob] = useState("");
   const [teacherCollege, setTeacherCollege] = useState("");
   const [teacherSubject, setTeacherSubject] = useState("");
+  const [teacherEmail, setTeacherEmail] = useState("");
 
   // Edit states
   const [editingStudent, setEditingStudent] = useState<string | null>(null);
   const [editStudentData, setEditStudentData] = useState<Partial<Omit<StudentAccount, "id">>>({});
   const [editingTeacher, setEditingTeacher] = useState<string | null>(null);
   const [editTeacherData, setEditTeacherData] = useState<Partial<Omit<TeacherAccount, "id">>>({});
+
+  // File upload states
+  const [uploading, setUploading] = useState<Record<string, boolean>>({});
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
   const handleLogout = () => {
     sessionStorage.removeItem("admin-auth");
     navigate("/");
@@ -62,6 +69,12 @@ const AdminDashboard = () => {
   const year = college?.years.find((y) => y.id === selectedYear);
   const dept = year?.departments.find((d) => d.id === selectedDept);
   const subject = dept?.subjects.find((s) => s.id === selectedSubject);
+
+  // Get departments and years from selected college for student creation
+  const selectedStudentCollege = store.colleges.find((c) => c.name === studentCollege);
+  const studentCollegeYears = selectedStudentCollege?.years || [];
+  const selectedStudentYear = studentCollegeYears.find((y) => y.yearNumber === Number(studentYear));
+  const studentYearDepts = selectedStudentYear?.departments || [];
 
   // Breadcrumb
   const breadcrumbs: { label: string; onClick: () => void }[] = [
@@ -86,6 +99,15 @@ const AdminDashboard = () => {
     if (v.length >= 5) return v.slice(0, 2) + "-" + v.slice(2, 4) + "-" + v.slice(4);
     if (v.length >= 3) return v.slice(0, 2) + "-" + v.slice(2);
     return v;
+  };
+
+  const handleFileUpload = async (videoId: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading((prev) => ({ ...prev, [videoId]: true }));
+    await store.uploadVideoFile(videoId, file);
+    setUploading((prev) => ({ ...prev, [videoId]: false }));
+    if (fileInputRefs.current[videoId]) fileInputRefs.current[videoId]!.value = "";
   };
 
   if (store.loading) {
@@ -158,11 +180,7 @@ const AdminDashboard = () => {
         {view === "colleges" && (
           <div className="space-y-4 animate-fade-in">
             <div className="flex gap-2">
-              <Input
-                placeholder="New college name"
-                value={newCollegeName}
-                onChange={(e) => setNewCollegeName(e.target.value)}
-              />
+              <Input placeholder="New college name" value={newCollegeName} onChange={(e) => setNewCollegeName(e.target.value)} />
               <Button onClick={() => { if (newCollegeName.trim()) { store.addCollege(newCollegeName.trim()); setNewCollegeName(""); } }}>
                 <Plus className="h-4 w-4 mr-1" /> Add
               </Button>
@@ -177,8 +195,7 @@ const AdminDashboard = () => {
                     <span className="text-xs text-muted-foreground">({c.years.length} years)</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="icon"
-                      onClick={(e) => { e.stopPropagation(); store.removeCollege(c.id); }}>
+                    <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); store.removeCollege(c.id); }}>
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
@@ -221,8 +238,7 @@ const AdminDashboard = () => {
                     <span className="text-xs text-muted-foreground">({y.departments.length} depts)</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="icon"
-                      onClick={(e) => { e.stopPropagation(); store.removeYear(selectedCollege, y.id); }}>
+                    <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); store.removeYear(selectedCollege, y.id); }}>
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
@@ -255,8 +271,7 @@ const AdminDashboard = () => {
                     <span className="text-xs text-muted-foreground">({d.subjects.length} subjects)</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="icon"
-                      onClick={(e) => { e.stopPropagation(); store.removeDepartment(selectedCollege, selectedYear, d.id); }}>
+                    <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); store.removeDepartment(selectedCollege, selectedYear, d.id); }}>
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
@@ -304,8 +319,7 @@ const AdminDashboard = () => {
                     <span className="text-xs text-muted-foreground">({s.videos.length} videos)</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="icon"
-                      onClick={(e) => { e.stopPropagation(); store.removeSubject(selectedCollege, selectedYear, selectedDept, s.id); }}>
+                    <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); store.removeSubject(selectedCollege, selectedYear, selectedDept, s.id); }}>
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
@@ -337,18 +351,50 @@ const AdminDashboard = () => {
             </div>
             {subject.videos.map((v) => (
               <Card key={v.id}>
-                <CardContent className="p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Video className="h-5 w-5 text-primary" />
-                    <div>
-                      <p className="font-medium text-sm">{v.title}</p>
-                      <p className="text-xs text-muted-foreground truncate max-w-[200px]">{v.url}</p>
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Video className="h-5 w-5 text-primary" />
+                      <div>
+                        <p className="font-medium text-sm">{v.title}</p>
+                        <p className="text-xs text-muted-foreground truncate max-w-[200px]">{v.url}</p>
+                      </div>
                     </div>
+                    <Button variant="ghost" size="icon"
+                      onClick={() => store.removeVideo(selectedCollege, selectedYear, selectedDept, selectedSubject, v.id)}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
                   </div>
-                  <Button variant="ghost" size="icon"
-                    onClick={() => store.removeVideo(selectedCollege, selectedYear, selectedDept, selectedSubject, v.id)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
+                  {/* File upload section */}
+                  <div className="border-t pt-2">
+                    <div className="flex items-center gap-2 mb-2">
+                      <input
+                        type="file"
+                        accept=".pdf,.ppt,.pptx,.doc,.docx"
+                        className="hidden"
+                        ref={(el) => { fileInputRefs.current[v.id] = el; }}
+                        onChange={(e) => handleFileUpload(v.id, e)}
+                      />
+                      <Button variant="outline" size="sm" onClick={() => fileInputRefs.current[v.id]?.click()} disabled={uploading[v.id]}>
+                        {uploading[v.id] ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Upload className="h-4 w-4 mr-1" />}
+                        Upload File
+                      </Button>
+                      <span className="text-xs text-muted-foreground">PDF, PPT, DOC</span>
+                    </div>
+                    {v.files.length > 0 && (
+                      <div className="space-y-1">
+                        {v.files.map((f) => (
+                          <div key={f.id} className="flex items-center gap-2 text-sm">
+                            <FileText className="h-3 w-3 text-muted-foreground" />
+                            <a href={f.fileUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex-1 truncate">{f.fileName}</a>
+                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => store.removeVideoFile(f.id)}>
+                              <Trash2 className="h-3 w-3 text-destructive" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             ))}
@@ -365,33 +411,46 @@ const AdminDashboard = () => {
               <CardHeader><CardTitle className="text-lg font-display">Create Student Account</CardTitle></CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Step 1: Select college first */}
+                  <Select value={studentCollege} onValueChange={(v) => { setStudentCollege(v); setStudentYear(""); setStudentDept(""); }}>
+                    <SelectTrigger><SelectValue placeholder="1. Select College" /></SelectTrigger>
+                    <SelectContent>
+                      {store.colleges.map((c) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  {/* Step 2: Select year from that college */}
+                  <Select value={studentYear} onValueChange={(v) => { setStudentYear(v); setStudentDept(""); }} disabled={!studentCollege}>
+                    <SelectTrigger><SelectValue placeholder="2. Select Year" /></SelectTrigger>
+                    <SelectContent>
+                      {studentCollegeYears.sort((a, b) => a.yearNumber - b.yearNumber).map((y) => (
+                        <SelectItem key={y.id} value={String(y.yearNumber)}>Year {y.yearNumber}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {/* Step 3: Select department from that year */}
+                  <Select value={studentDept} onValueChange={setStudentDept} disabled={!studentYear}>
+                    <SelectTrigger><SelectValue placeholder="3. Select Department" /></SelectTrigger>
+                    <SelectContent>
+                      {studentYearDepts.map((d) => (
+                        <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <Input placeholder="Registration Number (numbers only)" value={studentRegNo}
                     onChange={(e) => setStudentRegNo(e.target.value.replace(/\D/g, ""))} inputMode="numeric" />
                   <Input placeholder="Student Name" value={studentName} onChange={(e) => setStudentName(e.target.value)} />
                   <Input placeholder="DOB (DD-MM-YYYY)" value={studentDob} maxLength={10} inputMode="numeric"
                     onChange={(e) => setStudentDob(formatDob(e.target.value))} />
-                  <Select value={studentCollege} onValueChange={setStudentCollege}>
-                    <SelectTrigger><SelectValue placeholder="Select College" /></SelectTrigger>
-                    <SelectContent>
-                      {store.colleges.map((c) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                  <Input placeholder="Department (e.g., CSE)" value={studentDept} onChange={(e) => setStudentDept(e.target.value)} />
-                  <Select value={studentYear} onValueChange={setStudentYear}>
-                    <SelectTrigger><SelectValue placeholder="Year" /></SelectTrigger>
-                    <SelectContent>
-                      {[1, 2, 3, 4].map((y) => <SelectItem key={y} value={String(y)}>Year {y}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <Input placeholder="Email (optional)" type="email" value={studentEmail} onChange={(e) => setStudentEmail(e.target.value)} />
                 </div>
                 <Button className="mt-3" onClick={() => {
                   if (studentRegNo && studentName && studentDob && studentCollege && studentDept && studentYear) {
                     store.addStudent({
                       registrationNumber: studentRegNo, name: studentName, dob: studentDob,
-                      collegeName: studentCollege, department: studentDept, year: Number(studentYear),
+                      email: studentEmail, collegeName: studentCollege, department: studentDept, year: Number(studentYear),
                     });
                     setStudentRegNo(""); setStudentName(""); setStudentDob("");
-                    setStudentCollege(""); setStudentDept(""); setStudentYear("");
+                    setStudentCollege(""); setStudentDept(""); setStudentYear(""); setStudentEmail("");
                   }
                 }}>
                   <Plus className="h-4 w-4 mr-1" /> Create Account
@@ -410,6 +469,7 @@ const AdminDashboard = () => {
                           <Input placeholder="Registration Number" value={editStudentData.registrationNumber ?? ""} onChange={(e) => setEditStudentData(d => ({ ...d, registrationNumber: e.target.value.replace(/\D/g, "") }))} inputMode="numeric" />
                           <Input placeholder="Name" value={editStudentData.name ?? ""} onChange={(e) => setEditStudentData(d => ({ ...d, name: e.target.value }))} />
                           <Input placeholder="DOB (DD-MM-YYYY)" value={editStudentData.dob ?? ""} maxLength={10} inputMode="numeric" onChange={(e) => setEditStudentData(d => ({ ...d, dob: formatDob(e.target.value) }))} />
+                          <Input placeholder="Email" type="email" value={editStudentData.email ?? ""} onChange={(e) => setEditStudentData(d => ({ ...d, email: e.target.value }))} />
                           <Input placeholder="Department" value={editStudentData.department ?? ""} onChange={(e) => setEditStudentData(d => ({ ...d, department: e.target.value }))} />
                           <Select value={editStudentData.collegeName ?? ""} onValueChange={(v) => setEditStudentData(d => ({ ...d, collegeName: v }))}>
                             <SelectTrigger><SelectValue placeholder="College" /></SelectTrigger>
@@ -434,9 +494,10 @@ const AdminDashboard = () => {
                         <div className="text-sm">
                           <p className="font-medium">{s.name} <span className="text-muted-foreground">#{s.registrationNumber}</span></p>
                           <p className="text-xs text-muted-foreground">{s.collegeName} · {s.department} · Year {s.year}</p>
+                          {s.email && <p className="text-xs text-muted-foreground">{s.email}</p>}
                         </div>
                         <div className="flex items-center gap-1">
-                          <Button variant="ghost" size="icon" onClick={() => { setEditingStudent(s.id); setEditStudentData({ registrationNumber: s.registrationNumber, name: s.name, dob: s.dob, collegeName: s.collegeName, department: s.department, year: s.year }); }}>
+                          <Button variant="ghost" size="icon" onClick={() => { setEditingStudent(s.id); setEditStudentData({ registrationNumber: s.registrationNumber, name: s.name, dob: s.dob, email: s.email, collegeName: s.collegeName, department: s.department, year: s.year }); }}>
                             <Pencil className="h-4 w-4 text-primary" />
                           </Button>
                           <Button variant="ghost" size="icon" onClick={() => store.removeStudent(s.id)}>
@@ -471,15 +532,16 @@ const AdminDashboard = () => {
                     </SelectContent>
                   </Select>
                   <Input placeholder="Subject Name (e.g., M3)" value={teacherSubject} onChange={(e) => setTeacherSubject(e.target.value)} />
+                  <Input placeholder="Email (optional)" type="email" value={teacherEmail} onChange={(e) => setTeacherEmail(e.target.value)} />
                 </div>
                 <Button className="mt-3" onClick={() => {
                   if (teacherStaffId && teacherName && teacherDob && teacherCollege && teacherSubject) {
                     store.addTeacher({
                       staffId: teacherStaffId, name: teacherName, dob: teacherDob,
-                      collegeName: teacherCollege, subjectName: teacherSubject,
+                      email: teacherEmail, collegeName: teacherCollege, subjectName: teacherSubject,
                     });
                     setTeacherStaffId(""); setTeacherName(""); setTeacherDob("");
-                    setTeacherCollege(""); setTeacherSubject("");
+                    setTeacherCollege(""); setTeacherSubject(""); setTeacherEmail("");
                   }
                 }}>
                   <Plus className="h-4 w-4 mr-1" /> Create Account
@@ -498,6 +560,7 @@ const AdminDashboard = () => {
                           <Input placeholder="Staff ID" value={editTeacherData.staffId ?? ""} onChange={(e) => setEditTeacherData(d => ({ ...d, staffId: e.target.value.replace(/\D/g, "") }))} inputMode="numeric" />
                           <Input placeholder="Name" value={editTeacherData.name ?? ""} onChange={(e) => setEditTeacherData(d => ({ ...d, name: e.target.value }))} />
                           <Input placeholder="DOB (DD-MM-YYYY)" value={editTeacherData.dob ?? ""} maxLength={10} inputMode="numeric" onChange={(e) => setEditTeacherData(d => ({ ...d, dob: formatDob(e.target.value) }))} />
+                          <Input placeholder="Email" type="email" value={editTeacherData.email ?? ""} onChange={(e) => setEditTeacherData(d => ({ ...d, email: e.target.value }))} />
                           <Select value={editTeacherData.collegeName ?? ""} onValueChange={(v) => setEditTeacherData(d => ({ ...d, collegeName: v }))}>
                             <SelectTrigger><SelectValue placeholder="College" /></SelectTrigger>
                             <SelectContent>{store.colleges.map((c) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}</SelectContent>
@@ -518,9 +581,10 @@ const AdminDashboard = () => {
                         <div className="text-sm">
                           <p className="font-medium">{t.name} <span className="text-muted-foreground">#{t.staffId}</span></p>
                           <p className="text-xs text-muted-foreground">{t.collegeName} · {t.subjectName}</p>
+                          {t.email && <p className="text-xs text-muted-foreground">{t.email}</p>}
                         </div>
                         <div className="flex items-center gap-1">
-                          <Button variant="ghost" size="icon" onClick={() => { setEditingTeacher(t.id); setEditTeacherData({ staffId: t.staffId, name: t.name, dob: t.dob, collegeName: t.collegeName, subjectName: t.subjectName }); }}>
+                          <Button variant="ghost" size="icon" onClick={() => { setEditingTeacher(t.id); setEditTeacherData({ staffId: t.staffId, name: t.name, dob: t.dob, email: t.email, collegeName: t.collegeName, subjectName: t.subjectName }); }}>
                             <Pencil className="h-4 w-4 text-primary" />
                           </Button>
                           <Button variant="ghost" size="icon" onClick={() => store.removeTeacher(t.id)}>

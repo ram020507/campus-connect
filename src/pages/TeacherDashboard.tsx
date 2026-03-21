@@ -1,12 +1,16 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSupabaseData, type TeacherAccount } from "@/hooks/useSupabaseData";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  GraduationCap, LogOut, MessageCircle, Send, CheckCircle2, Clock, Loader2, ArrowLeft, RefreshCw
+  GraduationCap, LogOut, MessageCircle, Send, CheckCircle2, Clock, Loader2, ArrowLeft, RefreshCw, ImagePlus, X
 } from "lucide-react";
+import {
+  AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 
 const TeacherDashboard = () => {
   const navigate = useNavigate();
@@ -19,6 +23,11 @@ const TeacherDashboard = () => {
   })();
 
   const [replyTexts, setReplyTexts] = useState<Record<string, string>>({});
+  const [replyImages, setReplyImages] = useState<Record<string, File>>({});
+  const [replyImagePreviews, setReplyImagePreviews] = useState<Record<string, string>>({});
+  const [sending, setSending] = useState<Record<string, boolean>>({});
+  const [claimAlert, setClaimAlert] = useState<{ show: boolean; teacherName: string }>({ show: false, teacherName: "" });
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   if (!teacher) {
     navigate("/teacher/login");
@@ -41,15 +50,45 @@ const TeacherDashboard = () => {
     (d) => d.answeredBy === teacher.name && d.answer
   );
 
-  const handleClaim = (doubtId: string) => {
+  const handleClaim = async (doubtId: string) => {
+    // Re-fetch to check if already claimed by another teacher
+    await store.refetch();
+    const doubt = store.doubts.find((d) => d.id === doubtId);
+    if (doubt?.claimedBy && doubt.claimedBy !== teacher.staffId) {
+      // Find the teacher name from staffId
+      const claimerTeacher = store.teachers.find((t) => t.staffId === doubt.claimedBy);
+      setClaimAlert({ show: true, teacherName: claimerTeacher?.name || doubt.claimedBy });
+      return;
+    }
     store.claimDoubt(doubtId, teacher.staffId);
   };
 
-  const handleReply = (doubtId: string) => {
+  const handleReplyImageSelect = (doubtId: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setReplyImages((prev) => ({ ...prev, [doubtId]: file }));
+      setReplyImagePreviews((prev) => ({ ...prev, [doubtId]: URL.createObjectURL(file) }));
+    }
+  };
+
+  const clearReplyImage = (doubtId: string) => {
+    setReplyImages((prev) => { const n = { ...prev }; delete n[doubtId]; return n; });
+    setReplyImagePreviews((prev) => { const n = { ...prev }; delete n[doubtId]; return n; });
+  };
+
+  const handleReply = async (doubtId: string) => {
     const text = replyTexts[doubtId]?.trim();
     if (text) {
-      store.answerDoubt(doubtId, text, teacher.name);
+      setSending((prev) => ({ ...prev, [doubtId]: true }));
+      let imageUrl: string | undefined;
+      if (replyImages[doubtId]) {
+        const url = await store.uploadDoubtImage(replyImages[doubtId]);
+        if (url) imageUrl = url;
+      }
+      await store.answerDoubt(doubtId, text, teacher.name, imageUrl);
       setReplyTexts((prev) => ({ ...prev, [doubtId]: "" }));
+      clearReplyImage(doubtId);
+      setSending((prev) => ({ ...prev, [doubtId]: false }));
     }
   };
 
@@ -109,6 +148,9 @@ const TeacherDashboard = () => {
                       </span>
                     </div>
                     <p className="text-sm font-medium mb-3">{d.question}</p>
+                    {d.questionImageUrl && (
+                      <img src={d.questionImageUrl} alt="Student attachment" className="mb-3 max-h-48 rounded border" />
+                    )}
                     {!d.claimedBy ? (
                       <Button size="sm" variant="outline" onClick={() => handleClaim(d.id)}>
                         Open & Claim
@@ -121,9 +163,31 @@ const TeacherDashboard = () => {
                           onChange={(e) => setReplyTexts((prev) => ({ ...prev, [d.id]: e.target.value }))}
                           rows={3}
                         />
-                        <Button size="sm" onClick={() => handleReply(d.id)} disabled={!replyTexts[d.id]?.trim()}>
-                          <Send className="h-4 w-4 mr-1" /> Send Reply
-                        </Button>
+                        {/* Reply image */}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          ref={(el) => { fileInputRefs.current[d.id] = el; }}
+                          onChange={(e) => handleReplyImageSelect(d.id, e)}
+                        />
+                        {replyImagePreviews[d.id] ? (
+                          <div className="relative inline-block">
+                            <img src={replyImagePreviews[d.id]} alt="Reply attachment" className="max-h-32 rounded border" />
+                            <button onClick={() => clearReplyImage(d.id)} className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1">
+                              <X className="h-3 w-3" />
+                            </button>
+                          </div>
+                        ) : (
+                          <Button variant="outline" size="sm" onClick={() => fileInputRefs.current[d.id]?.click()}>
+                            <ImagePlus className="h-4 w-4 mr-1" /> Attach Photo
+                          </Button>
+                        )}
+                        <div>
+                          <Button size="sm" onClick={() => handleReply(d.id)} disabled={!replyTexts[d.id]?.trim() || sending[d.id]}>
+                            {sending[d.id] ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Send className="h-4 w-4 mr-1" />} Send Reply
+                          </Button>
+                        </div>
                       </div>
                     )}
                   </CardContent>
@@ -146,14 +210,35 @@ const TeacherDashboard = () => {
                     Q from {d.studentName} · {d.studentDepartment} · Year {d.studentYear}
                   </p>
                   <p className="text-sm font-medium">{d.question}</p>
+                  {d.questionImageUrl && (
+                    <img src={d.questionImageUrl} alt="Student attachment" className="mt-2 max-h-40 rounded border" />
+                  )}
                   <div className="mt-2 p-3 rounded bg-success/10 text-sm">
                     <p>{d.answer}</p>
+                    {d.answerImageUrl && (
+                      <img src={d.answerImageUrl} alt="Answer attachment" className="mt-2 max-h-40 rounded border" />
+                    )}
                   </div>
                 </CardContent>
               </Card>
             ))}
         </div>
       </div>
+
+      {/* Claim conflict dialog */}
+      <AlertDialog open={claimAlert.show} onOpenChange={(open) => !open && setClaimAlert({ show: false, teacherName: "" })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Doubt Already Claimed</AlertDialogTitle>
+            <AlertDialogDescription>
+              This doubt is being solved by <strong>{claimAlert.teacherName}</strong>.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setClaimAlert({ show: false, teacherName: "" })}>OK</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
