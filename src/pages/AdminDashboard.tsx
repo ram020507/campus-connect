@@ -12,7 +12,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 
-type View = "colleges" | "years" | "departments" | "subjects" | "videos" | "students" | "teachers";
+type View = "colleges" | "years" | "departments" | "subjects" | "videos" | "students" | "students-college" | "teachers" | "teachers-college";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
