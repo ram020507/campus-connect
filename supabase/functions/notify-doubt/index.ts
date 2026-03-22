@@ -65,7 +65,7 @@ serve(async (req) => {
         console.log(`Answer: ${doubt.answer}`);
       }
 
-      return new Response(JSON.stringify({ success: true, notifiedCount: emails.length }), {
+      return new Response(JSON.stringify({ success: true, notifiedCount: email ? 1 : 0 }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
