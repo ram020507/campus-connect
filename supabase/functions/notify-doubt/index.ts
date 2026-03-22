@@ -50,20 +50,18 @@ serve(async (req) => {
       const { data: doubt } = await supabase.from("doubts").select("*").eq("id", doubtId).single();
       if (!doubt) throw new Error("Doubt not found");
 
-      // Find students in the same year and department
-      const { data: students } = await supabase
+      // Find the student who asked the question
+      const { data: student } = await supabase
         .from("students")
         .select("*")
-        .eq("year", doubt.student_year)
-        .eq("department", doubt.student_department);
+        .eq("registration_number", doubt.student_reg_no)
+        .single();
 
-      const emails = (students || [])
-        .filter((s: any) => s.email)
-        .map((s: any) => s.email);
+      const email = student?.email;
 
-      if (emails.length > 0) {
+      if (email) {
         console.log(`[Email Notification] Doubt answered in ${doubt.subject_name} by ${doubt.answered_by}`);
-        console.log(`Would send to students: ${emails.join(", ")}`);
+        console.log(`Would send to student: ${email}`);
         console.log(`Answer: ${doubt.answer}`);
       }
 
