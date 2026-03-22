@@ -166,7 +166,7 @@ const AdminDashboard = () => {
 
       <div className="max-w-4xl mx-auto p-4">
         {/* Breadcrumb */}
-        {!["students", "teachers"].includes(view) && (
+        {!["students", "students-college", "teachers", "teachers-college"].includes(view) && (
           <nav className="flex items-center gap-1 text-sm text-muted-foreground mb-4 flex-wrap">
             {breadcrumbs.map((bc, i) => (
               <span key={i} className="flex items-center gap-1">
