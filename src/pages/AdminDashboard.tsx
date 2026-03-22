@@ -33,11 +33,14 @@ const AdminDashboard = () => {
   const [newVideoTitle, setNewVideoTitle] = useState("");
   const [newVideoUrl, setNewVideoUrl] = useState("");
 
-  // Student form - now with college selection first
+  // Selected college for student/teacher folder navigation
+  const [selectedStudentCollegeId, setSelectedStudentCollegeId] = useState("");
+  const [selectedTeacherCollegeId, setSelectedTeacherCollegeId] = useState("");
+
+  // Student form
   const [studentRegNo, setStudentRegNo] = useState("");
   const [studentName, setStudentName] = useState("");
   const [studentDob, setStudentDob] = useState("");
-  const [studentCollege, setStudentCollege] = useState("");
   const [studentDept, setStudentDept] = useState("");
   const [studentYear, setStudentYear] = useState("");
   const [studentEmail, setStudentEmail] = useState("");
@@ -46,7 +49,6 @@ const AdminDashboard = () => {
   const [teacherStaffId, setTeacherStaffId] = useState("");
   const [teacherName, setTeacherName] = useState("");
   const [teacherDob, setTeacherDob] = useState("");
-  const [teacherCollege, setTeacherCollege] = useState("");
   const [teacherSubject, setTeacherSubject] = useState("");
   const [teacherEmail, setTeacherEmail] = useState("");
 
