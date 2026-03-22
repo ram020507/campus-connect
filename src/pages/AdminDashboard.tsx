@@ -145,15 +145,15 @@ const AdminDashboard = () => {
       {/* Navigation Tabs */}
       <div className="border-b bg-card px-4 flex gap-1 overflow-x-auto">
         {[
-          { key: "colleges" as View, label: "Content", icon: FolderOpen },
-          { key: "students" as View, label: "Students", icon: Users },
-          { key: "teachers" as View, label: "Teachers", icon: GraduationCap },
+          { key: "colleges" as View, label: "Content", icon: FolderOpen, matches: ["colleges", "years", "departments", "subjects", "videos"] },
+          { key: "students" as View, label: "Students", icon: Users, matches: ["students", "students-college"] },
+          { key: "teachers" as View, label: "Teachers", icon: GraduationCap, matches: ["teachers", "teachers-college"] },
         ].map((tab) => (
           <button
             key={tab.key}
             onClick={() => setView(tab.key)}
             className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-              (view === tab.key || (tab.key === "colleges" && !["students", "teachers"].includes(view)))
+              tab.matches.includes(view)
                 ? "border-primary text-primary"
                 : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
