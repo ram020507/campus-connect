@@ -72,9 +72,10 @@ const AdminDashboard = () => {
   const dept = year?.departments.find((d) => d.id === selectedDept);
   const subject = dept?.subjects.find((s) => s.id === selectedSubject);
 
-  // Get departments and years from selected college for student creation
-  const selectedStudentCollege = store.colleges.find((c) => c.name === studentCollege);
-  const studentCollegeYears = selectedStudentCollege?.years || [];
+  // Get college for student/teacher folder views
+  const studentFolderCollege = store.colleges.find((c) => c.id === selectedStudentCollegeId);
+  const teacherFolderCollege = store.colleges.find((c) => c.id === selectedTeacherCollegeId);
+  const studentCollegeYears = studentFolderCollege?.years || [];
   const selectedStudentYear = studentCollegeYears.find((y) => y.yearNumber === Number(studentYear));
   const studentYearDepts = selectedStudentYear?.departments || [];
 
