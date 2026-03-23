@@ -1,6 +1,7 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSupabaseData, type TeacherAccount } from "@/hooks/useSupabaseData";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
@@ -27,7 +28,36 @@ const TeacherDashboard = () => {
   const [replyImagePreviews, setReplyImagePreviews] = useState<Record<string, string>>({});
   const [sending, setSending] = useState<Record<string, boolean>>({});
   const [claimAlert, setClaimAlert] = useState<{ show: boolean; teacherName: string }>({ show: false, teacherName: "" });
+  const [realtimeAlert, setRealtimeAlert] = useState<{ show: boolean; teacherName: string; question: string }>({ show: false, teacherName: "", question: "" });
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
+  // Realtime: listen for doubts changing to "in_progress" by another teacher
+  useEffect(() => {
+    if (!teacher) return;
+    const channel = supabase
+      .channel("doubt-status-realtime")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "doubts" },
+        (payload: any) => {
+          const newRow = payload.new;
+          if (
+            newRow.status === "in_progress" &&
+            newRow.handling_teacher &&
+            newRow.handling_teacher !== teacher.name &&
+            newRow.subject_name?.toLowerCase() === teacher.subjectName.toLowerCase()
+          ) {
+            setRealtimeAlert({
+              show: true,
+              teacherName: newRow.handling_teacher,
+              question: newRow.question?.substring(0, 80) || "a doubt",
+            });
+          }
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [teacher]);
 
   if (!teacher) {
     navigate("/teacher/login");
@@ -51,16 +81,14 @@ const TeacherDashboard = () => {
   );
 
   const handleClaim = async (doubtId: string) => {
-    // Re-fetch to check if already claimed by another teacher
     await store.refetch();
     const doubt = store.doubts.find((d) => d.id === doubtId);
     if (doubt?.claimedBy && doubt.claimedBy !== teacher.staffId) {
-      // Find the teacher name from staffId
       const claimerTeacher = store.teachers.find((t) => t.staffId === doubt.claimedBy);
       setClaimAlert({ show: true, teacherName: claimerTeacher?.name || doubt.claimedBy });
       return;
     }
-    store.claimDoubt(doubtId, teacher.staffId);
+    store.claimDoubt(doubtId, teacher.staffId, teacher.name);
   };
 
   const handleReplyImageSelect = (doubtId: string, e: React.ChangeEvent<HTMLInputElement>) => {
@@ -153,7 +181,7 @@ const TeacherDashboard = () => {
                     )}
                     {!d.claimedBy ? (
                       <Button size="sm" variant="outline" onClick={() => handleClaim(d.id)}>
-                        Open & Claim
+                        Start Answering
                       </Button>
                     ) : (
                       <div className="space-y-2">
@@ -236,6 +264,23 @@ const TeacherDashboard = () => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogAction onClick={() => setClaimAlert({ show: false, teacherName: "" })}>OK</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Realtime notification dialog */}
+      <AlertDialog open={realtimeAlert.show} onOpenChange={(open) => !open && setRealtimeAlert({ show: false, teacherName: "", question: "" })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Doubt Being Handled</AlertDialogTitle>
+            <AlertDialogDescription>
+              This doubt is being handled by <strong>{realtimeAlert.teacherName}</strong>:
+              <br />
+              <em className="text-xs">"{realtimeAlert.question}"</em>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setRealtimeAlert({ show: false, teacherName: "", question: "" })}>OK</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

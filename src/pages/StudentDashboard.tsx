@@ -89,6 +89,7 @@ const StudentDashboard = () => {
         subjectName: doubtSubject.trim(),
         question: doubtText.trim(),
         questionImageUrl: imageUrl,
+        status: "pending",
       });
       setDoubtText("");
       setDoubtSubject("");

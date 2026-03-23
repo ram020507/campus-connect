@@ -69,9 +69,11 @@ export type Database = {
           answered_by: string | null
           claimed_by: string | null
           created_at: string
+          handling_teacher: string | null
           id: string
           question: string
           question_image_url: string | null
+          status: string
           student_college: string
           student_department: string
           student_name: string
@@ -86,9 +88,11 @@ export type Database = {
           answered_by?: string | null
           claimed_by?: string | null
           created_at?: string
+          handling_teacher?: string | null
           id?: string
           question: string
           question_image_url?: string | null
+          status?: string
           student_college: string
           student_department: string
           student_name: string
@@ -103,9 +107,11 @@ export type Database = {
           answered_by?: string | null
           claimed_by?: string | null
           created_at?: string
+          handling_teacher?: string | null
           id?: string
           question?: string
           question_image_url?: string | null
+          status?: string
           student_college?: string
           student_department?: string
           student_name?: string

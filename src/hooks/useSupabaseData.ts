@@ -79,6 +79,8 @@ export interface Doubt {
   answerImageUrl?: string;
   answeredBy?: string;
   claimedBy?: string;
+  status: string;
+  handlingTeacher?: string;
   createdAt: string;
   answeredAt?: string;
 }
@@ -182,7 +184,7 @@ export function useSupabaseData() {
       );
 
       setDoubts(
-        (doubtsRes.data || []).map((d) => ({
+        (doubtsRes.data || []).map((d: any) => ({
           id: d.id,
           studentName: d.student_name,
           studentRegNo: d.student_reg_no,
@@ -196,6 +198,8 @@ export function useSupabaseData() {
           answerImageUrl: d.answer_image_url || undefined,
           answeredBy: d.answered_by || undefined,
           claimedBy: d.claimed_by || undefined,
+          status: d.status || "pending",
+          handlingTeacher: d.handling_teacher || undefined,
           createdAt: d.created_at,
           answeredAt: d.answered_at || undefined,
         }))
@@ -475,8 +479,12 @@ export function useSupabaseData() {
     }
   };
 
-  const claimDoubt = async (doubtId: string, teacherStaffId: string) => {
-    await supabase.from("doubts").update({ claimed_by: teacherStaffId }).eq("id", doubtId);
+  const claimDoubt = async (doubtId: string, teacherStaffId: string, teacherName: string) => {
+    await supabase.from("doubts").update({
+      claimed_by: teacherStaffId,
+      status: "in_progress",
+      handling_teacher: teacherName,
+    } as any).eq("id", doubtId);
     await fetchAll();
   };
 
@@ -486,7 +494,9 @@ export function useSupabaseData() {
       answered_by: teacherName,
       answered_at: new Date().toISOString(),
       answer_image_url: answerImageUrl || null,
-    }).eq("id", doubtId);
+      status: "answered",
+    } as any).eq("id", doubtId);
+    
     // Fire-and-forget email notification
     supabase.functions.invoke("notify-doubt", { body: { type: "doubt_answered", doubtId } }).catch(console.error);
     await fetchAll();
