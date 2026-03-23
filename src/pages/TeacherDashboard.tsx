@@ -31,11 +31,6 @@ const TeacherDashboard = () => {
   const [realtimeAlert, setRealtimeAlert] = useState<{ show: boolean; teacherName: string; question: string }>({ show: false, teacherName: "", question: "" });
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
-  if (!teacher) {
-    navigate("/teacher/login");
-    return null;
-  }
-
   // Realtime: listen for doubts changing to "in_progress" by another teacher
   useEffect(() => {
     if (!teacher) return;
@@ -64,7 +59,12 @@ const TeacherDashboard = () => {
     return () => { supabase.removeChannel(channel); };
   }, [teacher]);
 
+  if (!teacher) {
+    navigate("/teacher/login");
+    return null;
+  }
 
+  const handleLogout = () => {
     sessionStorage.removeItem("teacher-auth");
     navigate("/");
   };
