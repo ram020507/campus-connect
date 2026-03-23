@@ -494,6 +494,8 @@ export function useSupabaseData() {
       answered_by: teacherName,
       answered_at: new Date().toISOString(),
       answer_image_url: answerImageUrl || null,
+      status: "answered",
+    } as any).eq("id", doubtId);
     }).eq("id", doubtId);
     // Fire-and-forget email notification
     supabase.functions.invoke("notify-doubt", { body: { type: "doubt_answered", doubtId } }).catch(console.error);
