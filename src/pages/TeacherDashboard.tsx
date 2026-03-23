@@ -267,6 +267,23 @@ const TeacherDashboard = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Realtime notification dialog */}
+      <AlertDialog open={realtimeAlert.show} onOpenChange={(open) => !open && setRealtimeAlert({ show: false, teacherName: "", question: "" })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Doubt Being Handled</AlertDialogTitle>
+            <AlertDialogDescription>
+              This doubt is being handled by <strong>{realtimeAlert.teacherName}</strong>:
+              <br />
+              <em className="text-xs">"{realtimeAlert.question}"</em>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setRealtimeAlert({ show: false, teacherName: "", question: "" })}>OK</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
