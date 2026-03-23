@@ -28,6 +28,7 @@ const TeacherDashboard = () => {
   const [replyImagePreviews, setReplyImagePreviews] = useState<Record<string, string>>({});
   const [sending, setSending] = useState<Record<string, boolean>>({});
   const [claimAlert, setClaimAlert] = useState<{ show: boolean; teacherName: string }>({ show: false, teacherName: "" });
+  const [realtimeAlert, setRealtimeAlert] = useState<{ show: boolean; teacherName: string; question: string }>({ show: false, teacherName: "", question: "" });
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   if (!teacher) {
