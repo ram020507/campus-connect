@@ -181,7 +181,7 @@ const TeacherDashboard = () => {
                     )}
                     {!d.claimedBy ? (
                       <Button size="sm" variant="outline" onClick={() => handleClaim(d.id)}>
-                        Open & Claim
+                        Start Answering
                       </Button>
                     ) : (
                       <div className="space-y-2">
