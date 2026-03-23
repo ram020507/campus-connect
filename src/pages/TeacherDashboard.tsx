@@ -51,16 +51,14 @@ const TeacherDashboard = () => {
   );
 
   const handleClaim = async (doubtId: string) => {
-    // Re-fetch to check if already claimed by another teacher
     await store.refetch();
     const doubt = store.doubts.find((d) => d.id === doubtId);
     if (doubt?.claimedBy && doubt.claimedBy !== teacher.staffId) {
-      // Find the teacher name from staffId
       const claimerTeacher = store.teachers.find((t) => t.staffId === doubt.claimedBy);
       setClaimAlert({ show: true, teacherName: claimerTeacher?.name || doubt.claimedBy });
       return;
     }
-    store.claimDoubt(doubtId, teacher.staffId);
+    store.claimDoubt(doubtId, teacher.staffId, teacher.name);
   };
 
   const handleReplyImageSelect = (doubtId: string, e: React.ChangeEvent<HTMLInputElement>) => {
