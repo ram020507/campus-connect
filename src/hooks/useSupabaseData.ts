@@ -184,7 +184,7 @@ export function useSupabaseData() {
       );
 
       setDoubts(
-        (doubtsRes.data || []).map((d) => ({
+        (doubtsRes.data || []).map((d: any) => ({
           id: d.id,
           studentName: d.student_name,
           studentRegNo: d.student_reg_no,
@@ -198,6 +198,8 @@ export function useSupabaseData() {
           answerImageUrl: d.answer_image_url || undefined,
           answeredBy: d.answered_by || undefined,
           claimedBy: d.claimed_by || undefined,
+          status: d.status || "pending",
+          handlingTeacher: d.handling_teacher || undefined,
           createdAt: d.created_at,
           answeredAt: d.answered_at || undefined,
         }))
