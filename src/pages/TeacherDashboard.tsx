@@ -36,7 +36,35 @@ const TeacherDashboard = () => {
     return null;
   }
 
-  const handleLogout = () => {
+  // Realtime: listen for doubts changing to "in_progress" by another teacher
+  useEffect(() => {
+    if (!teacher) return;
+    const channel = supabase
+      .channel("doubt-status-realtime")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "doubts" },
+        (payload: any) => {
+          const newRow = payload.new;
+          if (
+            newRow.status === "in_progress" &&
+            newRow.handling_teacher &&
+            newRow.handling_teacher !== teacher.name &&
+            newRow.subject_name?.toLowerCase() === teacher.subjectName.toLowerCase()
+          ) {
+            setRealtimeAlert({
+              show: true,
+              teacherName: newRow.handling_teacher,
+              question: newRow.question?.substring(0, 80) || "a doubt",
+            });
+          }
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [teacher]);
+
+
     sessionStorage.removeItem("teacher-auth");
     navigate("/");
   };
