@@ -79,6 +79,8 @@ export interface Doubt {
   answerImageUrl?: string;
   answeredBy?: string;
   claimedBy?: string;
+  status: string;
+  handlingTeacher?: string;
   createdAt: string;
   answeredAt?: string;
 }
