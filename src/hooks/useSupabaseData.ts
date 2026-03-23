@@ -476,7 +476,12 @@ export function useSupabaseData() {
   };
 
   const claimDoubt = async (doubtId: string, teacherStaffId: string) => {
-    await supabase.from("doubts").update({ claimed_by: teacherStaffId }).eq("id", doubtId);
+    const teacher = teachers.find((t) => t.staffId === teacherStaffId);
+    await supabase.from("doubts").update({
+      claimed_by: teacherStaffId,
+      status: "in_progress",
+      handling_teacher: teacher?.name || teacherStaffId,
+    }).eq("id", doubtId);
     await fetchAll();
   };
 
