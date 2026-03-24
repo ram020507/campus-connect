@@ -25,6 +25,8 @@ const StudentDashboard = () => {
   })();
 
   const [view, setView] = useState<View>("dashboard");
+  const [doubtSearch, setDoubtSearch] = useState("");
+  const [knowledgeSearch, setKnowledgeSearch] = useState("");
   const [selectedSemester, setSelectedSemester] = useState<"odd" | "even">("odd");
   const [selectedSubjectId, setSelectedSubjectId] = useState("");
   const [selectedVideoUrl, setSelectedVideoUrl] = useState("");
