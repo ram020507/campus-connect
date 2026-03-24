@@ -132,6 +132,7 @@ const TeacherDashboard = () => {
             <Clock className="h-5 w-5 text-accent" />
             Pending Doubts ({pendingDoubts.length})
           </h2>
+          <Input placeholder="Search pending doubts..." value={pendingSearch} onChange={(e) => setPendingSearch(e.target.value)} className="mb-3" />
           {pendingDoubts.length === 0 ? (
             <Card>
               <CardContent className="p-6 text-center text-muted-foreground">
@@ -140,6 +141,11 @@ const TeacherDashboard = () => {
             </Card>
           ) : (
             pendingDoubts
+              .filter((d) => {
+                if (!pendingSearch.trim()) return true;
+                const q = pendingSearch.toLowerCase();
+                return d.question.toLowerCase().includes(q) || d.studentName.toLowerCase().includes(q) || d.subjectName.toLowerCase().includes(q);
+              })
               .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
               .map((d) => (
                 <Card key={d.id} className="mb-3 border-accent/30 animate-fade-in">
