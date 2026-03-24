@@ -25,8 +25,6 @@ const StudentDashboard = () => {
   })();
 
   const [view, setView] = useState<View>("dashboard");
-  const [doubtSearch, setDoubtSearch] = useState("");
-  const [knowledgeSearch, setKnowledgeSearch] = useState("");
   const [selectedSemester, setSelectedSemester] = useState<"odd" | "even">("odd");
   const [selectedSubjectId, setSelectedSubjectId] = useState("");
   const [selectedVideoUrl, setSelectedVideoUrl] = useState("");
@@ -48,7 +46,6 @@ const StudentDashboard = () => {
   const year = college?.years.find((y) => y.yearNumber === student.year);
   const dept = year?.departments.find((d) => d.name === student.department);
   const subjects = dept?.subjects.filter((s) => s.semester === selectedSemester) || [];
-  const allSubjects = dept?.subjects || [];
   const currentSubject = dept?.subjects.find((s) => s.id === selectedSubjectId);
   const currentVideo = currentSubject?.videos.find((v) => v.id === selectedVideoId);
 
@@ -272,16 +269,7 @@ const StudentDashboard = () => {
                 <CardTitle className="font-display text-lg">Ask a Doubt</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Select value={doubtSubject} onValueChange={setDoubtSubject}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Subject" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {allSubjects.map((s) => (
-                      <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Input placeholder="Subject Name (e.g., M3)" value={doubtSubject} onChange={(e) => setDoubtSubject(e.target.value)} />
                 <Textarea placeholder="Type your doubt here..." value={doubtText} onChange={(e) => setDoubtText(e.target.value)} rows={4} />
                 
                 {/* Image upload */}
@@ -306,14 +294,8 @@ const StudentDashboard = () => {
             </Card>
 
             <h3 className="font-display font-semibold">My Doubts</h3>
-            <Input placeholder="Search doubts..." value={doubtSearch} onChange={(e) => setDoubtSearch(e.target.value)} className="mb-2" />
             {store.doubts
               .filter((d) => d.studentRegNo === student.registrationNumber)
-              .filter((d) => {
-                if (!doubtSearch.trim()) return true;
-                const q = doubtSearch.toLowerCase();
-                return d.question.toLowerCase().includes(q) || d.subjectName.toLowerCase().includes(q) || (d.answer?.toLowerCase().includes(q));
-              })
               .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
               .map((d) => (
                 <Card key={d.id} className={d.answer ? "border-success/30" : ""}>
@@ -356,16 +338,10 @@ const StudentDashboard = () => {
             </Button>
             <h2 className="font-display font-semibold text-lg">Shared Knowledge</h2>
             <p className="text-sm text-muted-foreground">Answered doubts from your year & department</p>
-            <Input placeholder="Search questions or answers..." value={knowledgeSearch} onChange={(e) => setKnowledgeSearch(e.target.value)} />
             {answeredDoubts.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">No answered doubts yet.</p>
             ) : (
               answeredDoubts
-                .filter((d) => {
-                  if (!knowledgeSearch.trim()) return true;
-                  const q = knowledgeSearch.toLowerCase();
-                  return d.question.toLowerCase().includes(q) || d.subjectName.toLowerCase().includes(q) || (d.answer?.toLowerCase().includes(q)) || (d.answeredBy?.toLowerCase().includes(q)) || d.studentName.toLowerCase().includes(q);
-                })
                 .sort((a, b) => new Date(b.answeredAt!).getTime() - new Date(a.answeredAt!).getTime())
                 .map((d) => (
                   <Card key={d.id} className="border-success/30">

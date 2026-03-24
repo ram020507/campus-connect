@@ -5,9 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  GraduationCap, LogOut, MessageCircle, Send, CheckCircle2, Clock, Loader2, ArrowLeft, RefreshCw, ImagePlus, X, Search
+  GraduationCap, LogOut, MessageCircle, Send, CheckCircle2, Clock, Loader2, ArrowLeft, RefreshCw, ImagePlus, X
 } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
   AlertDialogDescription, AlertDialogFooter, AlertDialogAction,
@@ -29,8 +28,6 @@ const TeacherDashboard = () => {
   const [sending, setSending] = useState<Record<string, boolean>>({});
   const [claimAlert, setClaimAlert] = useState<{ show: boolean; teacherName: string }>({ show: false, teacherName: "" });
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
-  const [pendingSearch, setPendingSearch] = useState("");
-  const [answeredSearch, setAnsweredSearch] = useState("");
 
   if (!teacher) {
     navigate("/teacher/login");
@@ -132,7 +129,6 @@ const TeacherDashboard = () => {
             <Clock className="h-5 w-5 text-accent" />
             Pending Doubts ({pendingDoubts.length})
           </h2>
-          <Input placeholder="Search pending doubts..." value={pendingSearch} onChange={(e) => setPendingSearch(e.target.value)} className="mb-3" />
           {pendingDoubts.length === 0 ? (
             <Card>
               <CardContent className="p-6 text-center text-muted-foreground">
@@ -141,11 +137,6 @@ const TeacherDashboard = () => {
             </Card>
           ) : (
             pendingDoubts
-              .filter((d) => {
-                if (!pendingSearch.trim()) return true;
-                const q = pendingSearch.toLowerCase();
-                return d.question.toLowerCase().includes(q) || d.studentName.toLowerCase().includes(q) || d.subjectName.toLowerCase().includes(q);
-              })
               .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
               .map((d) => (
                 <Card key={d.id} className="mb-3 border-accent/30 animate-fade-in">
@@ -210,13 +201,7 @@ const TeacherDashboard = () => {
             <CheckCircle2 className="h-5 w-5 text-success" />
             Answered ({answeredDoubts.length})
           </h2>
-          <Input placeholder="Search answered doubts..." value={answeredSearch} onChange={(e) => setAnsweredSearch(e.target.value)} className="mb-3" />
           {answeredDoubts
-            .filter((d) => {
-              if (!answeredSearch.trim()) return true;
-              const q = answeredSearch.toLowerCase();
-              return d.question.toLowerCase().includes(q) || d.studentName.toLowerCase().includes(q) || (d.answer?.toLowerCase().includes(q));
-            })
             .sort((a, b) => new Date(b.answeredAt!).getTime() - new Date(a.answeredAt!).getTime())
             .map((d) => (
               <Card key={d.id} className="mb-3 border-success/30">
