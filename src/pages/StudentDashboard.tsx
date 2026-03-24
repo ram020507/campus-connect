@@ -48,6 +48,7 @@ const StudentDashboard = () => {
   const year = college?.years.find((y) => y.yearNumber === student.year);
   const dept = year?.departments.find((d) => d.name === student.department);
   const subjects = dept?.subjects.filter((s) => s.semester === selectedSemester) || [];
+  const allSubjects = dept?.subjects || [];
   const currentSubject = dept?.subjects.find((s) => s.id === selectedSubjectId);
   const currentVideo = currentSubject?.videos.find((v) => v.id === selectedVideoId);
 
