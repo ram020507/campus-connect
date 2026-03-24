@@ -48,6 +48,7 @@ const StudentDashboard = () => {
   const year = college?.years.find((y) => y.yearNumber === student.year);
   const dept = year?.departments.find((d) => d.name === student.department);
   const subjects = dept?.subjects.filter((s) => s.semester === selectedSemester) || [];
+  const allSubjects = dept?.subjects || [];
   const currentSubject = dept?.subjects.find((s) => s.id === selectedSubjectId);
   const currentVideo = currentSubject?.videos.find((v) => v.id === selectedVideoId);
 
@@ -271,7 +272,16 @@ const StudentDashboard = () => {
                 <CardTitle className="font-display text-lg">Ask a Doubt</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Input placeholder="Subject Name (e.g., M3)" value={doubtSubject} onChange={(e) => setDoubtSubject(e.target.value)} />
+                <Select value={doubtSubject} onValueChange={setDoubtSubject}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Subject" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {allSubjects.map((s) => (
+                      <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <Textarea placeholder="Type your doubt here..." value={doubtText} onChange={(e) => setDoubtText(e.target.value)} rows={4} />
                 
                 {/* Image upload */}
