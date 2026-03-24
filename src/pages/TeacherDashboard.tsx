@@ -29,6 +29,8 @@ const TeacherDashboard = () => {
   const [sending, setSending] = useState<Record<string, boolean>>({});
   const [claimAlert, setClaimAlert] = useState<{ show: boolean; teacherName: string }>({ show: false, teacherName: "" });
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const [pendingSearch, setPendingSearch] = useState("");
+  const [answeredSearch, setAnsweredSearch] = useState("");
 
   if (!teacher) {
     navigate("/teacher/login");
