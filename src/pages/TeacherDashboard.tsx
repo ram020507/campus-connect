@@ -210,7 +210,13 @@ const TeacherDashboard = () => {
             <CheckCircle2 className="h-5 w-5 text-success" />
             Answered ({answeredDoubts.length})
           </h2>
+          <Input placeholder="Search answered doubts..." value={answeredSearch} onChange={(e) => setAnsweredSearch(e.target.value)} className="mb-3" />
           {answeredDoubts
+            .filter((d) => {
+              if (!answeredSearch.trim()) return true;
+              const q = answeredSearch.toLowerCase();
+              return d.question.toLowerCase().includes(q) || d.studentName.toLowerCase().includes(q) || (d.answer?.toLowerCase().includes(q));
+            })
             .sort((a, b) => new Date(b.answeredAt!).getTime() - new Date(a.answeredAt!).getTime())
             .map((d) => (
               <Card key={d.id} className="mb-3 border-success/30">

@@ -346,10 +346,16 @@ const StudentDashboard = () => {
             </Button>
             <h2 className="font-display font-semibold text-lg">Shared Knowledge</h2>
             <p className="text-sm text-muted-foreground">Answered doubts from your year & department</p>
+            <Input placeholder="Search questions or answers..." value={knowledgeSearch} onChange={(e) => setKnowledgeSearch(e.target.value)} />
             {answeredDoubts.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">No answered doubts yet.</p>
             ) : (
               answeredDoubts
+                .filter((d) => {
+                  if (!knowledgeSearch.trim()) return true;
+                  const q = knowledgeSearch.toLowerCase();
+                  return d.question.toLowerCase().includes(q) || d.subjectName.toLowerCase().includes(q) || (d.answer?.toLowerCase().includes(q)) || (d.answeredBy?.toLowerCase().includes(q)) || d.studentName.toLowerCase().includes(q);
+                })
                 .sort((a, b) => new Date(b.answeredAt!).getTime() - new Date(a.answeredAt!).getTime())
                 .map((d) => (
                   <Card key={d.id} className="border-success/30">
