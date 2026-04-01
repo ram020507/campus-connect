@@ -15,6 +15,7 @@ import {
 
 const TeacherDashboard = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const store = useSupabaseData();
 
   const teacher: TeacherAccount | null = (() => {
@@ -22,6 +23,19 @@ const TeacherDashboard = () => {
       return JSON.parse(sessionStorage.getItem("teacher-auth") || "null");
     } catch { return null; }
   })();
+
+  useTeacherNotifications(teacher?.subjectName, teacher?.staffId);
+
+  // Auto-claim doubt from notification link
+  const notifDoubtId = searchParams.get("doubtId");
+  useEffect(() => {
+    if (notifDoubtId && teacher && !store.loading) {
+      const doubt = store.doubts.find((d) => d.id === notifDoubtId);
+      if (doubt && !doubt.claimedBy) {
+        store.claimDoubt(notifDoubtId, teacher.staffId);
+      }
+    }
+  }, [notifDoubtId, store.loading]);
 
   const [replyTexts, setReplyTexts] = useState<Record<string, string>>({});
   const [replyImages, setReplyImages] = useState<Record<string, File>>({});
