@@ -356,10 +356,19 @@ const StudentDashboard = () => {
             </Button>
             <h2 className="font-display font-semibold text-lg">Shared Knowledge</h2>
             <p className="text-sm text-muted-foreground">Answered doubts from your year & department</p>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input placeholder="Search shared knowledge..." value={sharedSearch} onChange={(e) => setSharedSearch(e.target.value)} className="pl-9" />
+            </div>
             {answeredDoubts.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">No answered doubts yet.</p>
             ) : (
               answeredDoubts
+                .filter((d) => {
+                  if (!sharedSearch.trim()) return true;
+                  const q = sharedSearch.toLowerCase();
+                  return d.question.toLowerCase().includes(q) || d.subjectName.toLowerCase().includes(q) || d.answer?.toLowerCase().includes(q) || d.studentName.toLowerCase().includes(q);
+                })
                 .sort((a, b) => new Date(b.answeredAt!).getTime() - new Date(a.answeredAt!).getTime())
                 .map((d) => (
                   <Card key={d.id} className="border-success/30">
