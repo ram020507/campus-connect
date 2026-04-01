@@ -12,6 +12,8 @@ const StudentLogin = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const doubtId = searchParams.get("doubtId");
 
   const handleRegNoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setRegNo(e.target.value.replace(/\D/g, ""));
