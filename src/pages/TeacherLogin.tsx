@@ -12,6 +12,8 @@ const TeacherLogin = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const doubtId = searchParams.get("doubtId");
 
   const handleStaffIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setStaffId(e.target.value.replace(/\D/g, ""));
