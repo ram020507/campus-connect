@@ -17,6 +17,7 @@ type View = "dashboard" | "subjects" | "videos" | "video-player" | "doubts" | "s
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const store = useSupabaseData();
 
   const student: StudentAccount | null = (() => {
@@ -25,7 +26,12 @@ const StudentDashboard = () => {
     } catch { return null; }
   })();
 
-  const [view, setView] = useState<View>("dashboard");
+  useStudentNotifications(student?.registrationNumber);
+
+  const [view, setView] = useState<View>(() => {
+    // If navigated from notification, go directly to doubts view
+    return searchParams.get("doubtId") ? "doubts" : "dashboard";
+  });
   const [selectedSemester, setSelectedSemester] = useState<"odd" | "even">("odd");
   const [selectedSubjectId, setSelectedSubjectId] = useState("");
   const [selectedVideoUrl, setSelectedVideoUrl] = useState("");
@@ -36,6 +42,8 @@ const StudentDashboard = () => {
   const [doubtImage, setDoubtImage] = useState<File | null>(null);
   const [doubtImagePreview, setDoubtImagePreview] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  const [doubtSearch, setDoubtSearch] = useState("");
+  const [sharedSearch, setSharedSearch] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!student) {
