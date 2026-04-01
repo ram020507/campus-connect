@@ -303,8 +303,17 @@ const StudentDashboard = () => {
             </Card>
 
             <h3 className="font-display font-semibold">My Doubts</h3>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input placeholder="Search doubts..." value={doubtSearch} onChange={(e) => setDoubtSearch(e.target.value)} className="pl-9" />
+            </div>
             {store.doubts
               .filter((d) => d.studentRegNo === student.registrationNumber)
+              .filter((d) => {
+                if (!doubtSearch.trim()) return true;
+                const q = doubtSearch.toLowerCase();
+                return d.question.toLowerCase().includes(q) || d.subjectName.toLowerCase().includes(q) || d.answer?.toLowerCase().includes(q);
+              })
               .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
               .map((d) => (
                 <Card key={d.id} className={d.answer ? "border-success/30" : ""}>
