@@ -49,7 +49,7 @@ const TeacherLogin = () => {
         collegeName: data.college_name,
         subjectName: data.subject_name,
       }));
-      navigate("/teacher/dashboard");
+      navigate(doubtId ? `/teacher/dashboard?doubtId=${doubtId}` : "/teacher/dashboard");
     } else {
       setError("Invalid credentials. Contact your admin.");
     }

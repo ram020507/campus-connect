@@ -50,7 +50,7 @@ const StudentLogin = () => {
         department: data.department,
         year: data.year,
       }));
-      navigate("/student/dashboard");
+      navigate(doubtId ? `/student/dashboard?doubtId=${doubtId}` : "/student/dashboard");
     } else {
       setError("Invalid credentials. Contact your admin.");
     }
