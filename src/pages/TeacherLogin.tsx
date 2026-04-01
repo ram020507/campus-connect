@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -12,6 +12,8 @@ const TeacherLogin = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const doubtId = searchParams.get("doubtId");
 
   const handleStaffIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setStaffId(e.target.value.replace(/\D/g, ""));
@@ -47,7 +49,7 @@ const TeacherLogin = () => {
         collegeName: data.college_name,
         subjectName: data.subject_name,
       }));
-      navigate("/teacher/dashboard");
+      navigate(doubtId ? `/teacher/dashboard?doubtId=${doubtId}` : "/teacher/dashboard");
     } else {
       setError("Invalid credentials. Contact your admin.");
     }

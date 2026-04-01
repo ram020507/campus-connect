@@ -1,12 +1,13 @@
 import { useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useSupabaseData, type StudentAccount } from "@/hooks/useSupabaseData";
+import { useStudentNotifications } from "@/hooks/useNotifications";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  BookOpen, Video, LogOut, MessageCircle, ArrowLeft, Send, CheckCircle2, Play, Loader2, RefreshCw, ImagePlus, X, Download, FileText
+  BookOpen, Video, LogOut, MessageCircle, ArrowLeft, Send, CheckCircle2, Play, Loader2, RefreshCw, ImagePlus, X, Download, FileText, Search
 } from "lucide-react";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -16,6 +17,7 @@ type View = "dashboard" | "subjects" | "videos" | "video-player" | "doubts" | "s
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const store = useSupabaseData();
 
   const student: StudentAccount | null = (() => {
@@ -24,7 +26,12 @@ const StudentDashboard = () => {
     } catch { return null; }
   })();
 
-  const [view, setView] = useState<View>("dashboard");
+  useStudentNotifications(student?.registrationNumber);
+
+  const [view, setView] = useState<View>(() => {
+    // If navigated from notification, go directly to doubts view
+    return searchParams.get("doubtId") ? "doubts" : "dashboard";
+  });
   const [selectedSemester, setSelectedSemester] = useState<"odd" | "even">("odd");
   const [selectedSubjectId, setSelectedSubjectId] = useState("");
   const [selectedVideoUrl, setSelectedVideoUrl] = useState("");
@@ -35,6 +42,8 @@ const StudentDashboard = () => {
   const [doubtImage, setDoubtImage] = useState<File | null>(null);
   const [doubtImagePreview, setDoubtImagePreview] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  const [doubtSearch, setDoubtSearch] = useState("");
+  const [sharedSearch, setSharedSearch] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!student) {
@@ -294,8 +303,17 @@ const StudentDashboard = () => {
             </Card>
 
             <h3 className="font-display font-semibold">My Doubts</h3>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input placeholder="Search doubts..." value={doubtSearch} onChange={(e) => setDoubtSearch(e.target.value)} className="pl-9" />
+            </div>
             {store.doubts
               .filter((d) => d.studentRegNo === student.registrationNumber)
+              .filter((d) => {
+                if (!doubtSearch.trim()) return true;
+                const q = doubtSearch.toLowerCase();
+                return d.question.toLowerCase().includes(q) || d.subjectName.toLowerCase().includes(q) || d.answer?.toLowerCase().includes(q);
+              })
               .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
               .map((d) => (
                 <Card key={d.id} className={d.answer ? "border-success/30" : ""}>
@@ -338,10 +356,19 @@ const StudentDashboard = () => {
             </Button>
             <h2 className="font-display font-semibold text-lg">Shared Knowledge</h2>
             <p className="text-sm text-muted-foreground">Answered doubts from your year & department</p>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input placeholder="Search shared knowledge..." value={sharedSearch} onChange={(e) => setSharedSearch(e.target.value)} className="pl-9" />
+            </div>
             {answeredDoubts.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">No answered doubts yet.</p>
             ) : (
               answeredDoubts
+                .filter((d) => {
+                  if (!sharedSearch.trim()) return true;
+                  const q = sharedSearch.toLowerCase();
+                  return d.question.toLowerCase().includes(q) || d.subjectName.toLowerCase().includes(q) || d.answer?.toLowerCase().includes(q) || d.studentName.toLowerCase().includes(q);
+                })
                 .sort((a, b) => new Date(b.answeredAt!).getTime() - new Date(a.answeredAt!).getTime())
                 .map((d) => (
                   <Card key={d.id} className="border-success/30">
