@@ -32,27 +32,27 @@ const StudentLogin = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { data } = await supabase
-      .from("students")
-      .select("*")
-      .eq("registration_number", regNo)
-      .eq("dob", dob)
-      .maybeSingle();
-    setLoading(false);
-
-    if (data) {
-      sessionStorage.setItem("student-auth", JSON.stringify({
-        id: data.id,
-        registrationNumber: data.registration_number,
-        name: data.name,
-        dob: data.dob,
-        collegeName: data.college_name,
-        department: data.department,
-        year: data.year,
-      }));
-      navigate(doubtId ? `/student/dashboard?doubtId=${doubtId}` : "/student/dashboard");
-    } else {
-      setError("Invalid credentials. Contact your admin.");
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke("auth-login", {
+        body: { type: "student", registrationNumber: regNo, dob },
+      });
+      if (fnError || !data?.success) {
+        setError("Invalid credentials. Contact your admin.");
+      } else {
+        sessionStorage.setItem("student-auth", JSON.stringify({
+          id: data.user.id,
+          registrationNumber: data.user.registrationNumber,
+          name: data.user.name,
+          collegeName: data.user.collegeName,
+          department: data.user.department,
+          year: data.user.year,
+        }));
+        navigate(doubtId ? `/student/dashboard?doubtId=${doubtId}` : "/student/dashboard");
+      }
+    } catch {
+      setError("Authentication failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 

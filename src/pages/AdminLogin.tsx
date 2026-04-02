@@ -3,24 +3,33 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Shield, ArrowLeft, RefreshCw } from "lucide-react";
-
-const ADMIN_USERNAME = "ram";
-const ADMIN_PASSWORD = "ram20507";
+import { Shield, ArrowLeft, RefreshCw, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const AdminLogin = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-      sessionStorage.setItem("admin-auth", "true");
-      navigate("/admin/dashboard");
-    } else {
-      setError("Incorrect username or password");
+    setLoading(true);
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke("auth-login", {
+        body: { type: "admin", username, password },
+      });
+      if (fnError || !data?.success) {
+        setError("Incorrect username or password");
+      } else {
+        sessionStorage.setItem("admin-auth", "true");
+        navigate("/admin/dashboard");
+      }
+    } catch {
+      setError("Authentication failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -62,8 +71,8 @@ const AdminLogin = () => {
               />
               {error && <p className="text-sm text-destructive mt-1">{error}</p>}
             </div>
-            <Button type="submit" className="w-full">
-              Sign In
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading && <Loader2 className="h-4 w-4 mr-1 animate-spin" />} Sign In
             </Button>
           </form>
         </CardContent>
