@@ -5,22 +5,30 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Shield, ArrowLeft, RefreshCw } from "lucide-react";
 
-const ADMIN_USERNAME = "ram";
-const ADMIN_PASSWORD = "ram20507";
-
 const AdminLogin = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-      sessionStorage.setItem("admin-auth", "true");
-      navigate("/admin/dashboard");
-    } else {
-      setError("Incorrect username or password");
+    setLoading(true);
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke("auth-login", {
+        body: { type: "admin", username, password },
+      });
+      if (fnError || !data?.success) {
+        setError("Incorrect username or password");
+      } else {
+        sessionStorage.setItem("admin-auth", "true");
+        navigate("/admin/dashboard");
+      }
+    } catch {
+      setError("Authentication failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
