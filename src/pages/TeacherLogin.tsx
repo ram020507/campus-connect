@@ -32,26 +32,26 @@ const TeacherLogin = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { data } = await supabase
-      .from("teachers")
-      .select("*")
-      .eq("staff_id", staffId)
-      .eq("dob", dob)
-      .maybeSingle();
-    setLoading(false);
-
-    if (data) {
-      sessionStorage.setItem("teacher-auth", JSON.stringify({
-        id: data.id,
-        staffId: data.staff_id,
-        name: data.name,
-        dob: data.dob,
-        collegeName: data.college_name,
-        subjectName: data.subject_name,
-      }));
-      navigate(doubtId ? `/teacher/dashboard?doubtId=${doubtId}` : "/teacher/dashboard");
-    } else {
-      setError("Invalid credentials. Contact your admin.");
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke("auth-login", {
+        body: { type: "teacher", staffId, dob },
+      });
+      if (fnError || !data?.success) {
+        setError("Invalid credentials. Contact your admin.");
+      } else {
+        sessionStorage.setItem("teacher-auth", JSON.stringify({
+          id: data.user.id,
+          staffId: data.user.staffId,
+          name: data.user.name,
+          collegeName: data.user.collegeName,
+          subjectName: data.user.subjectName,
+        }));
+        navigate(doubtId ? `/teacher/dashboard?doubtId=${doubtId}` : "/teacher/dashboard");
+      }
+    } catch {
+      setError("Authentication failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 

@@ -71,8 +71,8 @@ const AdminLogin = () => {
               />
               {error && <p className="text-sm text-destructive mt-1">{error}</p>}
             </div>
-            <Button type="submit" className="w-full">
-              Sign In
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading && <Loader2 className="h-4 w-4 mr-1 animate-spin" />} Sign In
             </Button>
           </form>
         </CardContent>
