@@ -278,7 +278,16 @@ const StudentDashboard = () => {
                 <CardTitle className="font-display text-lg">Ask a Doubt</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Input placeholder="Subject Name (e.g., M3)" value={doubtSubject} onChange={(e) => setDoubtSubject(e.target.value)} />
+                <Select value={doubtSubject} onValueChange={setDoubtSubject}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Subject" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(dept?.subjects || []).map((s) => (
+                      <SelectItem key={s.id} value={s.name}>{s.name} ({s.semester} sem)</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <Textarea placeholder="Type your doubt here..." value={doubtText} onChange={(e) => setDoubtText(e.target.value)} rows={4} />
                 
                 {/* Image upload */}
