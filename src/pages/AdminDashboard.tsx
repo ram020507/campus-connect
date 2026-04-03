@@ -438,118 +438,165 @@ const AdminDashboard = () => {
           </div>
         )}
 
-        {/* STUDENTS - Inside College */}
+        {/* STUDENTS - Year List inside College */}
         {view === "students-college" && studentFolderCollege && (
-          <div className="space-y-6 animate-fade-in">
+          <div className="space-y-4 animate-fade-in">
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="sm" onClick={() => { setView("students"); setSelectedStudentCollegeId(""); }}>
                 <ArrowLeft className="h-4 w-4 mr-1" /> Back
               </Button>
               <Building2 className="h-5 w-5 text-primary" />
-              <span className="font-display font-semibold text-lg">{studentFolderCollege.name} — Students</span>
+              <span className="font-display font-semibold text-lg">{studentFolderCollege.name} — Years</span>
             </div>
-
-            <Card>
-              <CardHeader><CardTitle className="text-lg font-display">Create Student Account</CardTitle></CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <Select value={studentYear} onValueChange={(v) => { setStudentYear(v); setStudentDept(""); }}>
-                    <SelectTrigger><SelectValue placeholder="1. Select Year" /></SelectTrigger>
-                    <SelectContent>
-                      {studentCollegeYears.sort((a, b) => a.yearNumber - b.yearNumber).map((y) => (
-                        <SelectItem key={y.id} value={String(y.yearNumber)}>Year {y.yearNumber}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Select value={studentDept} onValueChange={setStudentDept} disabled={!studentYear}>
-                    <SelectTrigger><SelectValue placeholder="2. Select Department" /></SelectTrigger>
-                    <SelectContent>
-                      {studentYearDepts.map((d) => (
-                        <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Input placeholder="Registration Number (numbers only)" value={studentRegNo}
-                    onChange={(e) => setStudentRegNo(e.target.value.replace(/\D/g, ""))} inputMode="numeric" />
-                  <Input placeholder="Student Name" value={studentName} onChange={(e) => setStudentName(e.target.value)} />
-                  <Input placeholder="DOB (DD-MM-YYYY)" value={studentDob} maxLength={10} inputMode="numeric"
-                    onChange={(e) => setStudentDob(formatDob(e.target.value))} />
-                  <Input placeholder="Email (optional)" type="email" value={studentEmail} onChange={(e) => setStudentEmail(e.target.value)} />
-                </div>
-                <Button className="mt-3" onClick={() => {
-                  if (studentRegNo && studentName && studentDob && studentDept && studentYear) {
-                    store.addStudent({
-                      registrationNumber: studentRegNo, name: studentName, dob: studentDob,
-                      email: studentEmail, collegeName: studentFolderCollege.name, department: studentDept, year: Number(studentYear),
-                    });
-                    setStudentRegNo(""); setStudentName(""); setStudentDob(""); setStudentDept(""); setStudentYear(""); setStudentEmail("");
-                  }
-                }}>
-                  <Plus className="h-4 w-4 mr-1" /> Create Account
-                </Button>
-              </CardContent>
-            </Card>
-
-            <div className="space-y-2">
-              {(() => {
-                const collegeStudents = store.students.filter((s) => s.collegeName === studentFolderCollege.name);
-                return (
-                  <>
-                    <h3 className="font-display font-semibold text-lg">Students ({collegeStudents.length})</h3>
-                    {collegeStudents.map((s) => (
-                      <Card key={s.id}>
-                        <CardContent className="p-3">
-                          {editingStudent === s.id ? (
-                            <div className="space-y-2">
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                <Input placeholder="Registration Number" value={editStudentData.registrationNumber ?? ""} onChange={(e) => setEditStudentData(d => ({ ...d, registrationNumber: e.target.value.replace(/\D/g, "") }))} inputMode="numeric" />
-                                <Input placeholder="Name" value={editStudentData.name ?? ""} onChange={(e) => setEditStudentData(d => ({ ...d, name: e.target.value }))} />
-                                <Input placeholder="DOB (DD-MM-YYYY)" value={editStudentData.dob ?? ""} maxLength={10} inputMode="numeric" onChange={(e) => setEditStudentData(d => ({ ...d, dob: formatDob(e.target.value) }))} />
-                                <Input placeholder="Email" type="email" value={editStudentData.email ?? ""} onChange={(e) => setEditStudentData(d => ({ ...d, email: e.target.value }))} />
-                                <Input placeholder="Department" value={editStudentData.department ?? ""} onChange={(e) => setEditStudentData(d => ({ ...d, department: e.target.value }))} />
-                                <Select value={String(editStudentData.year ?? "")} onValueChange={(v) => setEditStudentData(d => ({ ...d, year: Number(v) }))}>
-                                  <SelectTrigger><SelectValue placeholder="Year" /></SelectTrigger>
-                                  <SelectContent>{[1,2,3,4].map((y) => <SelectItem key={y} value={String(y)}>Year {y}</SelectItem>)}</SelectContent>
-                                </Select>
-                              </div>
-                              <div className="flex gap-2">
-                                <Button size="sm" onClick={async () => { await store.updateStudent(s.id, editStudentData); setEditingStudent(null); }}>
-                                  <Check className="h-4 w-4 mr-1" /> Save
-                                </Button>
-                                <Button size="sm" variant="ghost" onClick={() => setEditingStudent(null)}>
-                                  <X className="h-4 w-4 mr-1" /> Cancel
-                                </Button>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="flex items-center justify-between">
-                              <div className="text-sm">
-                                <p className="font-medium">{s.name} <span className="text-muted-foreground">#{s.registrationNumber}</span></p>
-                                <p className="text-xs text-muted-foreground">{s.department} · Year {s.year}</p>
-                                {s.email && <p className="text-xs text-muted-foreground">{s.email}</p>}
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <Button variant="ghost" size="icon" onClick={() => { setEditingStudent(s.id); setEditStudentData({ registrationNumber: s.registrationNumber, name: s.name, dob: s.dob, email: s.email, collegeName: s.collegeName, department: s.department, year: s.year }); }}>
-                                  <Pencil className="h-4 w-4 text-primary" />
-                                </Button>
-                                <Button variant="ghost" size="icon" onClick={() => store.removeStudent(s.id)}>
-                                  <Trash2 className="h-4 w-4 text-destructive" />
-                                </Button>
-                              </div>
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
-                    ))}
-                    {collegeStudents.length === 0 && (
-                      <p className="text-center text-muted-foreground py-4">No students in this college yet.</p>
-                    )}
-                  </>
-                );
-              })()}
-            </div>
+            {studentFolderCollege.years.sort((a, b) => a.yearNumber - b.yearNumber).map((y) => {
+              const count = store.students.filter((s) => s.collegeName === studentFolderCollege.name && s.year === y.yearNumber).length;
+              return (
+                <Card key={y.id} className="cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => { setSelectedStudentYearId(y.id); setView("students-year"); }}>
+                  <CardContent className="p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <FolderOpen className="h-5 w-5 text-primary" />
+                      <span className="font-medium">Year {y.yearNumber}</span>
+                      <span className="text-xs text-muted-foreground">({count} students)</span>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  </CardContent>
+                </Card>
+              );
+            })}
+            {studentFolderCollege.years.length === 0 && (
+              <p className="text-center text-muted-foreground py-8">No years configured for this college. Add years in the Content tab.</p>
+            )}
           </div>
         )}
+
+        {/* STUDENTS - Department List inside Year */}
+        {view === "students-year" && studentFolderCollege && (() => {
+          const sYear = studentFolderCollege.years.find((y) => y.id === selectedStudentYearId);
+          if (!sYear) return null;
+          return (
+            <div className="space-y-4 animate-fade-in">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="sm" onClick={() => { setView("students-college"); setSelectedStudentYearId(""); }}>
+                  <ArrowLeft className="h-4 w-4 mr-1" /> Back
+                </Button>
+                <FolderOpen className="h-5 w-5 text-primary" />
+                <span className="font-display font-semibold text-lg">{studentFolderCollege.name} — Year {sYear.yearNumber} — Departments</span>
+              </div>
+              {sYear.departments.map((d) => {
+                const count = store.students.filter((s) => s.collegeName === studentFolderCollege.name && s.year === sYear.yearNumber && s.department === d.name).length;
+                return (
+                  <Card key={d.id} className="cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => { setSelectedStudentDeptId(d.id); setStudentYear(String(sYear.yearNumber)); setStudentDept(d.name); setView("students-dept"); }}>
+                    <CardContent className="p-4 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <FolderOpen className="h-5 w-5 text-primary" />
+                        <span className="font-medium">{d.name}</span>
+                        <span className="text-xs text-muted-foreground">({count} students)</span>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    </CardContent>
+                  </Card>
+                );
+              })}
+              {sYear.departments.length === 0 && (
+                <p className="text-center text-muted-foreground py-8">No departments in this year. Add departments in the Content tab.</p>
+              )}
+            </div>
+          );
+        })()}
+
+        {/* STUDENTS - Inside Year+Dept folder */}
+        {view === "students-dept" && studentFolderCollege && (() => {
+          const sYear = studentFolderCollege.years.find((y) => y.id === selectedStudentYearId);
+          const sDept = sYear?.departments.find((d) => d.id === selectedStudentDeptId);
+          if (!sYear || !sDept) return null;
+          const folderStudents = store.students.filter((s) => s.collegeName === studentFolderCollege.name && s.year === sYear.yearNumber && s.department === sDept.name);
+          return (
+            <div className="space-y-6 animate-fade-in">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="sm" onClick={() => { setView("students-year"); setSelectedStudentDeptId(""); }}>
+                  <ArrowLeft className="h-4 w-4 mr-1" /> Back
+                </Button>
+                <FolderOpen className="h-5 w-5 text-primary" />
+                <span className="font-display font-semibold text-lg">{studentFolderCollege.name} — Year {sYear.yearNumber} — {sDept.name}</span>
+              </div>
+
+              <Card>
+                <CardHeader><CardTitle className="text-lg font-display">Create Student Account</CardTitle></CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <Input placeholder="Registration Number (numbers only)" value={studentRegNo}
+                      onChange={(e) => setStudentRegNo(e.target.value.replace(/\D/g, ""))} inputMode="numeric" />
+                    <Input placeholder="Student Name" value={studentName} onChange={(e) => setStudentName(e.target.value)} />
+                    <Input placeholder="DOB (DD-MM-YYYY)" value={studentDob} maxLength={10} inputMode="numeric"
+                      onChange={(e) => setStudentDob(formatDob(e.target.value))} />
+                    <Input placeholder="Email (optional)" type="email" value={studentEmail} onChange={(e) => setStudentEmail(e.target.value)} />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">Year: {sYear.yearNumber} · Department: {sDept.name} · College: {studentFolderCollege.name}</p>
+                  <Button className="mt-3" onClick={() => {
+                    if (studentRegNo && studentName && studentDob) {
+                      store.addStudent({
+                        registrationNumber: studentRegNo, name: studentName, dob: studentDob,
+                        email: studentEmail, collegeName: studentFolderCollege.name, department: sDept.name, year: sYear.yearNumber,
+                      });
+                      setStudentRegNo(""); setStudentName(""); setStudentDob(""); setStudentEmail("");
+                    }
+                  }}>
+                    <Plus className="h-4 w-4 mr-1" /> Create Account
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <div className="space-y-2">
+                <h3 className="font-display font-semibold text-lg">Students ({folderStudents.length})</h3>
+                {folderStudents.map((s) => (
+                  <Card key={s.id}>
+                    <CardContent className="p-3">
+                      {editingStudent === s.id ? (
+                        <div className="space-y-2">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <Input placeholder="Registration Number" value={editStudentData.registrationNumber ?? ""} onChange={(e) => setEditStudentData(d => ({ ...d, registrationNumber: e.target.value.replace(/\D/g, "") }))} inputMode="numeric" />
+                            <Input placeholder="Name" value={editStudentData.name ?? ""} onChange={(e) => setEditStudentData(d => ({ ...d, name: e.target.value }))} />
+                            <Input placeholder="DOB (DD-MM-YYYY)" value={editStudentData.dob ?? ""} maxLength={10} inputMode="numeric" onChange={(e) => setEditStudentData(d => ({ ...d, dob: formatDob(e.target.value) }))} />
+                            <Input placeholder="Email" type="email" value={editStudentData.email ?? ""} onChange={(e) => setEditStudentData(d => ({ ...d, email: e.target.value }))} />
+                          </div>
+                          <div className="flex gap-2">
+                            <Button size="sm" onClick={async () => { await store.updateStudent(s.id, editStudentData); setEditingStudent(null); }}>
+                              <Check className="h-4 w-4 mr-1" /> Save
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={() => setEditingStudent(null)}>
+                              <X className="h-4 w-4 mr-1" /> Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm">
+                            <p className="font-medium">{s.name} <span className="text-muted-foreground">#{s.registrationNumber}</span></p>
+                            <p className="text-xs text-muted-foreground">{s.department} · Year {s.year}</p>
+                            {s.email && <p className="text-xs text-muted-foreground">{s.email}</p>}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Button variant="ghost" size="icon" onClick={() => { setEditingStudent(s.id); setEditStudentData({ registrationNumber: s.registrationNumber, name: s.name, dob: s.dob, email: s.email, collegeName: s.collegeName, department: s.department, year: s.year }); }}>
+                              <Pencil className="h-4 w-4 text-primary" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => store.removeStudent(s.id)}>
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+                {folderStudents.length === 0 && (
+                  <p className="text-center text-muted-foreground py-4">No students in this folder yet.</p>
+                )}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* TEACHERS - College List */}
         {view === "teachers" && (
