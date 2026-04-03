@@ -626,99 +626,138 @@ const AdminDashboard = () => {
           </div>
         )}
 
-        {/* TEACHERS - Inside College */}
-        {view === "teachers-college" && teacherFolderCollege && (
-          <div className="space-y-6 animate-fade-in">
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" onClick={() => { setView("teachers"); setSelectedTeacherCollegeId(""); }}>
-                <ArrowLeft className="h-4 w-4 mr-1" /> Back
-              </Button>
-              <Building2 className="h-5 w-5 text-primary" />
-              <span className="font-display font-semibold text-lg">{teacherFolderCollege.name} — Teachers</span>
-            </div>
-
-            <Card>
-              <CardHeader><CardTitle className="text-lg font-display">Create Teacher Account</CardTitle></CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <Input placeholder="Staff ID (numbers only)" value={teacherStaffId}
-                    onChange={(e) => setTeacherStaffId(e.target.value.replace(/\D/g, ""))} inputMode="numeric" />
-                  <Input placeholder="Teacher Name" value={teacherName} onChange={(e) => setTeacherName(e.target.value)} />
-                  <Input placeholder="DOB (DD-MM-YYYY)" value={teacherDob} maxLength={10} inputMode="numeric"
-                    onChange={(e) => setTeacherDob(formatDob(e.target.value))} />
-                  <Input placeholder="Subject Name (e.g., M3)" value={teacherSubject} onChange={(e) => setTeacherSubject(e.target.value)} />
-                  <Input placeholder="Email (optional)" type="email" value={teacherEmail} onChange={(e) => setTeacherEmail(e.target.value)} />
-                </div>
-                <Button className="mt-3" onClick={() => {
-                  if (teacherStaffId && teacherName && teacherDob && teacherSubject) {
-                    store.addTeacher({
-                      staffId: teacherStaffId, name: teacherName, dob: teacherDob,
-                      email: teacherEmail, collegeName: teacherFolderCollege.name, subjectName: teacherSubject,
-                    });
-                    setTeacherStaffId(""); setTeacherName(""); setTeacherDob(""); setTeacherSubject(""); setTeacherEmail("");
-                  }
-                }}>
-                  <Plus className="h-4 w-4 mr-1" /> Create Account
+        {/* TEACHERS - Subject folders inside College */}
+        {view === "teachers-college" && teacherFolderCollege && (() => {
+          const collegeTeachers = store.teachers.filter((t) => t.collegeName === teacherFolderCollege.name);
+          const subjectNames = [...new Set(collegeTeachers.map((t) => t.subjectName))].sort();
+          // Also include subjects from content hierarchy that have no teachers yet
+          const allSubjects = new Set(subjectNames);
+          teacherFolderCollege.years.forEach((y) =>
+            y.departments.forEach((d) =>
+              d.subjects.forEach((s) => allSubjects.add(s.name))
+            )
+          );
+          const sortedSubjects = [...allSubjects].sort();
+          return (
+            <div className="space-y-4 animate-fade-in">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="sm" onClick={() => { setView("teachers"); setSelectedTeacherCollegeId(""); }}>
+                  <ArrowLeft className="h-4 w-4 mr-1" /> Back
                 </Button>
-              </CardContent>
-            </Card>
-
-            <div className="space-y-2">
-              {(() => {
-                const collegeTeachers = store.teachers.filter((t) => t.collegeName === teacherFolderCollege.name);
+                <Building2 className="h-5 w-5 text-primary" />
+                <span className="font-display font-semibold text-lg">{teacherFolderCollege.name} — Subjects</span>
+              </div>
+              {sortedSubjects.map((subj) => {
+                const count = collegeTeachers.filter((t) => t.subjectName === subj).length;
                 return (
-                  <>
-                    <h3 className="font-display font-semibold text-lg">Teachers ({collegeTeachers.length})</h3>
-                    {collegeTeachers.map((t) => (
-                      <Card key={t.id}>
-                        <CardContent className="p-3">
-                          {editingTeacher === t.id ? (
-                            <div className="space-y-2">
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                <Input placeholder="Staff ID" value={editTeacherData.staffId ?? ""} onChange={(e) => setEditTeacherData(d => ({ ...d, staffId: e.target.value.replace(/\D/g, "") }))} inputMode="numeric" />
-                                <Input placeholder="Name" value={editTeacherData.name ?? ""} onChange={(e) => setEditTeacherData(d => ({ ...d, name: e.target.value }))} />
-                                <Input placeholder="DOB (DD-MM-YYYY)" value={editTeacherData.dob ?? ""} maxLength={10} inputMode="numeric" onChange={(e) => setEditTeacherData(d => ({ ...d, dob: formatDob(e.target.value) }))} />
-                                <Input placeholder="Email" type="email" value={editTeacherData.email ?? ""} onChange={(e) => setEditTeacherData(d => ({ ...d, email: e.target.value }))} />
-                                <Input placeholder="Subject Name" value={editTeacherData.subjectName ?? ""} onChange={(e) => setEditTeacherData(d => ({ ...d, subjectName: e.target.value }))} />
-                              </div>
-                              <div className="flex gap-2">
-                                <Button size="sm" onClick={async () => { await store.updateTeacher(t.id, editTeacherData); setEditingTeacher(null); }}>
-                                  <Check className="h-4 w-4 mr-1" /> Save
-                                </Button>
-                                <Button size="sm" variant="ghost" onClick={() => setEditingTeacher(null)}>
-                                  <X className="h-4 w-4 mr-1" /> Cancel
-                                </Button>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="flex items-center justify-between">
-                              <div className="text-sm">
-                                <p className="font-medium">{t.name} <span className="text-muted-foreground">#{t.staffId}</span></p>
-                                <p className="text-xs text-muted-foreground">{t.subjectName}</p>
-                                {t.email && <p className="text-xs text-muted-foreground">{t.email}</p>}
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <Button variant="ghost" size="icon" onClick={() => { setEditingTeacher(t.id); setEditTeacherData({ staffId: t.staffId, name: t.name, dob: t.dob, email: t.email, collegeName: t.collegeName, subjectName: t.subjectName }); }}>
-                                  <Pencil className="h-4 w-4 text-primary" />
-                                </Button>
-                                <Button variant="ghost" size="icon" onClick={() => store.removeTeacher(t.id)}>
-                                  <Trash2 className="h-4 w-4 text-destructive" />
-                                </Button>
-                              </div>
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
-                    ))}
-                    {collegeTeachers.length === 0 && (
-                      <p className="text-center text-muted-foreground py-4">No teachers in this college yet.</p>
-                    )}
-                  </>
+                  <Card key={subj} className="cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => { setSelectedTeacherSubject(subj); setTeacherSubject(subj); setView("teachers-subject"); }}>
+                    <CardContent className="p-4 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <BookOpen className="h-5 w-5 text-primary" />
+                        <span className="font-medium">{subj}</span>
+                        <span className="text-xs text-muted-foreground">({count} teachers)</span>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    </CardContent>
+                  </Card>
                 );
-              })()}
+              })}
+              {sortedSubjects.length === 0 && (
+                <p className="text-center text-muted-foreground py-8">No subjects configured. Add subjects in the Content tab first.</p>
+              )}
             </div>
-          </div>
-        )}
+          );
+        })()}
+
+        {/* TEACHERS - Inside Subject folder */}
+        {view === "teachers-subject" && teacherFolderCollege && (() => {
+          const subjectTeachers = store.teachers.filter((t) => t.collegeName === teacherFolderCollege.name && t.subjectName === selectedTeacherSubject);
+          return (
+            <div className="space-y-6 animate-fade-in">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="sm" onClick={() => { setView("teachers-college"); setSelectedTeacherSubject(""); }}>
+                  <ArrowLeft className="h-4 w-4 mr-1" /> Back
+                </Button>
+                <BookOpen className="h-5 w-5 text-primary" />
+                <span className="font-display font-semibold text-lg">{teacherFolderCollege.name} — {selectedTeacherSubject}</span>
+              </div>
+
+              <Card>
+                <CardHeader><CardTitle className="text-lg font-display">Create Teacher Account</CardTitle></CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <Input placeholder="Staff ID (numbers only)" value={teacherStaffId}
+                      onChange={(e) => setTeacherStaffId(e.target.value.replace(/\D/g, ""))} inputMode="numeric" />
+                    <Input placeholder="Teacher Name" value={teacherName} onChange={(e) => setTeacherName(e.target.value)} />
+                    <Input placeholder="DOB (DD-MM-YYYY)" value={teacherDob} maxLength={10} inputMode="numeric"
+                      onChange={(e) => setTeacherDob(formatDob(e.target.value))} />
+                    <Input placeholder="Email (optional)" type="email" value={teacherEmail} onChange={(e) => setTeacherEmail(e.target.value)} />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">Subject: {selectedTeacherSubject} · College: {teacherFolderCollege.name}</p>
+                  <Button className="mt-3" onClick={() => {
+                    if (teacherStaffId && teacherName && teacherDob) {
+                      store.addTeacher({
+                        staffId: teacherStaffId, name: teacherName, dob: teacherDob,
+                        email: teacherEmail, collegeName: teacherFolderCollege.name, subjectName: selectedTeacherSubject,
+                      });
+                      setTeacherStaffId(""); setTeacherName(""); setTeacherDob(""); setTeacherEmail("");
+                    }
+                  }}>
+                    <Plus className="h-4 w-4 mr-1" /> Create Account
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <div className="space-y-2">
+                <h3 className="font-display font-semibold text-lg">Teachers ({subjectTeachers.length})</h3>
+                {subjectTeachers.map((t) => (
+                  <Card key={t.id}>
+                    <CardContent className="p-3">
+                      {editingTeacher === t.id ? (
+                        <div className="space-y-2">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <Input placeholder="Staff ID" value={editTeacherData.staffId ?? ""} onChange={(e) => setEditTeacherData(d => ({ ...d, staffId: e.target.value.replace(/\D/g, "") }))} inputMode="numeric" />
+                            <Input placeholder="Name" value={editTeacherData.name ?? ""} onChange={(e) => setEditTeacherData(d => ({ ...d, name: e.target.value }))} />
+                            <Input placeholder="DOB (DD-MM-YYYY)" value={editTeacherData.dob ?? ""} maxLength={10} inputMode="numeric" onChange={(e) => setEditTeacherData(d => ({ ...d, dob: formatDob(e.target.value) }))} />
+                            <Input placeholder="Email" type="email" value={editTeacherData.email ?? ""} onChange={(e) => setEditTeacherData(d => ({ ...d, email: e.target.value }))} />
+                          </div>
+                          <div className="flex gap-2">
+                            <Button size="sm" onClick={async () => { await store.updateTeacher(t.id, editTeacherData); setEditingTeacher(null); }}>
+                              <Check className="h-4 w-4 mr-1" /> Save
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={() => setEditingTeacher(null)}>
+                              <X className="h-4 w-4 mr-1" /> Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm">
+                            <p className="font-medium">{t.name} <span className="text-muted-foreground">#{t.staffId}</span></p>
+                            <p className="text-xs text-muted-foreground">{t.subjectName}</p>
+                            {t.email && <p className="text-xs text-muted-foreground">{t.email}</p>}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Button variant="ghost" size="icon" onClick={() => { setEditingTeacher(t.id); setEditTeacherData({ staffId: t.staffId, name: t.name, dob: t.dob, email: t.email, collegeName: t.collegeName, subjectName: t.subjectName }); }}>
+                              <Pencil className="h-4 w-4 text-primary" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => store.removeTeacher(t.id)}>
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+                {subjectTeachers.length === 0 && (
+                  <p className="text-center text-muted-foreground py-4">No teachers for this subject yet.</p>
+                )}
+              </div>
+            </div>
+          );
+        })()}
       </div>
     </div>
   );
