@@ -78,9 +78,6 @@ const AdminDashboard = () => {
   // Get college for student/teacher folder views
   const studentFolderCollege = store.colleges.find((c) => c.id === selectedStudentCollegeId);
   const teacherFolderCollege = store.colleges.find((c) => c.id === selectedTeacherCollegeId);
-  const studentCollegeYears = studentFolderCollege?.years || [];
-  const selectedStudentYear = studentCollegeYears.find((y) => y.yearNumber === Number(studentYear));
-  const studentYearDepts = selectedStudentYear?.departments || [];
 
   // Breadcrumb
   const breadcrumbs: { label: string; onClick: () => void }[] = [
