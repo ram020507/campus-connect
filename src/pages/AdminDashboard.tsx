@@ -38,6 +38,7 @@ const AdminDashboard = () => {
   const [selectedStudentYearId, setSelectedStudentYearId] = useState("");
   const [selectedStudentDeptId, setSelectedStudentDeptId] = useState("");
   const [selectedTeacherCollegeId, setSelectedTeacherCollegeId] = useState("");
+  const [selectedTeacherSubject, setSelectedTeacherSubject] = useState("");
 
   // Student form
   const [studentRegNo, setStudentRegNo] = useState("");
