@@ -35,6 +35,8 @@ const AdminDashboard = () => {
 
   // Selected college for student/teacher folder navigation
   const [selectedStudentCollegeId, setSelectedStudentCollegeId] = useState("");
+  const [selectedStudentYearId, setSelectedStudentYearId] = useState("");
+  const [selectedStudentDeptId, setSelectedStudentDeptId] = useState("");
   const [selectedTeacherCollegeId, setSelectedTeacherCollegeId] = useState("");
 
   // Student form
