@@ -149,8 +149,8 @@ const AdminDashboard = () => {
       <div className="border-b bg-card px-4 flex gap-1 overflow-x-auto">
         {[
           { key: "colleges" as View, label: "Content", icon: FolderOpen, matches: ["colleges", "years", "departments", "subjects", "videos"] },
-          { key: "students" as View, label: "Students", icon: Users, matches: ["students", "students-college"] },
-          { key: "teachers" as View, label: "Teachers", icon: GraduationCap, matches: ["teachers", "teachers-college"] },
+          { key: "students" as View, label: "Students", icon: Users, matches: ["students", "students-college", "students-year", "students-dept"] },
+          { key: "teachers" as View, label: "Teachers", icon: GraduationCap, matches: ["teachers", "teachers-college", "teachers-subject"] },
         ].map((tab) => (
           <button
             key={tab.key}
