@@ -53,13 +53,13 @@ const StudentDashboard = () => {
   // Real-time duplicate detection on text input
   useEffect(() => {
     const searchText = `${doubtText} ${ocrText}`.trim();
-    if (searchText.length >= 5 && doubtSubject.trim()) {
-      const results = store.searchSimilarDoubts(searchText, doubtSubject.trim());
+    if (searchText.length >= 5) {
+      const results = store.searchSimilarDoubts(searchText);
       setSimilarDoubts(results);
     } else {
       setSimilarDoubts([]);
     }
-  }, [doubtText, ocrText, doubtSubject, store.doubts]);
+  }, [doubtText, ocrText, store.doubts]);
 
   if (!student) {
     navigate("/student/login");
