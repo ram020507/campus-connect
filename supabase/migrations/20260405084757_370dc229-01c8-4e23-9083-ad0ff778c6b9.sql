@@ -1,0 +1,1 @@
+ALTER TABLE public.doubts ADD COLUMN ocr_text text;

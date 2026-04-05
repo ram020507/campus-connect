@@ -71,6 +71,7 @@ export type Database = {
           created_at: string
           handling_teacher: string | null
           id: string
+          ocr_text: string | null
           question: string
           question_image_url: string | null
           status: string
@@ -90,6 +91,7 @@ export type Database = {
           created_at?: string
           handling_teacher?: string | null
           id?: string
+          ocr_text?: string | null
           question: string
           question_image_url?: string | null
           status?: string
@@ -109,6 +111,7 @@ export type Database = {
           created_at?: string
           handling_teacher?: string | null
           id?: string
+          ocr_text?: string | null
           question?: string
           question_image_url?: string | null
           status?: string

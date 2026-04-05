@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  GraduationCap, LogOut, MessageCircle, Send, CheckCircle2, Clock, Loader2, ArrowLeft, RefreshCw, ImagePlus, X
+  GraduationCap, LogOut, MessageCircle, Send, CheckCircle2, Clock, Loader2, ArrowLeft, RefreshCw, ImagePlus, X, Download
 } from "lucide-react";
 import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
@@ -164,7 +164,12 @@ const TeacherDashboard = () => {
                     </div>
                     <p className="text-sm font-medium mb-3">{d.question}</p>
                     {d.questionImageUrl && (
-                      <img src={d.questionImageUrl} alt="Student attachment" className="mb-3 max-h-48 rounded border" />
+                      <div className="mb-3">
+                        <img src={d.questionImageUrl} alt="Student attachment" className="max-h-48 rounded border" />
+                        <a href={d.questionImageUrl} download className="inline-flex items-center gap-1 text-xs text-primary mt-1 hover:underline">
+                          <Download className="h-3 w-3" /> Download Image
+                        </a>
+                      </div>
                     )}
                     {!d.claimedBy ? (
                       <Button size="sm" variant="outline" onClick={() => handleClaim(d.id)}>
@@ -226,12 +231,22 @@ const TeacherDashboard = () => {
                   </p>
                   <p className="text-sm font-medium">{d.question}</p>
                   {d.questionImageUrl && (
-                    <img src={d.questionImageUrl} alt="Student attachment" className="mt-2 max-h-40 rounded border" />
+                    <div className="mt-2">
+                      <img src={d.questionImageUrl} alt="Student attachment" className="max-h-40 rounded border" />
+                      <a href={d.questionImageUrl} download className="inline-flex items-center gap-1 text-xs text-primary mt-1 hover:underline">
+                        <Download className="h-3 w-3" /> Download Image
+                      </a>
+                    </div>
                   )}
                   <div className="mt-2 p-3 rounded bg-success/10 text-sm">
                     <p>{d.answer}</p>
                     {d.answerImageUrl && (
-                      <img src={d.answerImageUrl} alt="Answer attachment" className="mt-2 max-h-40 rounded border" />
+                      <div className="mt-2">
+                        <img src={d.answerImageUrl} alt="Answer attachment" className="max-h-40 rounded border" />
+                        <a href={d.answerImageUrl} download className="inline-flex items-center gap-1 text-xs text-primary mt-1 hover:underline">
+                          <Download className="h-3 w-3" /> Download Image
+                        </a>
+                      </div>
                     )}
                   </div>
                 </CardContent>
