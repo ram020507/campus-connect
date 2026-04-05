@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useSupabaseData, type StudentAccount } from "@/hooks/useSupabaseData";
 import { useStudentNotifications } from "@/hooks/useNotifications";
