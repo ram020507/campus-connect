@@ -500,13 +500,14 @@ export function useSupabaseData() {
     await fetchAll();
   };
 
-  const searchSimilarDoubts = (text: string): Doubt[] => {
+  const searchSimilarDoubts = (text: string, subjectName?: string): Doubt[] => {
     if (!text || text.trim().length < 5) return [];
     const q = text.toLowerCase().trim();
     const words = q.split(/\s+/).filter((w) => w.length > 2);
     if (words.length === 0) return [];
     return doubts.filter((d) => {
       if (!d.answer) return false;
+      if (subjectName && d.subjectName.toLowerCase() !== subjectName.toLowerCase()) return false;
       const target = `${d.question} ${d.ocrText || ""}`.toLowerCase();
       const matchCount = words.filter((w) => target.includes(w)).length;
       return matchCount >= Math.max(1, Math.floor(words.length * 0.4));
