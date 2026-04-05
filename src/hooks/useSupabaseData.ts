@@ -199,6 +199,7 @@ export function useSupabaseData() {
           claimedBy: d.claimed_by || undefined,
           createdAt: d.created_at,
           answeredAt: d.answered_at || undefined,
+          ocrText: (d as any).ocr_text || undefined,
         }))
       );
     } catch (err) {
