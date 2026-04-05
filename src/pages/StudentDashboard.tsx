@@ -82,17 +82,33 @@ const StudentDashboard = () => {
     navigate("/");
   };
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setDoubtImage(file);
       setDoubtImagePreview(URL.createObjectURL(file));
+      // Upload image first, then run OCR
+      setOcrProcessing(true);
+      try {
+        const url = await store.uploadDoubtImage(file);
+        if (url) {
+          const text = await store.extractOcrText(url);
+          setOcrText(text);
+          // Store the uploaded URL for later use
+          setDoubtImagePreview(url);
+        }
+      } catch (err) {
+        console.error("OCR failed:", err);
+      } finally {
+        setOcrProcessing(false);
+      }
     }
   };
 
   const clearImage = () => {
     setDoubtImage(null);
     setDoubtImagePreview(null);
+    setOcrText("");
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
