@@ -428,14 +428,24 @@ const StudentDashboard = () => {
                     </div>
                     <p className="text-sm font-medium mt-2">{d.question}</p>
                     {d.questionImageUrl && (
-                      <img src={d.questionImageUrl} alt="Doubt attachment" className="mt-2 max-h-48 rounded border" />
+                      <div className="mt-2">
+                        <img src={d.questionImageUrl} alt="Doubt attachment" className="max-h-48 rounded border" />
+                        <a href={d.questionImageUrl} download className="inline-flex items-center gap-1 text-xs text-primary mt-1 hover:underline">
+                          <Download className="h-3 w-3" /> Download Image
+                        </a>
+                      </div>
                     )}
                     {d.answer && (
                       <div className="mt-3 p-3 rounded bg-success/10 text-sm">
                         <p className="text-xs text-muted-foreground mb-1">Answer by {d.answeredBy}:</p>
                         <p>{d.answer}</p>
                         {d.answerImageUrl && (
-                          <img src={d.answerImageUrl} alt="Answer attachment" className="mt-2 max-h-48 rounded border" />
+                          <div className="mt-2">
+                            <img src={d.answerImageUrl} alt="Answer attachment" className="max-h-48 rounded border" />
+                            <a href={d.answerImageUrl} download className="inline-flex items-center gap-1 text-xs text-primary mt-1 hover:underline">
+                              <Download className="h-3 w-3" /> Download Image
+                            </a>
+                          </div>
                         )}
                       </div>
                     )}
