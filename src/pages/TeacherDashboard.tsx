@@ -231,7 +231,12 @@ const TeacherDashboard = () => {
                   </p>
                   <p className="text-sm font-medium">{d.question}</p>
                   {d.questionImageUrl && (
-                    <img src={d.questionImageUrl} alt="Student attachment" className="mt-2 max-h-40 rounded border" />
+                    <div className="mt-2">
+                      <img src={d.questionImageUrl} alt="Student attachment" className="max-h-40 rounded border" />
+                      <a href={d.questionImageUrl} download className="inline-flex items-center gap-1 text-xs text-primary mt-1 hover:underline">
+                        <Download className="h-3 w-3" /> Download Image
+                      </a>
+                    </div>
                   )}
                   <div className="mt-2 p-3 rounded bg-success/10 text-sm">
                     <p>{d.answer}</p>
