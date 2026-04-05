@@ -326,6 +326,52 @@ const StudentDashboard = () => {
                 </Select>
                 <Textarea placeholder="Type your doubt here..." value={doubtText} onChange={(e) => setDoubtText(e.target.value)} rows={4} />
                 
+                {/* OCR processing indicator */}
+                {ocrProcessing && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground p-2 rounded bg-secondary/50">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Extracting text from image...
+                  </div>
+                )}
+
+                {/* OCR extracted text */}
+                {ocrText && !ocrProcessing && (
+                  <div className="p-2 rounded bg-secondary/50 text-xs text-muted-foreground">
+                    <p className="font-semibold mb-1 flex items-center gap-1"><FileText className="h-3 w-3" /> OCR Extracted Text:</p>
+                    <p className="line-clamp-3">{ocrText}</p>
+                  </div>
+                )}
+
+                {/* Similar doubts suggestions */}
+                {similarDoubts.length > 0 && (
+                  <div className="border rounded-md p-3 bg-accent/5 space-y-2">
+                    <p className="text-xs font-semibold text-accent flex items-center gap-1">
+                      <Search className="h-3 w-3" /> Similar answered doubts found:
+                    </p>
+                    {similarDoubts.map((sd) => (
+                      <div key={sd.id} className="border rounded p-2 bg-card text-sm cursor-pointer hover:bg-accent/10 transition-colors"
+                        onClick={() => setExpandedSuggestion(expandedSuggestion === sd.id ? null : sd.id)}>
+                        <p className="font-medium text-xs">{sd.question}</p>
+                        <span className="text-xs text-muted-foreground">{sd.subjectName}</span>
+                        {expandedSuggestion === sd.id && (
+                          <div className="mt-2 p-2 rounded bg-success/10 text-xs">
+                            <p className="font-semibold text-muted-foreground mb-1">Answer by {sd.answeredBy}:</p>
+                            <p>{sd.answer}</p>
+                            {sd.answerImageUrl && (
+                              <div className="mt-2">
+                                <img src={sd.answerImageUrl} alt="Answer" className="max-h-32 rounded border" />
+                                <a href={sd.answerImageUrl} download className="inline-flex items-center gap-1 text-xs text-primary mt-1 hover:underline">
+                                  <Download className="h-3 w-3" /> Download
+                                </a>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 {/* Image upload */}
                 <input type="file" accept="image/*" ref={fileInputRef} className="hidden" onChange={handleImageSelect} />
                 {doubtImagePreview ? (
@@ -334,6 +380,11 @@ const StudentDashboard = () => {
                     <button onClick={clearImage} className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1">
                       <X className="h-3 w-3" />
                     </button>
+                    {doubtImagePreview.startsWith("http") && (
+                      <a href={doubtImagePreview} download className="absolute bottom-1 right-1 bg-card/90 text-foreground rounded p-1 hover:bg-card">
+                        <Download className="h-3 w-3" />
+                      </a>
+                    )}
                   </div>
                 ) : (
                   <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
@@ -341,7 +392,7 @@ const StudentDashboard = () => {
                   </Button>
                 )}
 
-                <Button onClick={handleSendDoubt} disabled={!doubtSubject.trim() || !doubtText.trim() || sending}>
+                <Button onClick={handleSendDoubt} disabled={!doubtSubject.trim() || !doubtText.trim() || sending || ocrProcessing}>
                   {sending ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Send className="h-4 w-4 mr-1" />} Send Doubt
                 </Button>
               </CardContent>
