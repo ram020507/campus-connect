@@ -81,6 +81,7 @@ export interface Doubt {
   claimedBy?: string;
   createdAt: string;
   answeredAt?: string;
+  ocrText?: string;
 }
 
 export function useSupabaseData() {
