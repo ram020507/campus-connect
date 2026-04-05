@@ -469,7 +469,8 @@ export function useSupabaseData() {
       subject_name: doubt.subjectName,
       question: doubt.question,
       question_image_url: doubt.questionImageUrl || null,
-    }).select("id").single();
+      ocr_text: doubt.ocrText || null,
+    } as any).select("id").single();
     if (!error && data) {
       // Fire-and-forget email notification
       supabase.functions.invoke("notify-doubt", { body: { type: "new_doubt", doubtId: data.id } }).catch(console.error);
