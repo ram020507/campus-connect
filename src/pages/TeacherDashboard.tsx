@@ -164,7 +164,12 @@ const TeacherDashboard = () => {
                     </div>
                     <p className="text-sm font-medium mb-3">{d.question}</p>
                     {d.questionImageUrl && (
-                      <img src={d.questionImageUrl} alt="Student attachment" className="mb-3 max-h-48 rounded border" />
+                      <div className="mb-3">
+                        <img src={d.questionImageUrl} alt="Student attachment" className="max-h-48 rounded border" />
+                        <a href={d.questionImageUrl} download className="inline-flex items-center gap-1 text-xs text-primary mt-1 hover:underline">
+                          <Download className="h-3 w-3" /> Download Image
+                        </a>
+                      </div>
                     )}
                     {!d.claimedBy ? (
                       <Button size="sm" variant="outline" onClick={() => handleClaim(d.id)}>
