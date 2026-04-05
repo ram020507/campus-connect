@@ -44,7 +44,22 @@ const StudentDashboard = () => {
   const [sending, setSending] = useState(false);
   const [doubtSearch, setDoubtSearch] = useState("");
   const [sharedSearch, setSharedSearch] = useState("");
+  const [ocrProcessing, setOcrProcessing] = useState(false);
+  const [ocrText, setOcrText] = useState("");
+  const [similarDoubts, setSimilarDoubts] = useState<ReturnType<typeof store.searchSimilarDoubts>>([]);
+  const [expandedSuggestion, setExpandedSuggestion] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Real-time duplicate detection on text input
+  useEffect(() => {
+    const searchText = `${doubtText} ${ocrText}`.trim();
+    if (searchText.length >= 5) {
+      const results = store.searchSimilarDoubts(searchText);
+      setSimilarDoubts(results);
+    } else {
+      setSimilarDoubts([]);
+    }
+  }, [doubtText, ocrText, store.doubts]);
 
   if (!student) {
     navigate("/student/login");
