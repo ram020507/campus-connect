@@ -115,8 +115,11 @@ const StudentDashboard = () => {
   const handleSendDoubt = async () => {
     if (doubtSubject.trim() && doubtText.trim()) {
       setSending(true);
+      // If image was already uploaded during OCR, use that URL
       let imageUrl: string | undefined;
-      if (doubtImage) {
+      if (doubtImage && doubtImagePreview?.startsWith("http")) {
+        imageUrl = doubtImagePreview;
+      } else if (doubtImage) {
         const url = await store.uploadDoubtImage(doubtImage);
         if (url) imageUrl = url;
       }
@@ -129,10 +132,12 @@ const StudentDashboard = () => {
         subjectName: doubtSubject.trim(),
         question: doubtText.trim(),
         questionImageUrl: imageUrl,
+        ocrText: ocrText || undefined,
       });
       setDoubtText("");
       setDoubtSubject("");
       clearImage();
+      setSimilarDoubts([]);
       setSending(false);
     }
   };
