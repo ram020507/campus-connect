@@ -247,6 +247,8 @@ const TeacherDashboard = () => {
                           <Download className="h-3 w-3" /> Download Image
                         </a>
                       </div>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             ))}
