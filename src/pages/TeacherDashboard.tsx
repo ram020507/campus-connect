@@ -243,9 +243,6 @@ const TeacherDashboard = () => {
                     {d.answerImageUrl && (
                       <div className="mt-2">
                         <img src={d.answerImageUrl} alt="Answer attachment" className="max-h-40 rounded border" />
-                        <a href={d.answerImageUrl} download className="inline-flex items-center gap-1 text-xs text-primary mt-1 hover:underline">
-                          <Download className="h-3 w-3" /> Download Image
-                        </a>
                       </div>
                     )}
                   </div>

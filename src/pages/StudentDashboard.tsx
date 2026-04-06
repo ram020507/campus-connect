@@ -363,9 +363,6 @@ const StudentDashboard = () => {
                               <div>
                                 <p className="font-semibold text-muted-foreground mb-1">Question Image:</p>
                                 <img src={sd.questionImageUrl} alt="Question" className="max-h-32 rounded border" />
-                                <a href={sd.questionImageUrl} download className="inline-flex items-center gap-1 text-xs text-primary mt-1 hover:underline">
-                                  <Download className="h-3 w-3" /> Download
-                                </a>
                               </div>
                             )}
                             <p className="font-semibold text-muted-foreground mb-1">Answer by {sd.answeredBy}:</p>
