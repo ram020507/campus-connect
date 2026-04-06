@@ -50,16 +50,20 @@ const StudentDashboard = () => {
   const [expandedSuggestion, setExpandedSuggestion] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Real-time duplicate detection on text input
+  // Real-time duplicate detection on text input with subject/year/department filtering
   useEffect(() => {
     const searchText = `${doubtText} ${ocrText}`.trim();
-    if (searchText.length >= 5) {
-      const results = store.searchSimilarDoubts(searchText);
+    if (searchText.length >= 5 && student) {
+      const results = store.searchSimilarDoubts(searchText, {
+        subjectName: doubtSubject || undefined,
+        studentYear: student.year,
+        studentDepartment: student.department,
+      });
       setSimilarDoubts(results);
     } else {
       setSimilarDoubts([]);
     }
-  }, [doubtText, ocrText, store.doubts]);
+  }, [doubtText, ocrText, doubtSubject, store.doubts]);
 
   if (!student) {
     navigate("/student/login");
