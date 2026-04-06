@@ -50,16 +50,20 @@ const StudentDashboard = () => {
   const [expandedSuggestion, setExpandedSuggestion] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Real-time duplicate detection on text input
+  // Real-time duplicate detection on text input with subject/year/department filtering
   useEffect(() => {
     const searchText = `${doubtText} ${ocrText}`.trim();
-    if (searchText.length >= 5) {
-      const results = store.searchSimilarDoubts(searchText);
+    if (searchText.length >= 5 && student) {
+      const results = store.searchSimilarDoubts(searchText, {
+        subjectName: doubtSubject || undefined,
+        studentYear: student.year,
+        studentDepartment: student.department,
+      });
       setSimilarDoubts(results);
     } else {
       setSimilarDoubts([]);
     }
-  }, [doubtText, ocrText, store.doubts]);
+  }, [doubtText, ocrText, doubtSubject, store.doubts]);
 
   if (!student) {
     navigate("/student/login");
@@ -354,7 +358,16 @@ const StudentDashboard = () => {
                         <p className="font-medium text-xs">{sd.question}</p>
                         <span className="text-xs text-muted-foreground">{sd.subjectName}</span>
                         {expandedSuggestion === sd.id && (
-                          <div className="mt-2 p-2 rounded bg-success/10 text-xs">
+                          <div className="mt-2 p-2 rounded bg-success/10 text-xs space-y-2">
+                            {sd.questionImageUrl && (
+                              <div>
+                                <p className="font-semibold text-muted-foreground mb-1">Question Image:</p>
+                                <img src={sd.questionImageUrl} alt="Question" className="max-h-32 rounded border" />
+                                <a href={sd.questionImageUrl} download className="inline-flex items-center gap-1 text-xs text-primary mt-1 hover:underline">
+                                  <Download className="h-3 w-3" /> Download
+                                </a>
+                              </div>
+                            )}
                             <p className="font-semibold text-muted-foreground mb-1">Answer by {sd.answeredBy}:</p>
                             <p>{sd.answer}</p>
                             {sd.answerImageUrl && (
