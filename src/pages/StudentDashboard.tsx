@@ -363,9 +363,6 @@ const StudentDashboard = () => {
                               <div>
                                 <p className="font-semibold text-muted-foreground mb-1">Question Image:</p>
                                 <img src={sd.questionImageUrl} alt="Question" className="max-h-32 rounded border" />
-                                <a href={sd.questionImageUrl} download className="inline-flex items-center gap-1 text-xs text-primary mt-1 hover:underline">
-                                  <Download className="h-3 w-3" /> Download
-                                </a>
                               </div>
                             )}
                             <p className="font-semibold text-muted-foreground mb-1">Answer by {sd.answeredBy}:</p>
@@ -393,11 +390,6 @@ const StudentDashboard = () => {
                     <button onClick={clearImage} className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1">
                       <X className="h-3 w-3" />
                     </button>
-                    {doubtImagePreview.startsWith("http") && (
-                      <a href={doubtImagePreview} download className="absolute bottom-1 right-1 bg-card/90 text-foreground rounded p-1 hover:bg-card">
-                        <Download className="h-3 w-3" />
-                      </a>
-                    )}
                   </div>
                 ) : (
                   <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
@@ -443,9 +435,6 @@ const StudentDashboard = () => {
                     {d.questionImageUrl && (
                       <div className="mt-2">
                         <img src={d.questionImageUrl} alt="Doubt attachment" className="max-h-48 rounded border" />
-                        <a href={d.questionImageUrl} download className="inline-flex items-center gap-1 text-xs text-primary mt-1 hover:underline">
-                          <Download className="h-3 w-3" /> Download Image
-                        </a>
                       </div>
                     )}
                     {d.answer && (
