@@ -393,11 +393,6 @@ const StudentDashboard = () => {
                     <button onClick={clearImage} className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1">
                       <X className="h-3 w-3" />
                     </button>
-                    {doubtImagePreview.startsWith("http") && (
-                      <a href={doubtImagePreview} download className="absolute bottom-1 right-1 bg-card/90 text-foreground rounded p-1 hover:bg-card">
-                        <Download className="h-3 w-3" />
-                      </a>
-                    )}
                   </div>
                 ) : (
                   <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
