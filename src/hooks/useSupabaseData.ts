@@ -393,7 +393,7 @@ export function useSupabaseData() {
 
   const updateStudent = async (id: string, updates: Partial<Omit<StudentAccount, "id">>) => {
     const student = students.find((s) => s.id === id);
-    const mapped: Record<string, unknown> = {};
+    const mapped: Record<string, string | number | null> = {};
 
     if (updates.registrationNumber !== undefined) mapped.registration_number = updates.registrationNumber;
     if (updates.name !== undefined) mapped.name = updates.name;
@@ -403,7 +403,7 @@ export function useSupabaseData() {
     if (updates.department !== undefined) mapped.department = updates.department;
     if (updates.year !== undefined) mapped.year = updates.year;
 
-    await supabase.from("students").update(mapped).eq("id", id);
+    await supabase.from("students").update(mapped as any).eq("id", id);
 
     if (student) {
       await syncStudentDoubts(student, updates);
@@ -441,7 +441,7 @@ export function useSupabaseData() {
 
   const updateTeacher = async (id: string, updates: Partial<Omit<TeacherAccount, "id">>) => {
     const teacher = teachers.find((t) => t.id === id);
-    const mapped: Record<string, unknown> = {};
+    const mapped: Record<string, string | number | null> = {};
 
     if (updates.staffId !== undefined) mapped.staff_id = updates.staffId;
     if (updates.name !== undefined) mapped.name = updates.name;
@@ -450,7 +450,7 @@ export function useSupabaseData() {
     if (updates.collegeName !== undefined) mapped.college_name = updates.collegeName;
     if (updates.subjectName !== undefined) mapped.subject_name = updates.subjectName;
 
-    await supabase.from("teachers").update(mapped).eq("id", id);
+    await supabase.from("teachers").update(mapped as any).eq("id", id);
 
     if (teacher) {
       await syncTeacherDoubts(teacher, updates);

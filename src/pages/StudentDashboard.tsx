@@ -117,7 +117,7 @@ const StudentDashboard = () => {
   };
 
   const handleSendDoubt = async () => {
-    if (doubtSubject.trim() && doubtText.trim()) {
+    if (doubtSubject.trim() && (doubtText.trim() || doubtImage)) {
       setSending(true);
       // If image was already uploaded during OCR, use that URL
       let imageUrl: string | undefined;
@@ -397,7 +397,7 @@ const StudentDashboard = () => {
                   </Button>
                 )}
 
-                <Button onClick={handleSendDoubt} disabled={!doubtSubject.trim() || !doubtText.trim() || sending || ocrProcessing}>
+                <Button onClick={handleSendDoubt} disabled={!doubtSubject.trim() || (!doubtText.trim() && !doubtImage) || sending || ocrProcessing}>
                   {sending ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Send className="h-4 w-4 mr-1" />} Send Doubt
                 </Button>
               </CardContent>
