@@ -546,6 +546,7 @@ export function useSupabaseData() {
     addTeacher, removeTeacher, updateTeacher,
     addDoubt, claimDoubt, answerDoubt,
     searchSimilarDoubts, extractOcrText,
+    updateDoubtQuestion, deleteDoubt, updateDoubtAnswer, deleteDoubtAnswer,
     refetch: fetchAll,
   };
 }
