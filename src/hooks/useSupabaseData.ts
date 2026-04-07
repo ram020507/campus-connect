@@ -393,7 +393,7 @@ export function useSupabaseData() {
 
   const updateStudent = async (id: string, updates: Partial<Omit<StudentAccount, "id">>) => {
     const student = students.find((s) => s.id === id);
-    const mapped: Record<string, unknown> = {};
+    const mapped: Record<string, string | number | null> = {};
 
     if (updates.registrationNumber !== undefined) mapped.registration_number = updates.registrationNumber;
     if (updates.name !== undefined) mapped.name = updates.name;
