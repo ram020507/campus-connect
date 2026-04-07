@@ -403,7 +403,7 @@ export function useSupabaseData() {
     if (updates.department !== undefined) mapped.department = updates.department;
     if (updates.year !== undefined) mapped.year = updates.year;
 
-    await supabase.from("students").update(mapped).eq("id", id);
+    await supabase.from("students").update(mapped as any).eq("id", id);
 
     if (student) {
       await syncStudentDoubts(student, updates);
