@@ -241,7 +241,26 @@ const TeacherDashboard = () => {
                     </div>
                   )}
                   <div className="mt-2 p-3 rounded bg-success/10 text-sm">
-                    <p>{d.answer}</p>
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="text-xs text-muted-foreground flex-1">Your answer:</p>
+                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => { setEditingAnswerId(d.id); setEditAnswerText(d.answer || ""); }}>
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-destructive" onClick={async () => { if (confirm("Delete your answer? The doubt will return to pending.")) await store.deleteDoubtAnswer(d.id); }}>
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    {editingAnswerId === d.id ? (
+                      <div className="space-y-2">
+                        <Textarea value={editAnswerText} onChange={(e) => setEditAnswerText(e.target.value)} rows={3} />
+                        <div className="flex gap-2">
+                          <Button size="sm" onClick={async () => { await store.updateDoubtAnswer(d.id, { answer: editAnswerText }); setEditingAnswerId(null); }}>Save</Button>
+                          <Button size="sm" variant="outline" onClick={() => setEditingAnswerId(null)}>Cancel</Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <p>{d.answer}</p>
+                    )}
                     {d.answerImageUrl && (
                       <div className="mt-2">
                         <img src={d.answerImageUrl} alt="Answer attachment" className="max-h-40 rounded border" />
