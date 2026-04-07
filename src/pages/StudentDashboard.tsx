@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  BookOpen, Video, LogOut, MessageCircle, ArrowLeft, Send, CheckCircle2, Play, Loader2, RefreshCw, ImagePlus, X, Download, FileText, Search
+  BookOpen, Video, LogOut, MessageCircle, ArrowLeft, Send, CheckCircle2, Play, Loader2, RefreshCw, ImagePlus, X, Download, FileText, Search, FolderOpen, ChevronDown, ChevronRight
 } from "lucide-react";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -42,8 +42,10 @@ const StudentDashboard = () => {
   const [doubtImage, setDoubtImage] = useState<File | null>(null);
   const [doubtImagePreview, setDoubtImagePreview] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
-  const [doubtSearch, setDoubtSearch] = useState("");
-  const [sharedSearch, setSharedSearch] = useState("");
+  const [doubtSearch, setDoubtSearch] = useState<Record<string, string>>({});
+  const [sharedSearch, setSharedSearch] = useState<Record<string, string>>({});
+  const [expandedDoubtSubjects, setExpandedDoubtSubjects] = useState<Record<string, boolean>>({});
+  const [expandedSharedSubjects, setExpandedSharedSubjects] = useState<Record<string, boolean>>({});
   const [ocrProcessing, setOcrProcessing] = useState(false);
   const [ocrText, setOcrText] = useState("");
   const [similarDoubts, setSimilarDoubts] = useState<ReturnType<typeof store.searchSimilarDoubts>>([]);
@@ -404,56 +406,80 @@ const StudentDashboard = () => {
             </Card>
 
             <h3 className="font-display font-semibold">My Doubts</h3>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search doubts..." value={doubtSearch} onChange={(e) => setDoubtSearch(e.target.value)} className="pl-9" />
-            </div>
-            {store.doubts
-              .filter((d) => d.studentRegNo === student.registrationNumber)
-              .filter((d) => {
-                if (!doubtSearch.trim()) return true;
-                const q = doubtSearch.toLowerCase();
-                return d.question.toLowerCase().includes(q) || d.subjectName.toLowerCase().includes(q) || d.answer?.toLowerCase().includes(q);
-              })
-              .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-              .map((d) => (
-                <Card key={d.id} className={d.answer ? "border-success/30" : ""}>
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground">
-                        {d.subjectName}
-                      </span>
-                      {d.answer ? (
-                        <span className="text-xs text-success flex items-center gap-1">
-                          <CheckCircle2 className="h-3 w-3" /> Answered
-                        </span>
-                      ) : (
-                        <span className="text-xs text-accent">Pending</span>
-                      )}
+            {(() => {
+              const myDoubts = store.doubts
+                .filter((d) => d.studentRegNo === student.registrationNumber)
+                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+              const subjectGroups = myDoubts.reduce<Record<string, typeof myDoubts>>((acc, d) => {
+                (acc[d.subjectName] = acc[d.subjectName] || []).push(d);
+                return acc;
+              }, {});
+              const subjectNames = Object.keys(subjectGroups).sort();
+              if (subjectNames.length === 0) return <p className="text-center text-muted-foreground py-8">No doubts yet.</p>;
+              return subjectNames.map((subj) => {
+                const isOpen = expandedDoubtSubjects[subj] ?? false;
+                const search = doubtSearch[subj] || "";
+                const filtered = subjectGroups[subj].filter((d) => {
+                  if (!search.trim()) return true;
+                  const q = search.toLowerCase();
+                  return d.question.toLowerCase().includes(q) || d.subjectName.toLowerCase().includes(q) || d.answer?.toLowerCase().includes(q);
+                });
+                return (
+                  <Card key={subj}>
+                    <div className="flex items-center gap-2 p-3 cursor-pointer hover:bg-accent/5 transition-colors"
+                      onClick={() => setExpandedDoubtSubjects((prev) => ({ ...prev, [subj]: !isOpen }))}>
+                      {isOpen ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+                      <FolderOpen className="h-4 w-4 text-primary" />
+                      <span className="font-semibold text-sm flex-1">{subj}</span>
+                      <span className="text-xs text-muted-foreground">{subjectGroups[subj].length} doubt(s)</span>
                     </div>
-                    <p className="text-sm font-medium mt-2">{d.question}</p>
-                    {d.questionImageUrl && (
-                      <div className="mt-2">
-                        <img src={d.questionImageUrl} alt="Doubt attachment" className="max-h-48 rounded border" />
-                      </div>
-                    )}
-                    {d.answer && (
-                      <div className="mt-3 p-3 rounded bg-success/10 text-sm">
-                        <p className="text-xs text-muted-foreground mb-1">Answer by {d.answeredBy}:</p>
-                        <p>{d.answer}</p>
-                        {d.answerImageUrl && (
-                          <div className="mt-2">
-                            <img src={d.answerImageUrl} alt="Answer attachment" className="max-h-48 rounded border" />
-                            <a href={d.answerImageUrl} download className="inline-flex items-center gap-1 text-xs text-primary mt-1 hover:underline">
-                              <Download className="h-3 w-3" /> Download Image
-                            </a>
+                    {isOpen && (
+                      <div className="px-3 pb-3 space-y-3">
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input placeholder={`Search in ${subj}...`} value={search}
+                            onChange={(e) => setDoubtSearch((prev) => ({ ...prev, [subj]: e.target.value }))} className="pl-9" />
+                        </div>
+                        {filtered.length === 0 ? (
+                          <p className="text-center text-muted-foreground text-sm py-4">No matching doubts.</p>
+                        ) : filtered.map((d) => (
+                          <div key={d.id} className={`border rounded-lg p-3 ${d.answer ? "border-success/30" : ""}`}>
+                            <div className="flex items-center gap-2 mb-1">
+                              {d.answer ? (
+                                <span className="text-xs text-success flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Answered</span>
+                              ) : (
+                                <span className="text-xs text-accent">Pending</span>
+                              )}
+                              <span className="text-xs text-muted-foreground ml-auto">{new Date(d.createdAt).toLocaleDateString()}</span>
+                            </div>
+                            <p className="text-sm font-medium mt-1">{d.question}</p>
+                            {d.questionImageUrl && (
+                              <div className="mt-2">
+                                <img src={d.questionImageUrl} alt="Doubt attachment" className="max-h-48 rounded border" />
+                              </div>
+                            )}
+                            {d.answer && (
+                              <div className="mt-3 p-3 rounded bg-success/10 text-sm">
+                                <p className="text-xs text-muted-foreground mb-1">Answer by {d.answeredBy}:</p>
+                                <p>{d.answer}</p>
+                                {d.answerImageUrl && (
+                                  <div className="mt-2">
+                                    <img src={d.answerImageUrl} alt="Answer attachment" className="max-h-48 rounded border" />
+                                    <a href={d.answerImageUrl} download className="inline-flex items-center gap-1 text-xs text-primary mt-1 hover:underline">
+                                      <Download className="h-3 w-3" /> Download Image
+                                    </a>
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
-                        )}
+                        ))}
                       </div>
                     )}
-                  </CardContent>
-                </Card>
-              ))}
+                  </Card>
+                );
+              });
+            })()}
           </div>
         )}
 
@@ -464,58 +490,80 @@ const StudentDashboard = () => {
             </Button>
             <h2 className="font-display font-semibold text-lg">Shared Knowledge</h2>
             <p className="text-sm text-muted-foreground">Answered doubts from your year & department</p>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search shared knowledge..." value={sharedSearch} onChange={(e) => setSharedSearch(e.target.value)} className="pl-9" />
-            </div>
-            {answeredDoubts.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">No answered doubts yet.</p>
-            ) : (
-              answeredDoubts
-                .filter((d) => {
-                  if (!sharedSearch.trim()) return true;
-                  const q = sharedSearch.toLowerCase();
-                  return d.question.toLowerCase().includes(q) || d.subjectName.toLowerCase().includes(q) || d.answer?.toLowerCase().includes(q) || d.studentName.toLowerCase().includes(q);
-                })
-                .sort((a, b) => new Date(b.answeredAt!).getTime() - new Date(a.answeredAt!).getTime())
-                .map((d) => (
-                  <Card key={d.id} className="border-success/30">
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground">
-                          {d.subjectName}
-                        </span>
-                        <span className="text-xs text-muted-foreground">by {d.studentName}</span>
-                      </div>
-                      <p className="text-sm font-medium">{d.question}</p>
-                      {d.questionImageUrl && (
-                        <div>
-                          <img src={d.questionImageUrl} alt="Doubt attachment" className="mt-2 max-h-48 rounded border" />
-                          {d.studentRegNo !== student.registrationNumber && (
-                            <a href={d.questionImageUrl} download target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-primary mt-1 hover:underline">
-                              <Download className="h-3 w-3" /> Download Image
-                            </a>
-                          )}
+            {(() => {
+              const subjectGroups = answeredDoubts.reduce<Record<string, typeof answeredDoubts>>((acc, d) => {
+                (acc[d.subjectName] = acc[d.subjectName] || []).push(d);
+                return acc;
+              }, {});
+              const subjectNames = Object.keys(subjectGroups).sort();
+              if (subjectNames.length === 0) return <p className="text-center text-muted-foreground py-8">No answered doubts yet.</p>;
+              return subjectNames.map((subj) => {
+                const isOpen = expandedSharedSubjects[subj] ?? false;
+                const search = sharedSearch[subj] || "";
+                const filtered = subjectGroups[subj]
+                  .filter((d) => {
+                    if (!search.trim()) return true;
+                    const q = search.toLowerCase();
+                    return d.question.toLowerCase().includes(q) || d.answer?.toLowerCase().includes(q) || d.studentName.toLowerCase().includes(q);
+                  })
+                  .sort((a, b) => new Date(b.answeredAt!).getTime() - new Date(a.answeredAt!).getTime());
+                return (
+                  <Card key={subj}>
+                    <div className="flex items-center gap-2 p-3 cursor-pointer hover:bg-accent/5 transition-colors"
+                      onClick={() => setExpandedSharedSubjects((prev) => ({ ...prev, [subj]: !isOpen }))}>
+                      {isOpen ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+                      <FolderOpen className="h-4 w-4 text-success" />
+                      <span className="font-semibold text-sm flex-1">{subj}</span>
+                      <span className="text-xs text-muted-foreground">{subjectGroups[subj].length} answer(s)</span>
+                    </div>
+                    {isOpen && (
+                      <div className="px-3 pb-3 space-y-3">
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input placeholder={`Search in ${subj}...`} value={search}
+                            onChange={(e) => setSharedSearch((prev) => ({ ...prev, [subj]: e.target.value }))} className="pl-9" />
                         </div>
-                      )}
-                      <div className="mt-3 p-3 rounded bg-success/10 text-sm">
-                        <p className="text-xs text-muted-foreground mb-1">Answer by {d.answeredBy}:</p>
-                        <p>{d.answer}</p>
-                        {d.answerImageUrl && (
-                          <div>
-                            <img src={d.answerImageUrl} alt="Answer attachment" className="mt-2 max-h-48 rounded border" />
-                            {d.studentRegNo !== student.registrationNumber && (
-                              <a href={d.answerImageUrl} download target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-primary mt-1 hover:underline">
-                                <Download className="h-3 w-3" /> Download Image
-                              </a>
+                        {filtered.length === 0 ? (
+                          <p className="text-center text-muted-foreground text-sm py-4">No matching doubts.</p>
+                        ) : filtered.map((d) => (
+                          <div key={d.id} className="border rounded-lg p-3 border-success/30">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-xs text-muted-foreground">by {d.studentName}</span>
+                              <span className="text-xs text-muted-foreground ml-auto">{new Date(d.createdAt).toLocaleDateString()}</span>
+                            </div>
+                            <p className="text-sm font-medium">{d.question}</p>
+                            {d.questionImageUrl && (
+                              <div>
+                                <img src={d.questionImageUrl} alt="Doubt attachment" className="mt-2 max-h-48 rounded border" />
+                                {d.studentRegNo !== student.registrationNumber && (
+                                  <a href={d.questionImageUrl} download target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-primary mt-1 hover:underline">
+                                    <Download className="h-3 w-3" /> Download Image
+                                  </a>
+                                )}
+                              </div>
                             )}
+                            <div className="mt-3 p-3 rounded bg-success/10 text-sm">
+                              <p className="text-xs text-muted-foreground mb-1">Answer by {d.answeredBy}:</p>
+                              <p>{d.answer}</p>
+                              {d.answerImageUrl && (
+                                <div>
+                                  <img src={d.answerImageUrl} alt="Answer attachment" className="mt-2 max-h-48 rounded border" />
+                                  {d.studentRegNo !== student.registrationNumber && (
+                                    <a href={d.answerImageUrl} download target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-primary mt-1 hover:underline">
+                                      <Download className="h-3 w-3" /> Download Image
+                                    </a>
+                                  )}
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        )}
+                        ))}
                       </div>
-                    </CardContent>
+                    )}
                   </Card>
-                ))
-            )}
+                );
+              });
+            })()}
           </div>
         )}
       </div>
