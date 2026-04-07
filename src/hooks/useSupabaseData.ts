@@ -450,7 +450,7 @@ export function useSupabaseData() {
     if (updates.collegeName !== undefined) mapped.college_name = updates.collegeName;
     if (updates.subjectName !== undefined) mapped.subject_name = updates.subjectName;
 
-    await supabase.from("teachers").update(mapped).eq("id", id);
+    await supabase.from("teachers").update(mapped as any).eq("id", id);
 
     if (teacher) {
       await syncTeacherDoubts(teacher, updates);
