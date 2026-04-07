@@ -490,58 +490,80 @@ const StudentDashboard = () => {
             </Button>
             <h2 className="font-display font-semibold text-lg">Shared Knowledge</h2>
             <p className="text-sm text-muted-foreground">Answered doubts from your year & department</p>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search shared knowledge..." value={sharedSearch} onChange={(e) => setSharedSearch(e.target.value)} className="pl-9" />
-            </div>
-            {answeredDoubts.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">No answered doubts yet.</p>
-            ) : (
-              answeredDoubts
-                .filter((d) => {
-                  if (!sharedSearch.trim()) return true;
-                  const q = sharedSearch.toLowerCase();
-                  return d.question.toLowerCase().includes(q) || d.subjectName.toLowerCase().includes(q) || d.answer?.toLowerCase().includes(q) || d.studentName.toLowerCase().includes(q);
-                })
-                .sort((a, b) => new Date(b.answeredAt!).getTime() - new Date(a.answeredAt!).getTime())
-                .map((d) => (
-                  <Card key={d.id} className="border-success/30">
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground">
-                          {d.subjectName}
-                        </span>
-                        <span className="text-xs text-muted-foreground">by {d.studentName}</span>
-                      </div>
-                      <p className="text-sm font-medium">{d.question}</p>
-                      {d.questionImageUrl && (
-                        <div>
-                          <img src={d.questionImageUrl} alt="Doubt attachment" className="mt-2 max-h-48 rounded border" />
-                          {d.studentRegNo !== student.registrationNumber && (
-                            <a href={d.questionImageUrl} download target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-primary mt-1 hover:underline">
-                              <Download className="h-3 w-3" /> Download Image
-                            </a>
-                          )}
+            {(() => {
+              const subjectGroups = answeredDoubts.reduce<Record<string, typeof answeredDoubts>>((acc, d) => {
+                (acc[d.subjectName] = acc[d.subjectName] || []).push(d);
+                return acc;
+              }, {});
+              const subjectNames = Object.keys(subjectGroups).sort();
+              if (subjectNames.length === 0) return <p className="text-center text-muted-foreground py-8">No answered doubts yet.</p>;
+              return subjectNames.map((subj) => {
+                const isOpen = expandedSharedSubjects[subj] ?? false;
+                const search = sharedSearch[subj] || "";
+                const filtered = subjectGroups[subj]
+                  .filter((d) => {
+                    if (!search.trim()) return true;
+                    const q = search.toLowerCase();
+                    return d.question.toLowerCase().includes(q) || d.answer?.toLowerCase().includes(q) || d.studentName.toLowerCase().includes(q);
+                  })
+                  .sort((a, b) => new Date(b.answeredAt!).getTime() - new Date(a.answeredAt!).getTime());
+                return (
+                  <Card key={subj}>
+                    <div className="flex items-center gap-2 p-3 cursor-pointer hover:bg-accent/5 transition-colors"
+                      onClick={() => setExpandedSharedSubjects((prev) => ({ ...prev, [subj]: !isOpen }))}>
+                      {isOpen ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+                      <FolderOpen className="h-4 w-4 text-success" />
+                      <span className="font-semibold text-sm flex-1">{subj}</span>
+                      <span className="text-xs text-muted-foreground">{subjectGroups[subj].length} answer(s)</span>
+                    </div>
+                    {isOpen && (
+                      <div className="px-3 pb-3 space-y-3">
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input placeholder={`Search in ${subj}...`} value={search}
+                            onChange={(e) => setSharedSearch((prev) => ({ ...prev, [subj]: e.target.value }))} className="pl-9" />
                         </div>
-                      )}
-                      <div className="mt-3 p-3 rounded bg-success/10 text-sm">
-                        <p className="text-xs text-muted-foreground mb-1">Answer by {d.answeredBy}:</p>
-                        <p>{d.answer}</p>
-                        {d.answerImageUrl && (
-                          <div>
-                            <img src={d.answerImageUrl} alt="Answer attachment" className="mt-2 max-h-48 rounded border" />
-                            {d.studentRegNo !== student.registrationNumber && (
-                              <a href={d.answerImageUrl} download target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-primary mt-1 hover:underline">
-                                <Download className="h-3 w-3" /> Download Image
-                              </a>
+                        {filtered.length === 0 ? (
+                          <p className="text-center text-muted-foreground text-sm py-4">No matching doubts.</p>
+                        ) : filtered.map((d) => (
+                          <div key={d.id} className="border rounded-lg p-3 border-success/30">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-xs text-muted-foreground">by {d.studentName}</span>
+                              <span className="text-xs text-muted-foreground ml-auto">{new Date(d.createdAt).toLocaleDateString()}</span>
+                            </div>
+                            <p className="text-sm font-medium">{d.question}</p>
+                            {d.questionImageUrl && (
+                              <div>
+                                <img src={d.questionImageUrl} alt="Doubt attachment" className="mt-2 max-h-48 rounded border" />
+                                {d.studentRegNo !== student.registrationNumber && (
+                                  <a href={d.questionImageUrl} download target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-primary mt-1 hover:underline">
+                                    <Download className="h-3 w-3" /> Download Image
+                                  </a>
+                                )}
+                              </div>
                             )}
+                            <div className="mt-3 p-3 rounded bg-success/10 text-sm">
+                              <p className="text-xs text-muted-foreground mb-1">Answer by {d.answeredBy}:</p>
+                              <p>{d.answer}</p>
+                              {d.answerImageUrl && (
+                                <div>
+                                  <img src={d.answerImageUrl} alt="Answer attachment" className="mt-2 max-h-48 rounded border" />
+                                  {d.studentRegNo !== student.registrationNumber && (
+                                    <a href={d.answerImageUrl} download target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-primary mt-1 hover:underline">
+                                      <Download className="h-3 w-3" /> Download Image
+                                    </a>
+                                  )}
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        )}
+                        ))}
                       </div>
-                    </CardContent>
+                    )}
                   </Card>
-                ))
-            )}
+                );
+              });
+            })()}
           </div>
         )}
       </div>
