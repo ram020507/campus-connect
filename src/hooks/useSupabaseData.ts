@@ -520,6 +520,40 @@ export function useSupabaseData() {
     }).slice(0, 5);
   };
 
+  const updateDoubtQuestion = async (doubtId: string, updates: { question?: string; questionImageUrl?: string | null }) => {
+    const mapped: Record<string, any> = {};
+    if (updates.question !== undefined) mapped.question = updates.question;
+    if (updates.questionImageUrl !== undefined) mapped.question_image_url = updates.questionImageUrl;
+    await (supabase.from("doubts").update as any)(mapped).eq("id", doubtId);
+    await fetchAll();
+  };
+
+  const deleteDoubt = async (doubtId: string) => {
+    await supabase.from("doubts").delete().eq("id", doubtId);
+    await fetchAll();
+  };
+
+  const updateDoubtAnswer = async (doubtId: string, updates: { answer?: string; answerImageUrl?: string | null }) => {
+    const mapped: Record<string, any> = {};
+    if (updates.answer !== undefined) mapped.answer = updates.answer;
+    if (updates.answerImageUrl !== undefined) mapped.answer_image_url = updates.answerImageUrl;
+    await (supabase.from("doubts").update as any)(mapped).eq("id", doubtId);
+    await fetchAll();
+  };
+
+  const deleteDoubtAnswer = async (doubtId: string) => {
+    await supabase.from("doubts").update({
+      answer: null,
+      answered_by: null,
+      answered_at: null,
+      answer_image_url: null,
+      status: "pending",
+      claimed_by: null,
+      handling_teacher: null,
+    }).eq("id", doubtId);
+    await fetchAll();
+  };
+
   const extractOcrText = async (imageUrl: string): Promise<string> => {
     try {
       const { data, error } = await supabase.functions.invoke("ocr-extract", {
@@ -546,6 +580,7 @@ export function useSupabaseData() {
     addTeacher, removeTeacher, updateTeacher,
     addDoubt, claimDoubt, answerDoubt,
     searchSimilarDoubts, extractOcrText,
+    updateDoubtQuestion, deleteDoubt, updateDoubtAnswer, deleteDoubtAnswer,
     refetch: fetchAll,
   };
 }

@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  BookOpen, Video, LogOut, MessageCircle, ArrowLeft, Send, CheckCircle2, Play, Loader2, RefreshCw, ImagePlus, X, Download, FileText, Search, FolderOpen, ChevronDown, ChevronRight
+  BookOpen, Video, LogOut, MessageCircle, ArrowLeft, Send, CheckCircle2, Play, Loader2, RefreshCw, ImagePlus, X, Download, FileText, Search, FolderOpen, ChevronDown, ChevronRight, Pencil, Trash2
 } from "lucide-react";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -50,6 +50,8 @@ const StudentDashboard = () => {
   const [ocrText, setOcrText] = useState("");
   const [similarDoubts, setSimilarDoubts] = useState<ReturnType<typeof store.searchSimilarDoubts>>([]);
   const [expandedSuggestion, setExpandedSuggestion] = useState<string | null>(null);
+  const [editingDoubtId, setEditingDoubtId] = useState<string | null>(null);
+  const [editDoubtText, setEditDoubtText] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Real-time duplicate detection on text input with subject/year/department filtering
@@ -451,8 +453,24 @@ const StudentDashboard = () => {
                                 <span className="text-xs text-accent">Pending</span>
                               )}
                               <span className="text-xs text-muted-foreground ml-auto">{new Date(d.createdAt).toLocaleDateString()}</span>
+                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => { setEditingDoubtId(d.id); setEditDoubtText(d.question); }}>
+                                <Pencil className="h-3 w-3" />
+                              </Button>
+                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-destructive" onClick={async () => { if (confirm("Delete this doubt?")) await store.deleteDoubt(d.id); }}>
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
                             </div>
-                            <p className="text-sm font-medium mt-1">{d.question}</p>
+                            {editingDoubtId === d.id ? (
+                              <div className="space-y-2 mt-1">
+                                <Textarea value={editDoubtText} onChange={(e) => setEditDoubtText(e.target.value)} rows={3} />
+                                <div className="flex gap-2">
+                                  <Button size="sm" onClick={async () => { await store.updateDoubtQuestion(d.id, { question: editDoubtText }); setEditingDoubtId(null); }}>Save</Button>
+                                  <Button size="sm" variant="outline" onClick={() => setEditingDoubtId(null)}>Cancel</Button>
+                                </div>
+                              </div>
+                            ) : (
+                              <p className="text-sm font-medium mt-1">{d.question}</p>
+                            )}
                             {d.questionImageUrl && (
                               <div className="mt-2">
                                 <img src={d.questionImageUrl} alt="Doubt attachment" className="max-h-48 rounded border" />

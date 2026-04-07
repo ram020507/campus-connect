@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  GraduationCap, LogOut, MessageCircle, Send, CheckCircle2, Clock, Loader2, ArrowLeft, RefreshCw, ImagePlus, X, Download
+  GraduationCap, LogOut, MessageCircle, Send, CheckCircle2, Clock, Loader2, ArrowLeft, RefreshCw, ImagePlus, X, Download, Pencil, Trash2
 } from "lucide-react";
 import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
@@ -42,6 +42,8 @@ const TeacherDashboard = () => {
   const [replyImagePreviews, setReplyImagePreviews] = useState<Record<string, string>>({});
   const [sending, setSending] = useState<Record<string, boolean>>({});
   const [claimAlert, setClaimAlert] = useState<{ show: boolean; teacherName: string }>({ show: false, teacherName: "" });
+  const [editingAnswerId, setEditingAnswerId] = useState<string | null>(null);
+  const [editAnswerText, setEditAnswerText] = useState("");
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   if (!teacher) {
@@ -239,7 +241,26 @@ const TeacherDashboard = () => {
                     </div>
                   )}
                   <div className="mt-2 p-3 rounded bg-success/10 text-sm">
-                    <p>{d.answer}</p>
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="text-xs text-muted-foreground flex-1">Your answer:</p>
+                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => { setEditingAnswerId(d.id); setEditAnswerText(d.answer || ""); }}>
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-destructive" onClick={async () => { if (confirm("Delete your answer? The doubt will return to pending.")) await store.deleteDoubtAnswer(d.id); }}>
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    {editingAnswerId === d.id ? (
+                      <div className="space-y-2">
+                        <Textarea value={editAnswerText} onChange={(e) => setEditAnswerText(e.target.value)} rows={3} />
+                        <div className="flex gap-2">
+                          <Button size="sm" onClick={async () => { await store.updateDoubtAnswer(d.id, { answer: editAnswerText }); setEditingAnswerId(null); }}>Save</Button>
+                          <Button size="sm" variant="outline" onClick={() => setEditingAnswerId(null)}>Cancel</Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <p>{d.answer}</p>
+                    )}
                     {d.answerImageUrl && (
                       <div className="mt-2">
                         <img src={d.answerImageUrl} alt="Answer attachment" className="max-h-40 rounded border" />
