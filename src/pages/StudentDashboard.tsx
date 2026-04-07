@@ -117,7 +117,7 @@ const StudentDashboard = () => {
   };
 
   const handleSendDoubt = async () => {
-    if (doubtSubject.trim() && doubtText.trim()) {
+    if (doubtSubject.trim() && (doubtText.trim() || doubtImage)) {
       setSending(true);
       // If image was already uploaded during OCR, use that URL
       let imageUrl: string | undefined;
