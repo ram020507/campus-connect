@@ -50,6 +50,8 @@ const StudentDashboard = () => {
   const [ocrText, setOcrText] = useState("");
   const [similarDoubts, setSimilarDoubts] = useState<ReturnType<typeof store.searchSimilarDoubts>>([]);
   const [expandedSuggestion, setExpandedSuggestion] = useState<string | null>(null);
+  const [editingDoubtId, setEditingDoubtId] = useState<string | null>(null);
+  const [editDoubtText, setEditDoubtText] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Real-time duplicate detection on text input with subject/year/department filtering
