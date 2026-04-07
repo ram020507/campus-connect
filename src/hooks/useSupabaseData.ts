@@ -524,7 +524,7 @@ export function useSupabaseData() {
     const mapped: Record<string, any> = {};
     if (updates.question !== undefined) mapped.question = updates.question;
     if (updates.questionImageUrl !== undefined) mapped.question_image_url = updates.questionImageUrl;
-    await supabase.from("doubts").update(mapped).eq("id", doubtId);
+    await (supabase.from("doubts").update as any)(mapped).eq("id", doubtId);
     await fetchAll();
   };
 
