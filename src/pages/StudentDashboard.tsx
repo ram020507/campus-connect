@@ -42,8 +42,10 @@ const StudentDashboard = () => {
   const [doubtImage, setDoubtImage] = useState<File | null>(null);
   const [doubtImagePreview, setDoubtImagePreview] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
-  const [doubtSearch, setDoubtSearch] = useState("");
-  const [sharedSearch, setSharedSearch] = useState("");
+  const [doubtSearch, setDoubtSearch] = useState<Record<string, string>>({});
+  const [sharedSearch, setSharedSearch] = useState<Record<string, string>>({});
+  const [expandedDoubtSubjects, setExpandedDoubtSubjects] = useState<Record<string, boolean>>({});
+  const [expandedSharedSubjects, setExpandedSharedSubjects] = useState<Record<string, boolean>>({});
   const [ocrProcessing, setOcrProcessing] = useState(false);
   const [ocrText, setOcrText] = useState("");
   const [similarDoubts, setSimilarDoubts] = useState<ReturnType<typeof store.searchSimilarDoubts>>([]);
