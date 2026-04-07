@@ -397,7 +397,7 @@ const StudentDashboard = () => {
                   </Button>
                 )}
 
-                <Button onClick={handleSendDoubt} disabled={!doubtSubject.trim() || !doubtText.trim() || sending || ocrProcessing}>
+                <Button onClick={handleSendDoubt} disabled={!doubtSubject.trim() || (!doubtText.trim() && !doubtImage) || sending || ocrProcessing}>
                   {sending ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Send className="h-4 w-4 mr-1" />} Send Doubt
                 </Button>
               </CardContent>
