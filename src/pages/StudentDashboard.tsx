@@ -7,13 +7,15 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  BookOpen, Video, LogOut, MessageCircle, ArrowLeft, Send, CheckCircle2, Play, Loader2, RefreshCw, ImagePlus, X, Download, FileText, Search, FolderOpen, ChevronDown, ChevronRight, Pencil, Trash2
+  BookOpen, Video, LogOut, MessageCircle, ArrowLeft, Send, CheckCircle2, Play, Loader2, RefreshCw, ImagePlus, X, Download, FileText, Search, FolderOpen, ChevronDown, ChevronRight, Pencil, Trash2, Monitor
 } from "lucide-react";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 
-type View = "dashboard" | "subjects" | "videos" | "video-player" | "doubts" | "shared-knowledge";
+import DigitalBoardStudent from "@/components/DigitalBoardStudent";
+
+type View = "dashboard" | "subjects" | "videos" | "video-player" | "doubts" | "shared-knowledge" | "digital-board";
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
@@ -190,7 +192,7 @@ const StudentDashboard = () => {
       <div className="max-w-4xl mx-auto p-4">
         {view === "dashboard" && (
           <div className="space-y-6 animate-fade-in">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setView("subjects")}>
                 <CardContent className="p-6 text-center">
                   <Video className="h-8 w-8 mx-auto mb-2 text-primary" />
@@ -210,6 +212,13 @@ const StudentDashboard = () => {
                   <CheckCircle2 className="h-8 w-8 mx-auto mb-2 text-success" />
                   <p className="font-semibold font-display">Shared Knowledge</p>
                   <p className="text-xs text-muted-foreground">View answered doubts</p>
+                </CardContent>
+              </Card>
+              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setView("digital-board")}>
+                <CardContent className="p-6 text-center">
+                  <Monitor className="h-8 w-8 mx-auto mb-2 text-primary" />
+                  <p className="font-semibold font-display">Digital Board</p>
+                  <p className="text-xs text-muted-foreground">Live session with teacher</p>
                 </CardContent>
               </Card>
             </div>
@@ -583,6 +592,16 @@ const StudentDashboard = () => {
               });
             })()}
           </div>
+        )}
+
+        {view === "digital-board" && (
+          <DigitalBoardStudent
+            student={student}
+            subjects={
+              dept?.subjects.map((s) => s.name) || []
+            }
+            onBack={() => setView("dashboard")}
+          />
         )}
       </div>
     </div>

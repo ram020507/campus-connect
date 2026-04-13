@@ -12,6 +12,7 @@ import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
   AlertDialogDescription, AlertDialogFooter, AlertDialogAction,
 } from "@/components/ui/alert-dialog";
+import DigitalBoardTeacher from "@/components/DigitalBoardTeacher";
 
 const TeacherDashboard = () => {
   const navigate = useNavigate();
@@ -141,6 +142,7 @@ const TeacherDashboard = () => {
       </header>
 
       <div className="max-w-3xl mx-auto p-4 space-y-6">
+        <DigitalBoardTeacher teacher={teacher} />
         <div>
           <h2 className="font-display font-semibold text-lg flex items-center gap-2 mb-4">
             <Clock className="h-5 w-5 text-accent" />
