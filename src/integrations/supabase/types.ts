@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      call_requests: {
+        Row: {
+          accepted_by_name: string | null
+          accepted_by_staff_id: string | null
+          created_at: string | null
+          doubt_text: string | null
+          id: string
+          mode: string
+          session_id: string | null
+          status: string
+          student_college: string
+          student_department: string
+          student_name: string
+          student_reg_no: string
+          student_year: number
+          subject_name: string
+          updated_at: string | null
+        }
+        Insert: {
+          accepted_by_name?: string | null
+          accepted_by_staff_id?: string | null
+          created_at?: string | null
+          doubt_text?: string | null
+          id?: string
+          mode?: string
+          session_id?: string | null
+          status?: string
+          student_college: string
+          student_department: string
+          student_name: string
+          student_reg_no: string
+          student_year: number
+          subject_name: string
+          updated_at?: string | null
+        }
+        Update: {
+          accepted_by_name?: string | null
+          accepted_by_staff_id?: string | null
+          created_at?: string | null
+          doubt_text?: string | null
+          id?: string
+          mode?: string
+          session_id?: string | null
+          status?: string
+          student_college?: string
+          student_department?: string
+          student_name?: string
+          student_reg_no?: string
+          student_year?: number
+          subject_name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       colleges: {
         Row: {
           created_at: string
@@ -60,6 +114,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      digital_board_sessions: {
+        Row: {
+          canvas_data: Json | null
+          code_content: string | null
+          college_name: string
+          department: string
+          doubt_text: string | null
+          ended_at: string | null
+          id: string
+          mode: string
+          started_at: string | null
+          status: string
+          student_name: string
+          student_reg_no: string
+          student_year: number
+          subject_name: string
+          teacher_name: string
+          teacher_staff_id: string
+        }
+        Insert: {
+          canvas_data?: Json | null
+          code_content?: string | null
+          college_name: string
+          department: string
+          doubt_text?: string | null
+          ended_at?: string | null
+          id?: string
+          mode?: string
+          started_at?: string | null
+          status?: string
+          student_name: string
+          student_reg_no: string
+          student_year: number
+          subject_name: string
+          teacher_name: string
+          teacher_staff_id: string
+        }
+        Update: {
+          canvas_data?: Json | null
+          code_content?: string | null
+          college_name?: string
+          department?: string
+          doubt_text?: string | null
+          ended_at?: string | null
+          id?: string
+          mode?: string
+          started_at?: string | null
+          status?: string
+          student_name?: string
+          student_reg_no?: string
+          student_year?: number
+          subject_name?: string
+          teacher_name?: string
+          teacher_staff_id?: string
+        }
+        Relationships: []
       }
       doubts: {
         Row: {
@@ -191,6 +302,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      teacher_status: {
+        Row: {
+          college_name: string
+          current_session_id: string | null
+          id: string
+          is_busy: boolean
+          is_online: boolean
+          last_seen_at: string | null
+          staff_id: string
+          subject_name: string
+          teacher_name: string
+          updated_at: string | null
+        }
+        Insert: {
+          college_name: string
+          current_session_id?: string | null
+          id?: string
+          is_busy?: boolean
+          is_online?: boolean
+          last_seen_at?: string | null
+          staff_id: string
+          subject_name: string
+          teacher_name: string
+          updated_at?: string | null
+        }
+        Update: {
+          college_name?: string
+          current_session_id?: string | null
+          id?: string
+          is_busy?: boolean
+          is_online?: boolean
+          last_seen_at?: string | null
+          staff_id?: string
+          subject_name?: string
+          teacher_name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       teachers: {
         Row: {
