@@ -12,6 +12,7 @@ import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
   AlertDialogDescription, AlertDialogFooter, AlertDialogAction,
 } from "@/components/ui/alert-dialog";
+import DigitalBoardTeacher from "@/components/DigitalBoardTeacher";
 
 const TeacherDashboard = () => {
   const navigate = useNavigate();
