@@ -214,6 +214,13 @@ const StudentDashboard = () => {
                   <p className="text-xs text-muted-foreground">View answered doubts</p>
                 </CardContent>
               </Card>
+              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setView("digital-board")}>
+                <CardContent className="p-6 text-center">
+                  <Monitor className="h-8 w-8 mx-auto mb-2 text-primary" />
+                  <p className="font-semibold font-display">Digital Board</p>
+                  <p className="text-xs text-muted-foreground">Live session with teacher</p>
+                </CardContent>
+              </Card>
             </div>
           </div>
         )}
