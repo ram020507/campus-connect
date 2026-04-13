@@ -593,6 +593,16 @@ const StudentDashboard = () => {
             })()}
           </div>
         )}
+
+        {view === "digital-board" && (
+          <DigitalBoardStudent
+            student={student}
+            subjects={
+              dept?.subjects.map((s) => s.name) || []
+            }
+            onBack={() => setView("dashboard")}
+          />
+        )}
       </div>
     </div>
   );
