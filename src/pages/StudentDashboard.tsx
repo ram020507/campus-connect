@@ -192,7 +192,7 @@ const StudentDashboard = () => {
       <div className="max-w-4xl mx-auto p-4">
         {view === "dashboard" && (
           <div className="space-y-6 animate-fade-in">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setView("subjects")}>
                 <CardContent className="p-6 text-center">
                   <Video className="h-8 w-8 mx-auto mb-2 text-primary" />
