@@ -7,13 +7,15 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  BookOpen, Video, LogOut, MessageCircle, ArrowLeft, Send, CheckCircle2, Play, Loader2, RefreshCw, ImagePlus, X, Download, FileText, Search, FolderOpen, ChevronDown, ChevronRight, Pencil, Trash2
+  BookOpen, Video, LogOut, MessageCircle, ArrowLeft, Send, CheckCircle2, Play, Loader2, RefreshCw, ImagePlus, X, Download, FileText, Search, FolderOpen, ChevronDown, ChevronRight, Pencil, Trash2, Monitor
 } from "lucide-react";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 
-type View = "dashboard" | "subjects" | "videos" | "video-player" | "doubts" | "shared-knowledge";
+import DigitalBoardStudent from "@/components/DigitalBoardStudent";
+
+type View = "dashboard" | "subjects" | "videos" | "video-player" | "doubts" | "shared-knowledge" | "digital-board";
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
