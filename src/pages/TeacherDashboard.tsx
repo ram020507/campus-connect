@@ -142,6 +142,7 @@ const TeacherDashboard = () => {
       </header>
 
       <div className="max-w-3xl mx-auto p-4 space-y-6">
+        <DigitalBoardTeacher teacher={teacher} />
         <div>
           <h2 className="font-display font-semibold text-lg flex items-center gap-2 mb-4">
             <Clock className="h-5 w-5 text-accent" />
