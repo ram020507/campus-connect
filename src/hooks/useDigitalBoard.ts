@@ -112,6 +112,7 @@ export function useDigitalBoard() {
     subjectName: string;
     mode: "whiteboard" | "compiler";
     doubtText?: string;
+    questionImageUrl?: string;
   }) => {
     const { data, error } = await supabase
       .from("call_requests")
@@ -124,7 +125,8 @@ export function useDigitalBoard() {
         subject_name: params.subjectName,
         mode: params.mode,
         doubt_text: params.doubtText || null,
-      })
+        question_image_url: params.questionImageUrl || null,
+      } as any)
       .select()
       .single();
     if (error) throw error;
