@@ -36,6 +36,7 @@ export interface BoardSession {
   studentYear: number;
   startedAt: string;
   endedAt: string | null;
+  teacherLocked: boolean;
 }
 
 export function useDigitalBoard() {
