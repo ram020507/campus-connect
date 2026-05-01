@@ -5,6 +5,7 @@ import {
   Phone, PhoneOff, Loader2, Monitor, Check, X, Bell,
 } from "lucide-react";
 import DigitalWhiteboard, { type WhiteboardRef, type Stroke } from "@/components/DigitalWhiteboard";
+import CCompilerEditor from "@/components/CCompilerEditor";
 import { useDigitalBoard, type CallRequest } from "@/hooks/useDigitalBoard";
 
 interface DigitalBoardTeacherProps {
@@ -116,8 +117,15 @@ const DigitalBoardTeacher = ({ teacher }: DigitalBoardTeacherProps) => {
               />
             </div>
           ) : (
-            <div className="border rounded-lg p-4 text-center text-muted-foreground">
-              <p>C Compiler mode coming soon...</p>
+            <div style={{ height: "60vh" }}>
+              <CCompilerEditor
+                initialCode={board.activeSession.codeContent || undefined}
+                onCodeChange={(code) => {
+                  if (board.activeSession) {
+                    board.updateCodeContent(board.activeSession.id, code);
+                  }
+                }}
+              />
             </div>
           )}
         </CardContent>
