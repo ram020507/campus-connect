@@ -324,6 +324,7 @@ export function useDigitalBoard() {
               studentYear: d.student_year,
               startedAt: d.started_at,
               endedAt: d.ended_at,
+              teacherLocked: d.teacher_locked || false,
             });
           }
         }
