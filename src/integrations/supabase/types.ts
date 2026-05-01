@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      board_events: {
+        Row: {
+          color: string | null
+          created_at: string
+          event_type: string
+          id: string
+          points: Json | null
+          sender: string
+          session_id: string
+          size: number | null
+          stroke_id: string | null
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          points?: Json | null
+          sender: string
+          session_id: string
+          size?: number | null
+          stroke_id?: string | null
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          points?: Json | null
+          sender?: string
+          session_id?: string
+          size?: number | null
+          stroke_id?: string | null
+        }
+        Relationships: []
+      }
       call_requests: {
         Row: {
           accepted_by_name: string | null
@@ -22,6 +58,7 @@ export type Database = {
           doubt_text: string | null
           id: string
           mode: string
+          question_image_url: string | null
           session_id: string | null
           status: string
           student_college: string
@@ -39,6 +76,7 @@ export type Database = {
           doubt_text?: string | null
           id?: string
           mode?: string
+          question_image_url?: string | null
           session_id?: string | null
           status?: string
           student_college: string
@@ -56,6 +94,7 @@ export type Database = {
           doubt_text?: string | null
           id?: string
           mode?: string
+          question_image_url?: string | null
           session_id?: string | null
           status?: string
           student_college?: string
@@ -131,6 +170,7 @@ export type Database = {
           student_reg_no: string
           student_year: number
           subject_name: string
+          teacher_locked: boolean | null
           teacher_name: string
           teacher_staff_id: string
         }
@@ -149,6 +189,7 @@ export type Database = {
           student_reg_no: string
           student_year: number
           subject_name: string
+          teacher_locked?: boolean | null
           teacher_name: string
           teacher_staff_id: string
         }
@@ -167,6 +208,7 @@ export type Database = {
           student_reg_no?: string
           student_year?: number
           subject_name?: string
+          teacher_locked?: boolean | null
           teacher_name?: string
           teacher_staff_id?: string
         }
