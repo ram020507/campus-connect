@@ -335,7 +335,7 @@ const DigitalBoardStudent = ({ student, subjects, onBack }: DigitalBoardStudentP
     );
   }
 
-  const isLocked = (board.activeSession as any).teacher_locked || false;
+  const isLocked = board.activeSession.teacherLocked || false;
 
   return (
     <div className="space-y-2 animate-fade-in">
