@@ -10,6 +10,7 @@ import {
   ArrowLeft, Phone, PhoneOff, Loader2, Monitor, X,
 } from "lucide-react";
 import DigitalWhiteboard, { type WhiteboardRef, type Stroke } from "@/components/DigitalWhiteboard";
+import CCompilerEditor from "@/components/CCompilerEditor";
 import { useDigitalBoard, type BoardSession } from "@/hooks/useDigitalBoard";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -261,8 +262,15 @@ const DigitalBoardStudent = ({ student, subjects, onBack }: DigitalBoardStudentP
           />
         </div>
       ) : (
-        <div className="border rounded-lg p-4 text-center text-muted-foreground">
-          <p>C Compiler mode coming soon...</p>
+        <div style={{ height: "calc(100vh - 220px)" }}>
+          <CCompilerEditor
+            initialCode={board.activeSession.codeContent || undefined}
+            onCodeChange={(code) => {
+              if (board.activeSession) {
+                board.updateCodeContent(board.activeSession.id, code);
+              }
+            }}
+          />
         </div>
       )}
     </div>
