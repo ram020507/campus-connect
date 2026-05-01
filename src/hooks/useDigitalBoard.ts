@@ -36,6 +36,7 @@ export interface BoardSession {
   studentYear: number;
   startedAt: string;
   endedAt: string | null;
+  teacherLocked: boolean;
 }
 
 export function useDigitalBoard() {
@@ -97,6 +98,7 @@ export function useDigitalBoard() {
         studentYear: data.student_year,
         startedAt: data.started_at,
         endedAt: data.ended_at,
+        teacherLocked: (data as any).teacher_locked || false,
       });
     }
     return data;
@@ -112,6 +114,7 @@ export function useDigitalBoard() {
     subjectName: string;
     mode: "whiteboard" | "compiler";
     doubtText?: string;
+    questionImageUrl?: string;
   }) => {
     const { data, error } = await supabase
       .from("call_requests")
@@ -124,7 +127,8 @@ export function useDigitalBoard() {
         subject_name: params.subjectName,
         mode: params.mode,
         doubt_text: params.doubtText || null,
-      })
+        question_image_url: params.questionImageUrl || null,
+      } as any)
       .select()
       .single();
     if (error) throw error;
@@ -320,6 +324,7 @@ export function useDigitalBoard() {
               studentYear: d.student_year,
               startedAt: d.started_at,
               endedAt: d.ended_at,
+              teacherLocked: d.teacher_locked || false,
             });
           }
         }
