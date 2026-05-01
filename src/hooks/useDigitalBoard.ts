@@ -98,6 +98,7 @@ export function useDigitalBoard() {
         studentYear: data.student_year,
         startedAt: data.started_at,
         endedAt: data.ended_at,
+        teacherLocked: (data as any).teacher_locked || false,
       });
     }
     return data;
