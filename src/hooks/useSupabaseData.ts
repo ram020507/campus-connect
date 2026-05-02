@@ -82,6 +82,14 @@ export interface Doubt {
   createdAt: string;
   answeredAt?: string;
   ocrText?: string;
+  helpfulCount: number;
+}
+
+export interface SavedDoubt {
+  id: string;
+  studentRegNo: string;
+  doubtId: string;
+  createdAt: string;
 }
 
 export function useSupabaseData() {
@@ -89,11 +97,13 @@ export function useSupabaseData() {
   const [students, setStudents] = useState<StudentAccount[]>([]);
   const [teachers, setTeachers] = useState<TeacherAccount[]>([]);
   const [doubts, setDoubts] = useState<Doubt[]>([]);
+  const [savedDoubts, setSavedDoubts] = useState<SavedDoubt[]>([]);
+  const [helpfulByMe, setHelpfulByMe] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchAll = useCallback(async () => {
     try {
-      const [collegesRes, yearsRes, deptsRes, subjectsRes, videosRes, videoFilesRes, studentsRes, teachersRes, doubtsRes] =
+      const [collegesRes, yearsRes, deptsRes, subjectsRes, videosRes, videoFilesRes, studentsRes, teachersRes, doubtsRes, savedRes, helpfulRes] =
         await Promise.all([
           supabase.from("colleges").select("*"),
           supabase.from("years").select("*"),
@@ -104,6 +114,8 @@ export function useSupabaseData() {
           supabase.from("students").select("*"),
           supabase.from("teachers").select("*"),
           supabase.from("doubts").select("*"),
+          supabase.from("saved_doubts").select("*"),
+          supabase.from("doubt_helpful").select("*"),
         ]);
 
       const videoFilesData = (videoFilesRes.data || []).map((f: any) => ({
@@ -200,7 +212,21 @@ export function useSupabaseData() {
           createdAt: d.created_at,
           answeredAt: d.answered_at || undefined,
           ocrText: (d as any).ocr_text || undefined,
+          helpfulCount: (d as any).helpful_count || 0,
         }))
+      );
+
+      setSavedDoubts(
+        (savedRes.data || []).map((s: any) => ({
+          id: s.id,
+          studentRegNo: s.student_reg_no,
+          doubtId: s.doubt_id,
+          createdAt: s.created_at,
+        }))
+      );
+
+      setHelpfulByMe(
+        (helpfulRes.data || []).map((h: any) => `${h.student_reg_no}:${h.doubt_id}`)
       );
     } catch (err) {
       console.error("Error fetching data:", err);
@@ -459,7 +485,7 @@ export function useSupabaseData() {
     await fetchAll();
   };
 
-  const addDoubt = async (doubt: Omit<Doubt, "id" | "createdAt">) => {
+  const addDoubt = async (doubt: Omit<Doubt, "id" | "createdAt" | "helpfulCount">) => {
     const { error, data } = await supabase.from("doubts").insert({
       student_name: doubt.studentName,
       student_reg_no: doubt.studentRegNo,
@@ -510,7 +536,6 @@ export function useSupabaseData() {
     if (words.length === 0) return [];
     return doubts.filter((d) => {
       if (!d.answer) return false;
-      // Filter by subject, year, and department when provided
       if (filters?.subjectName && d.subjectName.toLowerCase() !== filters.subjectName.toLowerCase()) return false;
       if (filters?.studentYear && d.studentYear !== filters.studentYear) return false;
       if (filters?.studentDepartment && d.studentDepartment.toLowerCase() !== filters.studentDepartment.toLowerCase()) return false;
@@ -520,11 +545,23 @@ export function useSupabaseData() {
     }).slice(0, 5);
   };
 
-  const updateDoubtQuestion = async (doubtId: string, updates: { question?: string; questionImageUrl?: string | null }) => {
+  // Enhanced edit: resets claim so updated doubt goes back to all teachers
+  const updateDoubtQuestion = async (doubtId: string, updates: { question?: string; questionImageUrl?: string | null; subjectName?: string }) => {
     const mapped: Record<string, any> = {};
     if (updates.question !== undefined) mapped.question = updates.question;
     if (updates.questionImageUrl !== undefined) mapped.question_image_url = updates.questionImageUrl;
+    if (updates.subjectName !== undefined) mapped.subject_name = updates.subjectName;
+    // Reset claim so it goes back to pending for teachers
+    mapped.claimed_by = null;
+    mapped.handling_teacher = null;
+    mapped.status = "pending";
+    mapped.answer = null;
+    mapped.answered_by = null;
+    mapped.answered_at = null;
+    mapped.answer_image_url = null;
     await (supabase.from("doubts").update as any)(mapped).eq("id", doubtId);
+    // Resend notification
+    supabase.functions.invoke("notify-doubt", { body: { type: "new_doubt", doubtId } }).catch(console.error);
     await fetchAll();
   };
 
@@ -554,6 +591,42 @@ export function useSupabaseData() {
     await fetchAll();
   };
 
+  // Save / unsave doubt
+  const saveDoubt = async (studentRegNo: string, doubtId: string) => {
+    await supabase.from("saved_doubts").insert({
+      student_reg_no: studentRegNo,
+      doubt_id: doubtId,
+    } as any);
+    await fetchAll();
+  };
+
+  const unsaveDoubt = async (studentRegNo: string, doubtId: string) => {
+    await supabase.from("saved_doubts").delete()
+      .eq("student_reg_no", studentRegNo)
+      .eq("doubt_id", doubtId);
+    await fetchAll();
+  };
+
+  // Toggle helpful
+  const toggleHelpful = async (studentRegNo: string, doubtId: string) => {
+    const key = `${studentRegNo}:${doubtId}`;
+    if (helpfulByMe.includes(key)) {
+      // Remove helpful
+      await supabase.from("doubt_helpful").delete()
+        .eq("student_reg_no", studentRegNo)
+        .eq("doubt_id", doubtId);
+      await (supabase.from("doubts").update as any)({ helpful_count: Math.max(0, (doubts.find(d => d.id === doubtId)?.helpfulCount || 1) - 1) }).eq("id", doubtId);
+    } else {
+      // Add helpful
+      await supabase.from("doubt_helpful").insert({
+        student_reg_no: studentRegNo,
+        doubt_id: doubtId,
+      } as any);
+      await (supabase.from("doubts").update as any)({ helpful_count: (doubts.find(d => d.id === doubtId)?.helpfulCount || 0) + 1 }).eq("id", doubtId);
+    }
+    await fetchAll();
+  };
+
   const extractOcrText = async (imageUrl: string): Promise<string> => {
     try {
       const { data, error } = await supabase.functions.invoke("ocr-extract", {
@@ -568,7 +641,7 @@ export function useSupabaseData() {
   };
 
   return {
-    colleges, students, teachers, doubts, loading,
+    colleges, students, teachers, doubts, savedDoubts, helpfulByMe, loading,
     addCollege, removeCollege,
     addYear, removeYear,
     addDepartment, removeDepartment,
@@ -581,6 +654,7 @@ export function useSupabaseData() {
     addDoubt, claimDoubt, answerDoubt,
     searchSimilarDoubts, extractOcrText,
     updateDoubtQuestion, deleteDoubt, updateDoubtAnswer, deleteDoubtAnswer,
+    saveDoubt, unsaveDoubt, toggleHelpful,
     refetch: fetchAll,
   };
 }
