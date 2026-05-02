@@ -248,7 +248,7 @@ const TeacherDashboard = () => {
                   <div className="mt-2 p-3 rounded bg-success/10 text-sm">
                     <div className="flex items-center gap-2 mb-1">
                       <p className="text-xs text-muted-foreground flex-1">Your answer:</p>
-                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => { setEditingAnswerId(d.id); setEditAnswerText(d.answer || ""); }}>
+                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => { setEditingAnswerId(d.id); setEditAnswerText(d.answer || ""); setEditAnswerImagePreview(d.answerImageUrl || null); }}>
                         <Pencil className="h-3 w-3" />
                       </Button>
                       <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-destructive" onClick={async () => { if (confirm("Delete your answer? The doubt will return to pending.")) await store.deleteDoubtAnswer(d.id); }}>
@@ -258,14 +258,36 @@ const TeacherDashboard = () => {
                     {editingAnswerId === d.id ? (
                       <div className="space-y-2">
                         <Textarea value={editAnswerText} onChange={(e) => setEditAnswerText(e.target.value)} rows={3} />
+                        {editAnswerImagePreview && (
+                          <div className="relative inline-block">
+                            <img src={editAnswerImagePreview} alt="Answer attachment" className="max-h-32 rounded border" />
+                            <button onClick={() => setEditAnswerImagePreview(null)} className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1">
+                              <X className="h-3 w-3" />
+                            </button>
+                          </div>
+                        )}
+                        <input type="file" accept="image/*" className="hidden" ref={editAnswerFileRef} onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const url = await store.uploadDoubtImage(file);
+                            if (url) setEditAnswerImagePreview(url);
+                          }
+                        }} />
+                        <Button variant="outline" size="sm" onClick={() => editAnswerFileRef.current?.click()}>
+                          <ImagePlus className="h-3 w-3 mr-1" /> {editAnswerImagePreview ? "Change Image" : "Add Image"}
+                        </Button>
                         <div className="flex gap-2">
-                          <Button size="sm" onClick={async () => { await store.updateDoubtAnswer(d.id, { answer: editAnswerText }); setEditingAnswerId(null); }}>Save</Button>
-                          <Button size="sm" variant="outline" onClick={() => setEditingAnswerId(null)}>Cancel</Button>
+                          <Button size="sm" onClick={async () => {
+                            await store.updateDoubtAnswer(d.id, { answer: editAnswerText, answerImageUrl: editAnswerImagePreview });
+                            setEditingAnswerId(null);
+                            setEditAnswerImagePreview(null);
+                          }}>Save</Button>
+                          <Button size="sm" variant="outline" onClick={() => { setEditingAnswerId(null); setEditAnswerImagePreview(null); }}>Cancel</Button>
                         </div>
                       </div>
                     ) : (
                       <p>{d.answer}</p>
-                    )}
+                    )
                     {d.answerImageUrl && (
                       <div className="mt-2">
                         <img src={d.answerImageUrl} alt="Answer attachment" className="max-h-40 rounded border" />
