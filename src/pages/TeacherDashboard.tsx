@@ -286,12 +286,14 @@ const TeacherDashboard = () => {
                         </div>
                       </div>
                     ) : (
-                      <p>{d.answer}</p>
-                    )
-                    {d.answerImageUrl && (
-                      <div className="mt-2">
-                        <img src={d.answerImageUrl} alt="Answer attachment" className="max-h-40 rounded border" />
-                      </div>
+                      <>
+                        <p>{d.answer}</p>
+                        {d.answerImageUrl && (
+                          <div className="mt-2">
+                            <img src={d.answerImageUrl} alt="Answer attachment" className="max-h-40 rounded border" />
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 </CardContent>
