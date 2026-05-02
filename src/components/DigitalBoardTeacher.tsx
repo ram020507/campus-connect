@@ -165,9 +165,9 @@ const DigitalBoardTeacher = ({ teacher }: DigitalBoardTeacherProps) => {
                 {req.doubtText && (
                   <p className="text-xs mt-1 text-muted-foreground italic">"{req.doubtText}"</p>
                 )}
-                {(req as any).question_image_url && (
+                {req.questionImageUrl && (
                   <div className="mt-1">
-                    <img src={(req as any).question_image_url} alt="Question" className="max-h-20 rounded border" />
+                    <img src={req.questionImageUrl} alt="Question" className="max-h-20 rounded border" />
                   </div>
                 )}
               </div>
