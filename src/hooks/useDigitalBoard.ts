@@ -12,7 +12,7 @@ export interface CallRequest {
   subjectName: string;
   mode: "whiteboard" | "compiler";
   doubtText: string | null;
-  status: string;
+  questionImageUrl: string | null;
   acceptedByStaffId: string | null;
   acceptedByName: string | null;
   sessionId: string | null;
