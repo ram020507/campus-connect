@@ -320,6 +320,7 @@ export function useDigitalBoard() {
               subjectName: d.subject_name,
               mode: d.mode,
               doubtText: d.doubt_text,
+              questionImageUrl: d.question_image_url || null,
               canvasData: d.canvas_data || [],
               codeContent: d.code_content || "",
               status: d.status,
