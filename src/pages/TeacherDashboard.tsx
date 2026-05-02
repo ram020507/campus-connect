@@ -45,6 +45,9 @@ const TeacherDashboard = () => {
   const [claimAlert, setClaimAlert] = useState<{ show: boolean; teacherName: string }>({ show: false, teacherName: "" });
   const [editingAnswerId, setEditingAnswerId] = useState<string | null>(null);
   const [editAnswerText, setEditAnswerText] = useState("");
+  const [editAnswerImage, setEditAnswerImage] = useState<File | null>(null);
+  const [editAnswerImagePreview, setEditAnswerImagePreview] = useState<string | null>(null);
+  const editAnswerFileRef = useRef<HTMLInputElement | null>(null);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   if (!teacher) {
