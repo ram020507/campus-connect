@@ -214,6 +214,35 @@ export type Database = {
         }
         Relationships: []
       }
+      doubt_helpful: {
+        Row: {
+          created_at: string
+          doubt_id: string
+          id: string
+          student_reg_no: string
+        }
+        Insert: {
+          created_at?: string
+          doubt_id: string
+          id?: string
+          student_reg_no: string
+        }
+        Update: {
+          created_at?: string
+          doubt_id?: string
+          id?: string
+          student_reg_no?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doubt_helpful_doubt_id_fkey"
+            columns: ["doubt_id"]
+            isOneToOne: false
+            referencedRelation: "doubts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       doubts: {
         Row: {
           answer: string | null
@@ -223,6 +252,7 @@ export type Database = {
           claimed_by: string | null
           created_at: string
           handling_teacher: string | null
+          helpful_count: number
           id: string
           ocr_text: string | null
           question: string
@@ -243,6 +273,7 @@ export type Database = {
           claimed_by?: string | null
           created_at?: string
           handling_teacher?: string | null
+          helpful_count?: number
           id?: string
           ocr_text?: string | null
           question: string
@@ -263,6 +294,7 @@ export type Database = {
           claimed_by?: string | null
           created_at?: string
           handling_teacher?: string | null
+          helpful_count?: number
           id?: string
           ocr_text?: string | null
           question?: string
@@ -276,6 +308,35 @@ export type Database = {
           subject_name?: string
         }
         Relationships: []
+      }
+      saved_doubts: {
+        Row: {
+          created_at: string
+          doubt_id: string
+          id: string
+          student_reg_no: string
+        }
+        Insert: {
+          created_at?: string
+          doubt_id: string
+          id?: string
+          student_reg_no: string
+        }
+        Update: {
+          created_at?: string
+          doubt_id?: string
+          id?: string
+          student_reg_no?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_doubts_doubt_id_fkey"
+            columns: ["doubt_id"]
+            isOneToOne: false
+            referencedRelation: "doubts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       students: {
         Row: {
