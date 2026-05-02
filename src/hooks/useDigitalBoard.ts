@@ -12,6 +12,7 @@ export interface CallRequest {
   subjectName: string;
   mode: "whiteboard" | "compiler";
   doubtText: string | null;
+  questionImageUrl: string | null;
   status: string;
   acceptedByStaffId: string | null;
   acceptedByName: string | null;
@@ -28,6 +29,7 @@ export interface BoardSession {
   subjectName: string;
   mode: "whiteboard" | "compiler";
   doubtText: string | null;
+  questionImageUrl: string | null;
   canvasData: Stroke[];
   codeContent: string;
   status: string;
@@ -63,6 +65,7 @@ export function useDigitalBoard() {
           subjectName: r.subject_name,
           mode: r.mode,
           doubtText: r.doubt_text,
+          questionImageUrl: r.question_image_url || null,
           status: r.status,
           acceptedByStaffId: r.accepted_by_staff_id,
           acceptedByName: r.accepted_by_name,
@@ -90,6 +93,7 @@ export function useDigitalBoard() {
         subjectName: data.subject_name,
         mode: data.mode as "whiteboard" | "compiler",
         doubtText: data.doubt_text,
+        questionImageUrl: (data as any).question_image_url || null,
         canvasData: (data.canvas_data as any) || [],
         codeContent: data.code_content || "",
         status: data.status,
@@ -316,6 +320,7 @@ export function useDigitalBoard() {
               subjectName: d.subject_name,
               mode: d.mode,
               doubtText: d.doubt_text,
+              questionImageUrl: d.question_image_url || null,
               canvasData: d.canvas_data || [],
               codeContent: d.code_content || "",
               status: d.status,
