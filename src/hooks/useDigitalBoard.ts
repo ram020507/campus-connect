@@ -93,6 +93,7 @@ export function useDigitalBoard() {
         subjectName: data.subject_name,
         mode: data.mode as "whiteboard" | "compiler",
         doubtText: data.doubt_text,
+        questionImageUrl: (data as any).question_image_url || null,
         canvasData: (data.canvas_data as any) || [],
         codeContent: data.code_content || "",
         status: data.status,
