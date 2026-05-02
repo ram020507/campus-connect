@@ -64,6 +64,7 @@ export function useDigitalBoard() {
           subjectName: r.subject_name,
           mode: r.mode,
           doubtText: r.doubt_text,
+          questionImageUrl: r.question_image_url || null,
           status: r.status,
           acceptedByStaffId: r.accepted_by_staff_id,
           acceptedByName: r.accepted_by_name,
