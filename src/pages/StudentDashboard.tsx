@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  BookOpen, Video, LogOut, MessageCircle, ArrowLeft, Send, CheckCircle2, Play, Loader2, RefreshCw, ImagePlus, X, Download, FileText, Search, FolderOpen, ChevronDown, ChevronRight, Pencil, Trash2, Monitor, ThumbsUp, Bookmark, BookmarkCheck, Shuffle
+  BookOpen, Video, LogOut, MessageCircle, ArrowLeft, Send, CheckCircle2, Play, Loader2, RefreshCw, ImagePlus, X, Download, FileText, Search, FolderOpen, ChevronDown, ChevronRight, Pencil, Trash2, Monitor, ThumbsUp, Bookmark, BookmarkCheck, Shuffle, ChevronUp
 } from "lucide-react";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -15,7 +15,7 @@ import {
 
 import DigitalBoardStudent from "@/components/DigitalBoardStudent";
 
-type View = "dashboard" | "subjects" | "videos" | "video-player" | "doubts" | "shared-knowledge" | "digital-board" | "shared-feed" | "saved-doubts";
+type View = "dashboard" | "subjects" | "videos" | "video-player" | "doubts" | "digital-board" | "learning-feed" | "saved-doubts";
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
@@ -44,9 +44,7 @@ const StudentDashboard = () => {
   const [doubtImagePreview, setDoubtImagePreview] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [doubtSearch, setDoubtSearch] = useState<Record<string, string>>({});
-  const [sharedSearch, setSharedSearch] = useState<Record<string, string>>({});
   const [expandedDoubtSubjects, setExpandedDoubtSubjects] = useState<Record<string, boolean>>({});
-  const [expandedSharedSubjects, setExpandedSharedSubjects] = useState<Record<string, boolean>>({});
   const [ocrProcessing, setOcrProcessing] = useState(false);
   const [ocrText, setOcrText] = useState("");
   const [similarDoubts, setSimilarDoubts] = useState<ReturnType<typeof store.searchSimilarDoubts>>([]);
@@ -59,6 +57,7 @@ const StudentDashboard = () => {
   const [savedSearch, setSavedSearch] = useState("");
   const [savedSubjectFilter, setSavedSubjectFilter] = useState("all");
   const [feedCurrentIndex, setFeedCurrentIndex] = useState(0);
+  const feedContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -89,17 +88,11 @@ const StudentDashboard = () => {
   const currentSubject = dept?.subjects.find((s) => s.id === selectedSubjectId);
   const currentVideo = currentSubject?.videos.find((v) => v.id === selectedVideoId);
 
-  // Shared Knowledge: exclude student's own doubts
-  const answeredDoubts = store.doubts.filter(
-    (d) => d.answer && d.studentYear === student.year && d.studentDepartment === student.department && d.studentRegNo !== student.registrationNumber
-  );
-
   // Feed: randomized doubts from all subjects for this year/dept (excluding own)
   const feedDoubts = useMemo(() => {
     const all = store.doubts.filter(
       (d) => d.answer && d.studentYear === student.year && d.studentDepartment === student.department && d.studentRegNo !== student.registrationNumber
     );
-    // Shuffle using Fisher-Yates
     const shuffled = [...all];
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -213,6 +206,13 @@ const StudentDashboard = () => {
   const isHelpful = (doubtId: string) => store.helpfulByMe.includes(`${student.registrationNumber}:${doubtId}`);
   const isSaved = (doubtId: string) => mySavedDoubtIds.includes(doubtId);
 
+  const goNextFeed = () => {
+    if (feedCurrentIndex < feedDoubts.length - 1) setFeedCurrentIndex((i) => i + 1);
+  };
+  const goPrevFeed = () => {
+    if (feedCurrentIndex > 0) setFeedCurrentIndex((i) => i - 1);
+  };
+
   if (store.loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -232,7 +232,11 @@ const StudentDashboard = () => {
           </div>
         </div>
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/")}>
+          <Button variant="ghost" size="sm" onClick={() => {
+            if (view === "saved-doubts") { setView("learning-feed"); }
+            else if (view !== "dashboard") { setView("dashboard"); }
+            else { navigate("/"); }
+          }}>
             <ArrowLeft className="h-4 w-4 mr-1" /> Back
           </Button>
           <Button variant="ghost" size="sm" onClick={() => window.location.reload()}>
@@ -247,7 +251,7 @@ const StudentDashboard = () => {
       <div className="max-w-4xl mx-auto p-4">
         {view === "dashboard" && (
           <div className="space-y-6 animate-fade-in">
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setView("subjects")}>
                 <CardContent className="p-4 text-center">
                   <Video className="h-7 w-7 mx-auto mb-2 text-primary" />
@@ -260,28 +264,16 @@ const StudentDashboard = () => {
                   <p className="font-semibold font-display text-sm">Ask a Doubt</p>
                 </CardContent>
               </Card>
-              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setView("shared-knowledge")}>
-                <CardContent className="p-4 text-center">
-                  <CheckCircle2 className="h-7 w-7 mx-auto mb-2 text-success" />
-                  <p className="font-semibold font-display text-sm">Shared Knowledge</p>
-                </CardContent>
-              </Card>
               <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setView("digital-board")}>
                 <CardContent className="p-4 text-center">
                   <Monitor className="h-7 w-7 mx-auto mb-2 text-primary" />
                   <p className="font-semibold font-display text-sm">Digital Board</p>
                 </CardContent>
               </Card>
-              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => { setFeedCurrentIndex(0); setView("shared-feed"); }}>
+              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => { setFeedCurrentIndex(0); setView("learning-feed"); }}>
                 <CardContent className="p-4 text-center">
                   <Shuffle className="h-7 w-7 mx-auto mb-2 text-accent" />
                   <p className="font-semibold font-display text-sm">Learning Feed</p>
-                </CardContent>
-              </Card>
-              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setView("saved-doubts")}>
-                <CardContent className="p-4 text-center">
-                  <Bookmark className="h-7 w-7 mx-auto mb-2 text-success" />
-                  <p className="font-semibold font-display text-sm">Saved Doubts</p>
                 </CardContent>
               </Card>
             </div>
@@ -520,28 +512,12 @@ const StudentDashboard = () => {
                                 <span className="text-xs text-accent">Pending</span>
                               )}
                               <span className="text-xs text-muted-foreground ml-auto">{new Date(d.createdAt).toLocaleDateString()}</span>
-                              {/* Only show edit/delete if not yet answered */}
-                              {!d.answer && (
-                                <>
-                                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => startEditDoubt(d)}>
-                                    <Pencil className="h-3 w-3" />
-                                  </Button>
-                                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-destructive" onClick={async () => { if (confirm("Delete this doubt?")) await store.deleteDoubt(d.id); }}>
-                                    <Trash2 className="h-3 w-3" />
-                                  </Button>
-                                </>
-                              )}
-                              {/* Allow edit even after answer (will reset answer) */}
-                              {d.answer && (
-                                <>
-                                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0" title="Edit (will reset answer)" onClick={() => startEditDoubt(d)}>
-                                    <Pencil className="h-3 w-3" />
-                                  </Button>
-                                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-destructive" onClick={async () => { if (confirm("Delete this doubt?")) await store.deleteDoubt(d.id); }}>
-                                    <Trash2 className="h-3 w-3" />
-                                  </Button>
-                                </>
-                              )}
+                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => startEditDoubt(d)}>
+                                <Pencil className="h-3 w-3" />
+                              </Button>
+                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-destructive" onClick={async () => { if (confirm("Delete this doubt?")) await store.deleteDoubt(d.id); }}>
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
                             </div>
                             {editingDoubtId === d.id ? (
                               <div className="space-y-2 mt-1">
@@ -609,91 +585,129 @@ const StudentDashboard = () => {
           </div>
         )}
 
-        {view === "shared-knowledge" && (
-          <div className="space-y-4 animate-fade-in">
-            <Button variant="ghost" size="sm" onClick={() => setView("dashboard")}>
-              <ArrowLeft className="h-4 w-4 mr-1" /> Back
-            </Button>
-            <h2 className="font-display font-semibold text-lg">Shared Knowledge</h2>
-            <p className="text-sm text-muted-foreground">Answered doubts from your year & department (excluding your own)</p>
-            {(() => {
-              const subjectGroups = answeredDoubts.reduce<Record<string, typeof answeredDoubts>>((acc, d) => {
-                (acc[d.subjectName] = acc[d.subjectName] || []).push(d);
-                return acc;
-              }, {});
-              const subjectNames = Object.keys(subjectGroups).sort();
-              if (subjectNames.length === 0) return <p className="text-center text-muted-foreground py-8">No answered doubts yet.</p>;
-              return subjectNames.map((subj) => {
-                const isOpen = expandedSharedSubjects[subj] ?? false;
-                const search = sharedSearch[subj] || "";
-                const filtered = subjectGroups[subj]
-                  .filter((d) => {
-                    if (!search.trim()) return true;
-                    const q = search.toLowerCase();
-                    return d.question.toLowerCase().includes(q) || d.answer?.toLowerCase().includes(q) || d.studentName.toLowerCase().includes(q);
-                  })
-                  .sort((a, b) => new Date(b.answeredAt!).getTime() - new Date(a.answeredAt!).getTime());
-                return (
-                  <Card key={subj}>
-                    <div className="flex items-center gap-2 p-3 cursor-pointer hover:bg-accent/5 transition-colors"
-                      onClick={() => setExpandedSharedSubjects((prev) => ({ ...prev, [subj]: !isOpen }))}>
-                      {isOpen ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
-                      <FolderOpen className="h-4 w-4 text-success" />
-                      <span className="font-semibold text-sm flex-1">{subj}</span>
-                      <span className="text-xs text-muted-foreground">{subjectGroups[subj].length} answer(s)</span>
-                    </div>
-                    {isOpen && (
-                      <div className="px-3 pb-3 space-y-3">
-                        <div className="relative">
-                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                          <Input placeholder={`Search in ${subj}...`} value={search}
-                            onChange={(e) => setSharedSearch((prev) => ({ ...prev, [subj]: e.target.value }))} className="pl-9" />
-                        </div>
-                        {filtered.length === 0 ? (
-                          <p className="text-center text-muted-foreground text-sm py-4">No matching doubts.</p>
-                        ) : filtered.map((d) => (
-                          <DoubtCard key={d.id} d={d} student={student} store={store} isHelpful={isHelpful} isSaved={isSaved} />
-                        ))}
-                      </div>
-                    )}
-                  </Card>
-                );
-              });
-            })()}
-          </div>
-        )}
+        {/* Learning Feed - Reels/Shorts style one-card-at-a-time */}
+        {view === "learning-feed" && (
+          <div className="animate-fade-in">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="sm" onClick={() => setView("dashboard")}>
+                  <ArrowLeft className="h-4 w-4 mr-1" /> Back
+                </Button>
+                <h2 className="font-display font-semibold text-lg flex items-center gap-2">
+                  <Shuffle className="h-5 w-5 text-accent" /> Learning Feed
+                </h2>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => setView("saved-doubts")}>
+                <BookmarkCheck className="h-4 w-4 mr-1" /> Saved Doubts
+              </Button>
+            </div>
 
-        {/* Learning Feed - Short scrollable cards */}
-        {view === "shared-feed" && (
-          <div className="space-y-4 animate-fade-in">
-            <Button variant="ghost" size="sm" onClick={() => setView("dashboard")}>
-              <ArrowLeft className="h-4 w-4 mr-1" /> Back
-            </Button>
-            <h2 className="font-display font-semibold text-lg flex items-center gap-2">
-              <Shuffle className="h-5 w-5 text-accent" /> Learning Feed
-            </h2>
-            <p className="text-sm text-muted-foreground">Scroll through solved doubts to learn something new!</p>
             {feedDoubts.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">No solved doubts available yet.</p>
+              <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+                <Shuffle className="h-12 w-12 mb-4 opacity-30" />
+                <p className="text-lg font-medium">No solved doubts available yet</p>
+                <p className="text-sm">Come back later to learn from your peers!</p>
+              </div>
             ) : (
-              <div className="space-y-4">
-                {feedDoubts.map((d) => (
-                  <DoubtCard key={d.id} d={d} student={student} store={store} isHelpful={isHelpful} isSaved={isSaved} />
-                ))}
+              <div className="relative" ref={feedContainerRef}>
+                {/* Navigation arrows */}
+                <div className="flex items-center justify-center gap-2 mb-3">
+                  <Button variant="outline" size="sm" onClick={goPrevFeed} disabled={feedCurrentIndex === 0}>
+                    <ChevronUp className="h-4 w-4" />
+                  </Button>
+                  <span className="text-xs text-muted-foreground">{feedCurrentIndex + 1} / {feedDoubts.length}</span>
+                  <Button variant="outline" size="sm" onClick={goNextFeed} disabled={feedCurrentIndex >= feedDoubts.length - 1}>
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                {/* Full-size feed card */}
+                {(() => {
+                  const d = feedDoubts[feedCurrentIndex];
+                  if (!d) return null;
+                  return (
+                    <Card className="border-2 border-primary/20 shadow-lg overflow-hidden">
+                      <CardContent className="p-0">
+                        {/* Subject badge header */}
+                        <div className="bg-primary/10 px-4 py-3 flex items-center justify-between">
+                          <span className="text-sm font-semibold text-primary">{d.subjectName}</span>
+                          <span className="text-xs text-muted-foreground">{new Date(d.createdAt).toLocaleDateString()}</span>
+                        </div>
+
+                        <div className="p-5 space-y-4">
+                          {/* Question */}
+                          <div>
+                            <p className="text-xs font-medium text-muted-foreground mb-1">Question</p>
+                            <p className="text-base font-medium leading-relaxed">{d.question}</p>
+                          </div>
+
+                          {/* Question image */}
+                          {d.questionImageUrl && (
+                            <div>
+                              <img src={d.questionImageUrl} alt="Question" className="w-full max-h-64 object-contain rounded-lg border" />
+                            </div>
+                          )}
+
+                          {/* Answer */}
+                          <div className="p-4 rounded-lg bg-success/10">
+                            <p className="text-xs font-medium text-muted-foreground mb-2">Answer by {d.answeredBy}</p>
+                            <p className="text-sm leading-relaxed">{d.answer}</p>
+                            {d.answerImageUrl && (
+                              <div className="mt-3">
+                                <img src={d.answerImageUrl} alt="Answer" className="w-full max-h-64 object-contain rounded-lg border" />
+                                <a href={d.answerImageUrl} download className="inline-flex items-center gap-1 text-xs text-primary mt-2 hover:underline">
+                                  <Download className="h-3 w-3" /> Download Image
+                                </a>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Footer: asked by + actions */}
+                          <div className="flex items-center justify-between pt-2 border-t">
+                            <p className="text-xs text-muted-foreground">Asked by {d.studentName}</p>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="outline" size="sm" className="gap-1"
+                                onClick={() => store.toggleHelpful(student.registrationNumber, d.id)}
+                              >
+                                <ThumbsUp className={`h-4 w-4 ${isHelpful(d.id) ? "fill-primary text-primary" : ""}`} />
+                                <span className="text-xs font-medium">{d.helpfulCount || 0} Insightful</span>
+                              </Button>
+                              <Button
+                                variant="outline" size="sm" className="gap-1"
+                                onClick={() => isSaved(d.id) ? store.unsaveDoubt(student.registrationNumber, d.id) : store.saveDoubt(student.registrationNumber, d.id)}
+                              >
+                                {isSaved(d.id) ? <BookmarkCheck className="h-4 w-4 text-success" /> : <Bookmark className="h-4 w-4" />}
+                                <span className="text-xs font-medium">{isSaved(d.id) ? "Saved" : "Save"}</span>
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })()}
+
+                {/* Swipe hint */}
+                {feedDoubts.length > 1 && (
+                  <p className="text-center text-xs text-muted-foreground mt-3">Use arrows to browse through doubts</p>
+                )}
               </div>
             )}
           </div>
         )}
 
-        {/* Saved Doubts */}
+        {/* Saved Doubts (sub-view of Learning Feed) */}
         {view === "saved-doubts" && (
           <div className="space-y-4 animate-fade-in">
-            <Button variant="ghost" size="sm" onClick={() => setView("dashboard")}>
-              <ArrowLeft className="h-4 w-4 mr-1" /> Back
-            </Button>
-            <h2 className="font-display font-semibold text-lg flex items-center gap-2">
-              <BookmarkCheck className="h-5 w-5 text-success" /> Saved Doubts & Answers
-            </h2>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" onClick={() => setView("learning-feed")}>
+                <ArrowLeft className="h-4 w-4 mr-1" /> Back to Feed
+              </Button>
+              <h2 className="font-display font-semibold text-lg flex items-center gap-2">
+                <BookmarkCheck className="h-5 w-5 text-success" /> Saved Doubts & Answers
+              </h2>
+            </div>
             <div className="flex gap-2">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -737,7 +751,7 @@ const StudentDashboard = () => {
   );
 };
 
-// Reusable doubt card for shared knowledge, feed, and saved
+// Reusable doubt card for saved doubts list
 function DoubtCard({ d, student, store, isHelpful, isSaved, showUnsave }: {
   d: any;
   student: StudentAccount;
