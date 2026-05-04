@@ -512,12 +512,20 @@ const StudentDashboard = () => {
                                 <span className="text-xs text-accent">Pending</span>
                               )}
                               <span className="text-xs text-muted-foreground ml-auto">{new Date(d.createdAt).toLocaleDateString()}</span>
-                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => startEditDoubt(d)}>
-                                <Pencil className="h-3 w-3" />
-                              </Button>
-                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-destructive" onClick={async () => { if (confirm("Delete this doubt?")) await store.deleteDoubt(d.id); }}>
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
+                              {/* Only show edit/delete if not claimed */}
+                              {!d.claimedBy && (
+                                <>
+                                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => startEditDoubt(d)}>
+                                    <Pencil className="h-3 w-3" />
+                                  </Button>
+                                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-destructive" onClick={async () => { if (confirm("Delete this doubt?")) await store.deleteDoubt(d.id); }}>
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                </>
+                              )}
+                              {d.claimedBy && !d.answer && (
+                                <span className="text-xs text-yellow-600 flex items-center gap-1">🔒 Claimed</span>
+                              )}
                             </div>
                             {editingDoubtId === d.id ? (
                               <div className="space-y-2 mt-1">
