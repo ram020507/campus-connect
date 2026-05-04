@@ -1,0 +1,1 @@
+ALTER TABLE public.doubts ADD COLUMN answer_image_urls jsonb DEFAULT '[]'::jsonb;
