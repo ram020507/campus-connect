@@ -150,7 +150,7 @@ const AdminDashboard = () => {
         {[
           { key: "colleges" as View, label: "Content", icon: FolderOpen, matches: ["colleges", "years", "departments", "subjects", "videos"] },
           { key: "students" as View, label: "Students", icon: Users, matches: ["students", "students-college", "students-year", "students-dept"] },
-          { key: "teachers" as View, label: "Teachers", icon: GraduationCap, matches: ["teachers", "teachers-college", "teachers-subject"] },
+          { key: "teachers" as View, label: "Teachers", icon: GraduationCap, matches: ["teachers", "teachers-college"] },
         ].map((tab) => (
           <button
             key={tab.key}
