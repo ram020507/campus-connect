@@ -40,9 +40,9 @@ export function useNotifications() {
   return { requestPermission, showNotification };
 }
 
-/** Hook for teachers: listens for new pending doubts matching their subject */
+/** Hook for teachers: listens for new pending doubts matching any of their subjects */
 export function useTeacherNotifications(
-  teacherSubject: string | undefined,
+  teacherSubjects: string[] | undefined,
   teacherStaffId: string | undefined
 ) {
   const { requestPermission, showNotification } = useNotifications();
@@ -50,17 +50,20 @@ export function useTeacherNotifications(
   const initialized = useRef(false);
 
   useEffect(() => {
-    if (!teacherSubject || !teacherStaffId) return;
+    if (!teacherSubjects || teacherSubjects.length === 0 || !teacherStaffId) return;
     requestPermission();
 
     // Load initial doubt IDs so we don't notify on page load
     supabase
       .from("doubts")
-      .select("id")
-      .eq("subject_name", teacherSubject)
+      .select("id, subject_name")
       .eq("status", "pending")
       .then(({ data }) => {
-        (data || []).forEach((d) => knownDoubtIds.current.add(d.id));
+        (data || []).forEach((d) => {
+          if (teacherSubjects.some(s => s.toLowerCase() === d.subject_name.toLowerCase())) {
+            knownDoubtIds.current.add(d.id);
+          }
+        });
         initialized.current = true;
       });
 
@@ -73,7 +76,7 @@ export function useTeacherNotifications(
           if (!initialized.current) return;
           const row = payload.new as any;
           if (
-            row.subject_name?.toLowerCase() === teacherSubject.toLowerCase() &&
+            teacherSubjects.some(s => s.toLowerCase() === row.subject_name?.toLowerCase()) &&
             row.status === "pending" &&
             !knownDoubtIds.current.has(row.id)
           ) {
@@ -92,7 +95,7 @@ export function useTeacherNotifications(
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [teacherSubject, teacherStaffId, requestPermission, showNotification]);
+  }, [teacherSubjects?.join(","), teacherStaffId, requestPermission, showNotification]);
 }
 
 /** Hook for students: listens for answers to their doubts */
