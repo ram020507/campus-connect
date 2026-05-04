@@ -12,7 +12,10 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 
-type View = "colleges" | "years" | "departments" | "subjects" | "videos" | "students" | "students-college" | "students-year" | "students-dept" | "teachers" | "teachers-college" | "teachers-subject";
+import { Checkbox } from "@/components/ui/checkbox";
+import { getTeacherSubjects } from "@/hooks/useSupabaseData";
+
+type View = "colleges" | "years" | "departments" | "subjects" | "videos" | "students" | "students-college" | "students-year" | "students-dept" | "teachers" | "teachers-college";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
