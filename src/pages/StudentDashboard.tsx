@@ -664,14 +664,18 @@ const StudentDashboard = () => {
                           <div className="p-4 rounded-lg bg-success/10">
                             <p className="text-xs font-medium text-muted-foreground mb-2">Answer by {d.answeredBy}</p>
                             <p className="text-sm leading-relaxed">{d.answer}</p>
-                            {d.answerImageUrl && (
-                              <div className="mt-3">
-                                <img src={d.answerImageUrl} alt="Answer" className="w-full max-h-64 object-contain rounded-lg border" />
-                                <a href={d.answerImageUrl} download className="inline-flex items-center gap-1 text-xs text-primary mt-2 hover:underline">
+                            {/* Show all answer images */}
+                            {(d.answerImageUrls && d.answerImageUrls.length > 0
+                              ? d.answerImageUrls
+                              : d.answerImageUrl ? [d.answerImageUrl] : []
+                            ).map((url, idx) => (
+                              <div key={idx} className="mt-3">
+                                <img src={url} alt={`Answer ${idx + 1}`} className="w-full max-h-64 object-contain rounded-lg border" />
+                                <a href={url} download className="inline-flex items-center gap-1 text-xs text-primary mt-2 hover:underline">
                                   <Download className="h-3 w-3" /> Download Image
                                 </a>
                               </div>
-                            )}
+                            ))}
                           </div>
 
                           {/* Footer: asked by + actions */}
