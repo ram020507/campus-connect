@@ -1,18 +1,20 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useSupabaseData, type TeacherAccount } from "@/hooks/useSupabaseData";
+import { useSupabaseData, type TeacherAccount, getTeacherSubjects, teacherHandlesSubject } from "@/hooks/useSupabaseData";
 import { useTeacherNotifications } from "@/hooks/useNotifications";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  GraduationCap, LogOut, MessageCircle, Send, CheckCircle2, Clock, Loader2, ArrowLeft, RefreshCw, ImagePlus, X, Download, Pencil, Trash2
+  GraduationCap, LogOut, MessageCircle, Send, CheckCircle2, Clock, Loader2, ArrowLeft, RefreshCw, ImagePlus, X, Download, Pencil, Trash2, Lock, Eye
 } from "lucide-react";
 import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
   AlertDialogDescription, AlertDialogFooter, AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 import DigitalBoardTeacher from "@/components/DigitalBoardTeacher";
+
+type Section = "unclaimed" | "claimed" | "all";
 
 const TeacherDashboard = () => {
   const navigate = useNavigate();
@@ -25,7 +27,8 @@ const TeacherDashboard = () => {
     } catch { return null; }
   })();
 
-  useTeacherNotifications(teacher?.subjectName, teacher?.staffId);
+  const teacherSubjects = teacher ? getTeacherSubjects(teacher) : [];
+  useTeacherNotifications(teacherSubjects, teacher?.staffId);
 
   // Auto-claim doubt from notification link
   const notifDoubtId = searchParams.get("doubtId");
@@ -38,15 +41,15 @@ const TeacherDashboard = () => {
     }
   }, [notifDoubtId, store.loading]);
 
+  const [activeSection, setActiveSection] = useState<Section>("unclaimed");
   const [replyTexts, setReplyTexts] = useState<Record<string, string>>({});
-  const [replyImages, setReplyImages] = useState<Record<string, File>>({});
-  const [replyImagePreviews, setReplyImagePreviews] = useState<Record<string, string>>({});
+  const [replyImages, setReplyImages] = useState<Record<string, File[]>>({});
+  const [replyImagePreviews, setReplyImagePreviews] = useState<Record<string, string[]>>({});
   const [sending, setSending] = useState<Record<string, boolean>>({});
   const [claimAlert, setClaimAlert] = useState<{ show: boolean; teacherName: string }>({ show: false, teacherName: "" });
   const [editingAnswerId, setEditingAnswerId] = useState<string | null>(null);
   const [editAnswerText, setEditAnswerText] = useState("");
-  const [editAnswerImage, setEditAnswerImage] = useState<File | null>(null);
-  const [editAnswerImagePreview, setEditAnswerImagePreview] = useState<string | null>(null);
+  const [editAnswerImages, setEditAnswerImages] = useState<string[]>([]);
   const editAnswerFileRef = useRef<HTMLInputElement | null>(null);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
@@ -60,19 +63,29 @@ const TeacherDashboard = () => {
     navigate("/");
   };
 
-  const pendingDoubts = store.doubts.filter(
+  // Section 1: Unclaimed doubts — pending, no claimedBy, matching teacher's subjects
+  const unclaimedDoubts = store.doubts.filter(
     (d) =>
-      d.subjectName.toLowerCase() === teacher.subjectName.toLowerCase() &&
+      teacherSubjects.some(s => s.toLowerCase() === d.subjectName.toLowerCase()) &&
       !d.answer &&
-      (!d.claimedBy || d.claimedBy === teacher.staffId)
+      !d.claimedBy
   );
 
-  const answeredDoubts = store.doubts.filter(
-    (d) => d.answeredBy === teacher.name && d.answer
+  // Section 2: Claimed by this teacher — claimed but not yet answered
+  const claimedDoubts = store.doubts.filter(
+    (d) =>
+      d.claimedBy === teacher.staffId &&
+      !d.answer
+  );
+
+  // Section 3: All solved doubts from teacher's subjects
+  const allSolvedDoubts = store.doubts.filter(
+    (d) =>
+      teacherSubjects.some(s => s.toLowerCase() === d.subjectName.toLowerCase()) &&
+      d.answer
   );
 
   const handleClaim = async (doubtId: string) => {
-    // Re-fetch to get latest state and check if already claimed
     await store.refetch();
     const freshDoubts = store.doubts;
     const doubt = freshDoubts.find((d) => d.id === doubtId);
@@ -85,32 +98,53 @@ const TeacherDashboard = () => {
   };
 
   const handleReplyImageSelect = (doubtId: string, e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setReplyImages((prev) => ({ ...prev, [doubtId]: file }));
-      setReplyImagePreviews((prev) => ({ ...prev, [doubtId]: URL.createObjectURL(file) }));
-    }
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    setReplyImages((prev) => ({ ...prev, [doubtId]: [...(prev[doubtId] || []), ...files] }));
+    setReplyImagePreviews((prev) => ({
+      ...prev,
+      [doubtId]: [...(prev[doubtId] || []), ...files.map((f) => URL.createObjectURL(f))],
+    }));
   };
 
-  const clearReplyImage = (doubtId: string) => {
+  const removeReplyImage = (doubtId: string, index: number) => {
+    setReplyImages((prev) => {
+      const arr = [...(prev[doubtId] || [])];
+      arr.splice(index, 1);
+      return { ...prev, [doubtId]: arr };
+    });
+    setReplyImagePreviews((prev) => {
+      const arr = [...(prev[doubtId] || [])];
+      arr.splice(index, 1);
+      return { ...prev, [doubtId]: arr };
+    });
+  };
+
+  const clearReplyImages = (doubtId: string) => {
     setReplyImages((prev) => { const n = { ...prev }; delete n[doubtId]; return n; });
     setReplyImagePreviews((prev) => { const n = { ...prev }; delete n[doubtId]; return n; });
   };
 
   const handleReply = async (doubtId: string) => {
     const text = replyTexts[doubtId]?.trim();
-    if (text) {
-      setSending((prev) => ({ ...prev, [doubtId]: true }));
-      let imageUrl: string | undefined;
-      if (replyImages[doubtId]) {
-        const url = await store.uploadDoubtImage(replyImages[doubtId]);
-        if (url) imageUrl = url;
-      }
-      await store.answerDoubt(doubtId, text, teacher.name, imageUrl);
-      setReplyTexts((prev) => ({ ...prev, [doubtId]: "" }));
-      clearReplyImage(doubtId);
-      setSending((prev) => ({ ...prev, [doubtId]: false }));
+    // Allow text only, image only, or both
+    if (!text && (!replyImages[doubtId] || replyImages[doubtId].length === 0)) return;
+    setSending((prev) => ({ ...prev, [doubtId]: true }));
+    const uploadedUrls: string[] = [];
+    for (const file of (replyImages[doubtId] || [])) {
+      const url = await store.uploadDoubtImage(file);
+      if (url) uploadedUrls.push(url);
     }
+    await store.answerDoubt(
+      doubtId,
+      text || "(Image answer)",
+      teacher.name,
+      uploadedUrls[0],
+      uploadedUrls
+    );
+    setReplyTexts((prev) => ({ ...prev, [doubtId]: "" }));
+    clearReplyImages(doubtId);
+    setSending((prev) => ({ ...prev, [doubtId]: false }));
   };
 
   if (store.loading) {
@@ -121,6 +155,12 @@ const TeacherDashboard = () => {
     );
   }
 
+  const sectionTabs: { key: Section; label: string; count: number; icon: React.ReactNode }[] = [
+    { key: "unclaimed", label: "Unclaimed", count: unclaimedDoubts.length, icon: <Clock className="h-4 w-4" /> },
+    { key: "claimed", label: "Claimed", count: claimedDoubts.length, icon: <Lock className="h-4 w-4" /> },
+    { key: "all", label: "All Doubts", count: allSolvedDoubts.length, icon: <Eye className="h-4 w-4" /> },
+  ];
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card px-4 py-3 flex items-center justify-between">
@@ -128,7 +168,7 @@ const TeacherDashboard = () => {
           <GraduationCap className="h-6 w-6 text-accent" />
           <div>
             <h1 className="text-lg font-bold font-display text-foreground">Teacher Portal</h1>
-            <p className="text-xs text-muted-foreground">{teacher.name} · {teacher.subjectName} · {teacher.collegeName}</p>
+            <p className="text-xs text-muted-foreground">{teacher.name} · {teacherSubjects.join(", ")} · {teacher.collegeName}</p>
           </div>
         </div>
         <div className="flex items-center gap-1">
@@ -144,162 +184,215 @@ const TeacherDashboard = () => {
         </div>
       </header>
 
-      <div className="max-w-3xl mx-auto p-4 space-y-6">
+      <div className="max-w-3xl mx-auto p-4 space-y-4">
         <DigitalBoardTeacher teacher={teacher} />
-        <div>
-          <h2 className="font-display font-semibold text-lg flex items-center gap-2 mb-4">
-            <Clock className="h-5 w-5 text-accent" />
-            Pending Doubts ({pendingDoubts.length})
-          </h2>
-          {pendingDoubts.length === 0 ? (
-            <Card>
-              <CardContent className="p-6 text-center text-muted-foreground">
-                No pending doubts. Great job!
-              </CardContent>
-            </Card>
-          ) : (
-            pendingDoubts
-              .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
-              .map((d) => (
-                <Card key={d.id} className="mb-3 border-accent/30 animate-fade-in">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <MessageCircle className="h-4 w-4 text-accent" />
-                      <span className="text-xs text-muted-foreground">
-                        From {d.studentName} · {d.studentDepartment} · Year {d.studentYear}
-                      </span>
-                    </div>
-                    <p className="text-sm font-medium mb-3">{d.question}</p>
-                    {d.questionImageUrl && (
-                      <div className="mb-3">
-                        <img src={d.questionImageUrl} alt="Student attachment" className="max-h-48 rounded border" />
-                        <a href={d.questionImageUrl} download className="inline-flex items-center gap-1 text-xs text-primary mt-1 hover:underline">
-                          <Download className="h-3 w-3" /> Download Image
-                        </a>
+
+        {/* Section Tabs */}
+        <div className="flex gap-1 border-b overflow-x-auto">
+          {sectionTabs.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveSection(tab.key)}
+              className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                activeSection === tab.key
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {tab.icon}
+              {tab.label} ({tab.count})
+            </button>
+          ))}
+        </div>
+
+        {/* Section 1: Unclaimed Doubts */}
+        {activeSection === "unclaimed" && (
+          <div className="space-y-3">
+            <h2 className="font-display font-semibold text-lg flex items-center gap-2">
+              <Clock className="h-5 w-5 text-accent" />
+              Unclaimed Doubts
+            </h2>
+            {unclaimedDoubts.length === 0 ? (
+              <Card>
+                <CardContent className="p-6 text-center text-muted-foreground">
+                  No unclaimed doubts. Great job!
+                </CardContent>
+              </Card>
+            ) : (
+              unclaimedDoubts
+                .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+                .map((d) => (
+                  <Card key={d.id} className="border-accent/30 animate-fade-in">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <MessageCircle className="h-4 w-4 text-accent" />
+                        <span className="text-xs text-muted-foreground">
+                          From {d.studentName} · {d.studentDepartment} · Year {d.studentYear}
+                        </span>
+                        <span className="text-xs font-medium bg-primary/10 text-primary px-2 py-0.5 rounded ml-auto">{d.subjectName}</span>
                       </div>
-                    )}
-                    {!d.claimedBy ? (
+                      <p className="text-sm font-medium mb-3">{d.question}</p>
+                      {d.questionImageUrl && (
+                        <div className="mb-3">
+                          <img src={d.questionImageUrl} alt="Student attachment" className="max-h-48 rounded border" />
+                          <a href={d.questionImageUrl} download className="inline-flex items-center gap-1 text-xs text-primary mt-1 hover:underline">
+                            <Download className="h-3 w-3" /> Download Image
+                          </a>
+                        </div>
+                      )}
                       <Button size="sm" variant="outline" onClick={() => handleClaim(d.id)}>
-                        Open & Claim
+                        Claim Doubt
                       </Button>
-                    ) : (
+                    </CardContent>
+                  </Card>
+                ))
+            )}
+          </div>
+        )}
+
+        {/* Section 2: Claimed Doubts */}
+        {activeSection === "claimed" && (
+          <div className="space-y-3">
+            <h2 className="font-display font-semibold text-lg flex items-center gap-2">
+              <Lock className="h-5 w-5 text-primary" />
+              Claimed Doubts
+            </h2>
+            {claimedDoubts.length === 0 ? (
+              <Card>
+                <CardContent className="p-6 text-center text-muted-foreground">
+                  No claimed doubts. Claim a doubt from the Unclaimed section to start answering.
+                </CardContent>
+              </Card>
+            ) : (
+              claimedDoubts
+                .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+                .map((d) => (
+                  <Card key={d.id} className="border-primary/30 animate-fade-in">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <MessageCircle className="h-4 w-4 text-primary" />
+                        <span className="text-xs text-muted-foreground">
+                          From {d.studentName} · {d.studentDepartment} · Year {d.studentYear}
+                        </span>
+                        <span className="text-xs font-medium bg-primary/10 text-primary px-2 py-0.5 rounded ml-auto">{d.subjectName}</span>
+                      </div>
+                      <p className="text-sm font-medium mb-3">{d.question}</p>
+                      {d.questionImageUrl && (
+                        <div className="mb-3">
+                          <img src={d.questionImageUrl} alt="Student attachment" className="max-h-48 rounded border" />
+                          <a href={d.questionImageUrl} download className="inline-flex items-center gap-1 text-xs text-primary mt-1 hover:underline">
+                            <Download className="h-3 w-3" /> Download Image
+                          </a>
+                        </div>
+                      )}
                       <div className="space-y-2">
                         <Textarea
-                          placeholder="Type your reply..."
+                          placeholder="Type your answer..."
                           value={replyTexts[d.id] || ""}
                           onChange={(e) => setReplyTexts((prev) => ({ ...prev, [d.id]: e.target.value }))}
                           rows={3}
                         />
-                        {/* Reply image */}
+                        {/* Multiple image upload */}
                         <input
                           type="file"
                           accept="image/*"
+                          multiple
                           className="hidden"
                           ref={(el) => { fileInputRefs.current[d.id] = el; }}
                           onChange={(e) => handleReplyImageSelect(d.id, e)}
                         />
-                        {replyImagePreviews[d.id] ? (
-                          <div className="relative inline-block">
-                            <img src={replyImagePreviews[d.id]} alt="Reply attachment" className="max-h-32 rounded border" />
-                            <button onClick={() => clearReplyImage(d.id)} className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1">
-                              <X className="h-3 w-3" />
-                            </button>
+                        {(replyImagePreviews[d.id] || []).length > 0 ? (
+                          <div className="flex flex-wrap gap-2">
+                            {replyImagePreviews[d.id].map((preview, idx) => (
+                              <div key={idx} className="relative inline-block">
+                                <img src={preview} alt={`Reply attachment ${idx + 1}`} className="max-h-24 rounded border" />
+                                <button onClick={() => removeReplyImage(d.id, idx)} className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1">
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </div>
+                            ))}
+                            <Button variant="outline" size="sm" onClick={() => fileInputRefs.current[d.id]?.click()}>
+                              <ImagePlus className="h-4 w-4 mr-1" /> Add More
+                            </Button>
                           </div>
                         ) : (
                           <Button variant="outline" size="sm" onClick={() => fileInputRefs.current[d.id]?.click()}>
-                            <ImagePlus className="h-4 w-4 mr-1" /> Attach Photo
+                            <ImagePlus className="h-4 w-4 mr-1" /> Attach Photos
                           </Button>
                         )}
                         <div>
-                          <Button size="sm" onClick={() => handleReply(d.id)} disabled={!replyTexts[d.id]?.trim() || sending[d.id]}>
-                            {sending[d.id] ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Send className="h-4 w-4 mr-1" />} Send Reply
+                          <Button
+                            size="sm"
+                            onClick={() => handleReply(d.id)}
+                            disabled={(!replyTexts[d.id]?.trim() && (!replyImages[d.id] || replyImages[d.id].length === 0)) || sending[d.id]}
+                          >
+                            {sending[d.id] ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Send className="h-4 w-4 mr-1" />} Submit Answer
                           </Button>
                         </div>
                       </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))
-          )}
-        </div>
+                    </CardContent>
+                  </Card>
+                ))
+            )}
+          </div>
+        )}
 
-        <div>
-          <h2 className="font-display font-semibold text-lg flex items-center gap-2 mb-4">
-            <CheckCircle2 className="h-5 w-5 text-success" />
-            Answered ({answeredDoubts.length})
-          </h2>
-          {answeredDoubts
-            .sort((a, b) => new Date(b.answeredAt!).getTime() - new Date(a.answeredAt!).getTime())
-            .map((d) => (
-              <Card key={d.id} className="mb-3 border-success/30">
-                <CardContent className="p-4">
-                  <p className="text-xs text-muted-foreground mb-1">
-                    Q from {d.studentName} · {d.studentDepartment} · Year {d.studentYear}
-                  </p>
-                  <p className="text-sm font-medium">{d.question}</p>
-                  {d.questionImageUrl && (
-                    <div className="mt-2">
-                      <img src={d.questionImageUrl} alt="Student attachment" className="max-h-40 rounded border" />
-                      <a href={d.questionImageUrl} download className="inline-flex items-center gap-1 text-xs text-primary mt-1 hover:underline">
-                        <Download className="h-3 w-3" /> Download Image
-                      </a>
-                    </div>
-                  )}
-                  <div className="mt-2 p-3 rounded bg-success/10 text-sm">
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="text-xs text-muted-foreground flex-1">Your answer:</p>
-                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => { setEditingAnswerId(d.id); setEditAnswerText(d.answer || ""); setEditAnswerImagePreview(d.answerImageUrl || null); }}>
-                        <Pencil className="h-3 w-3" />
-                      </Button>
-                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-destructive" onClick={async () => { if (confirm("Delete your answer? The doubt will return to pending.")) await store.deleteDoubtAnswer(d.id); }}>
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                    {editingAnswerId === d.id ? (
-                      <div className="space-y-2">
-                        <Textarea value={editAnswerText} onChange={(e) => setEditAnswerText(e.target.value)} rows={3} />
-                        {editAnswerImagePreview && (
-                          <div className="relative inline-block">
-                            <img src={editAnswerImagePreview} alt="Answer attachment" className="max-h-32 rounded border" />
-                            <button onClick={() => setEditAnswerImagePreview(null)} className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1">
-                              <X className="h-3 w-3" />
-                            </button>
-                          </div>
-                        )}
-                        <input type="file" accept="image/*" className="hidden" ref={editAnswerFileRef} onChange={async (e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            const url = await store.uploadDoubtImage(file);
-                            if (url) setEditAnswerImagePreview(url);
-                          }
-                        }} />
-                        <Button variant="outline" size="sm" onClick={() => editAnswerFileRef.current?.click()}>
-                          <ImagePlus className="h-3 w-3 mr-1" /> {editAnswerImagePreview ? "Change Image" : "Add Image"}
-                        </Button>
-                        <div className="flex gap-2">
-                          <Button size="sm" onClick={async () => {
-                            await store.updateDoubtAnswer(d.id, { answer: editAnswerText, answerImageUrl: editAnswerImagePreview });
-                            setEditingAnswerId(null);
-                            setEditAnswerImagePreview(null);
-                          }}>Save</Button>
-                          <Button size="sm" variant="outline" onClick={() => { setEditingAnswerId(null); setEditAnswerImagePreview(null); }}>Cancel</Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <>
-                        <p>{d.answer}</p>
-                        {d.answerImageUrl && (
-                          <div className="mt-2">
-                            <img src={d.answerImageUrl} alt="Answer attachment" className="max-h-40 rounded border" />
-                          </div>
-                        )}
-                      </>
-                    )}
-                  </div>
+        {/* Section 3: All Doubts (solved) */}
+        {activeSection === "all" && (
+          <div className="space-y-3">
+            <h2 className="font-display font-semibold text-lg flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-success" />
+              All Solved Doubts
+            </h2>
+            {allSolvedDoubts.length === 0 ? (
+              <Card>
+                <CardContent className="p-6 text-center text-muted-foreground">
+                  No solved doubts yet.
                 </CardContent>
               </Card>
-            ))}
-        </div>
+            ) : (
+              allSolvedDoubts
+                .sort((a, b) => new Date(b.answeredAt!).getTime() - new Date(a.answeredAt!).getTime())
+                .map((d) => (
+                  <Card key={d.id} className="border-success/30">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xs font-medium bg-primary/10 text-primary px-2 py-0.5 rounded">{d.subjectName}</span>
+                        <span className="text-xs text-muted-foreground ml-auto">
+                          Answered by {d.answeredBy} · {d.answeredAt ? new Date(d.answeredAt).toLocaleDateString() : ""}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mb-1">
+                        Q from {d.studentName} · {d.studentDepartment} · Year {d.studentYear}
+                      </p>
+                      <p className="text-sm font-medium">{d.question}</p>
+                      {d.questionImageUrl && (
+                        <div className="mt-2">
+                          <img src={d.questionImageUrl} alt="Student attachment" className="max-h-40 rounded border" />
+                        </div>
+                      )}
+                      <div className="mt-2 p-3 rounded bg-success/10 text-sm">
+                        <p className="text-xs text-muted-foreground mb-1">Answer:</p>
+                        <p>{d.answer}</p>
+                        {/* Show all answer images */}
+                        {(d.answerImageUrls && d.answerImageUrls.length > 0
+                          ? d.answerImageUrls
+                          : d.answerImageUrl ? [d.answerImageUrl] : []
+                        ).map((url, idx) => (
+                          <div key={idx} className="mt-2">
+                            <img src={url} alt={`Answer attachment ${idx + 1}`} className="max-h-40 rounded border" />
+                            <a href={url} download className="inline-flex items-center gap-1 text-xs text-primary mt-1 hover:underline">
+                              <Download className="h-3 w-3" /> Download
+                            </a>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+            )}
+          </div>
+        )}
       </div>
 
       {/* Claim conflict dialog */}
