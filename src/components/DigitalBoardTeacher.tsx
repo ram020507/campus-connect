@@ -38,10 +38,11 @@ const DigitalBoardTeacher = ({ teacher }: DigitalBoardTeacherProps) => {
     return () => { board.setTeacherOffline(teacher.staffId); };
   }, [teacher.staffId]);
 
-  // Filter requests for this teacher's subject, exclude if busy
+  // Filter requests for any of this teacher's subjects, exclude if busy
+  const teacherSubjects = getTeacherSubjects(teacher as any);
   const incomingRequests = board.callRequests.filter(
     (r) =>
-      r.subjectName.toLowerCase() === teacher.subjectName.toLowerCase() &&
+      teacherSubjects.some(s => s.toLowerCase() === r.subjectName.toLowerCase()) &&
       r.status === "pending"
   );
 
