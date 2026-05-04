@@ -62,7 +62,7 @@ export interface TeacherAccount {
   dob: string;
   email: string;
   collegeName: string;
-  subjectName: string;
+  subjectName: string; // comma-separated for multi-subject
 }
 
 export interface Doubt {
@@ -77,6 +77,7 @@ export interface Doubt {
   questionImageUrl?: string;
   answer?: string;
   answerImageUrl?: string;
+  answerImageUrls?: string[];
   answeredBy?: string;
   claimedBy?: string;
   createdAt: string;
@@ -90,6 +91,18 @@ export interface SavedDoubt {
   studentRegNo: string;
   doubtId: string;
   createdAt: string;
+}
+
+/** Get array of subject names from comma-separated string */
+export function getTeacherSubjects(teacher: TeacherAccount): string[] {
+  return teacher.subjectName.split(",").map((s) => s.trim()).filter(Boolean);
+}
+
+/** Check if a teacher handles a given subject */
+export function teacherHandlesSubject(teacher: TeacherAccount, subjectName: string): boolean {
+  return getTeacherSubjects(teacher).some(
+    (s) => s.toLowerCase() === subjectName.toLowerCase()
+  );
 }
 
 export function useSupabaseData() {
@@ -207,6 +220,7 @@ export function useSupabaseData() {
           questionImageUrl: d.question_image_url || undefined,
           answer: d.answer || undefined,
           answerImageUrl: d.answer_image_url || undefined,
+          answerImageUrls: (d as any).answer_image_urls || [],
           answeredBy: d.answered_by || undefined,
           claimedBy: d.claimed_by || undefined,
           createdAt: d.created_at,
@@ -456,7 +470,7 @@ export function useSupabaseData() {
       await Promise.all([
         supabase
           .from("doubts")
-          .update({ answer: null, answered_by: null, answered_at: null, answer_image_url: null, claimed_by: null })
+          .update({ answer: null, answered_by: null, answered_at: null, answer_image_url: null, answer_image_urls: [], claimed_by: null })
           .eq("answered_by", teacher.name),
         supabase.from("doubts").update({ claimed_by: null }).eq("claimed_by", teacher.staffId),
       ]);
@@ -514,13 +528,15 @@ export function useSupabaseData() {
     await fetchAll();
   };
 
-  const answerDoubt = async (doubtId: string, answer: string, teacherName: string, answerImageUrl?: string) => {
+  const answerDoubt = async (doubtId: string, answer: string, teacherName: string, answerImageUrl?: string, answerImageUrls?: string[]) => {
     await supabase.from("doubts").update({
       answer,
       answered_by: teacherName,
       answered_at: new Date().toISOString(),
       answer_image_url: answerImageUrl || null,
-    }).eq("id", doubtId);
+      answer_image_urls: answerImageUrls || [],
+      status: "solved",
+    } as any).eq("id", doubtId);
     // Fire-and-forget email notification
     supabase.functions.invoke("notify-doubt", { body: { type: "doubt_answered", doubtId } }).catch(console.error);
     await fetchAll();
@@ -559,6 +575,7 @@ export function useSupabaseData() {
     mapped.answered_by = null;
     mapped.answered_at = null;
     mapped.answer_image_url = null;
+    mapped.answer_image_urls = [];
     await (supabase.from("doubts").update as any)(mapped).eq("id", doubtId);
     // Resend notification
     supabase.functions.invoke("notify-doubt", { body: { type: "new_doubt", doubtId } }).catch(console.error);
@@ -570,10 +587,11 @@ export function useSupabaseData() {
     await fetchAll();
   };
 
-  const updateDoubtAnswer = async (doubtId: string, updates: { answer?: string; answerImageUrl?: string | null }) => {
+  const updateDoubtAnswer = async (doubtId: string, updates: { answer?: string; answerImageUrl?: string | null; answerImageUrls?: string[] }) => {
     const mapped: Record<string, any> = {};
     if (updates.answer !== undefined) mapped.answer = updates.answer;
     if (updates.answerImageUrl !== undefined) mapped.answer_image_url = updates.answerImageUrl;
+    if (updates.answerImageUrls !== undefined) mapped.answer_image_urls = updates.answerImageUrls;
     await (supabase.from("doubts").update as any)(mapped).eq("id", doubtId);
     await fetchAll();
   };
@@ -584,10 +602,11 @@ export function useSupabaseData() {
       answered_by: null,
       answered_at: null,
       answer_image_url: null,
+      answer_image_urls: [] as any,
       status: "pending",
       claimed_by: null,
       handling_teacher: null,
-    }).eq("id", doubtId);
+    } as any).eq("id", doubtId);
     await fetchAll();
   };
 

@@ -12,7 +12,10 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 
-type View = "colleges" | "years" | "departments" | "subjects" | "videos" | "students" | "students-college" | "students-year" | "students-dept" | "teachers" | "teachers-college" | "teachers-subject";
+import { Checkbox } from "@/components/ui/checkbox";
+import { getTeacherSubjects } from "@/hooks/useSupabaseData";
+
+type View = "colleges" | "years" | "departments" | "subjects" | "videos" | "students" | "students-college" | "students-year" | "students-dept" | "teachers" | "teachers-college";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -38,7 +41,7 @@ const AdminDashboard = () => {
   const [selectedStudentYearId, setSelectedStudentYearId] = useState("");
   const [selectedStudentDeptId, setSelectedStudentDeptId] = useState("");
   const [selectedTeacherCollegeId, setSelectedTeacherCollegeId] = useState("");
-  const [selectedTeacherSubject, setSelectedTeacherSubject] = useState("");
+  const [teacherSelectedSubjects, setTeacherSelectedSubjects] = useState<string[]>([]);
 
   // Student form
   const [studentRegNo, setStudentRegNo] = useState("");
@@ -147,7 +150,7 @@ const AdminDashboard = () => {
         {[
           { key: "colleges" as View, label: "Content", icon: FolderOpen, matches: ["colleges", "years", "departments", "subjects", "videos"] },
           { key: "students" as View, label: "Students", icon: Users, matches: ["students", "students-college", "students-year", "students-dept"] },
-          { key: "teachers" as View, label: "Teachers", icon: GraduationCap, matches: ["teachers", "teachers-college", "teachers-subject"] },
+          { key: "teachers" as View, label: "Teachers", icon: GraduationCap, matches: ["teachers", "teachers-college"] },
         ].map((tab) => (
           <button
             key={tab.key}
@@ -166,7 +169,7 @@ const AdminDashboard = () => {
 
       <div className="max-w-4xl mx-auto p-4">
         {/* Breadcrumb */}
-        {!["students", "students-college", "students-year", "students-dept", "teachers", "teachers-college", "teachers-subject"].includes(view) && (
+        {!["students", "students-college", "students-year", "students-dept", "teachers", "teachers-college"].includes(view) && (
           <nav className="flex items-center gap-1 text-sm text-muted-foreground mb-4 flex-wrap">
             {breadcrumbs.map((bc, i) => (
               <span key={i} className="flex items-center gap-1">
@@ -623,61 +626,32 @@ const AdminDashboard = () => {
           </div>
         )}
 
-        {/* TEACHERS - Subject folders inside College */}
+        {/* TEACHERS - Inside College: list all teachers with multi-subject support */}
         {view === "teachers-college" && teacherFolderCollege && (() => {
           const collegeTeachers = store.teachers.filter((t) => t.collegeName === teacherFolderCollege.name);
-          const subjectNames = [...new Set(collegeTeachers.map((t) => t.subjectName))].sort();
-          // Also include subjects from content hierarchy that have no teachers yet
-          const allSubjects = new Set(subjectNames);
+          // Get all subjects available in this college from the content hierarchy
+          const allSubjects: string[] = [];
           teacherFolderCollege.years.forEach((y) =>
             y.departments.forEach((d) =>
-              d.subjects.forEach((s) => allSubjects.add(s.name))
+              d.subjects.forEach((s) => { if (!allSubjects.includes(s.name)) allSubjects.push(s.name); })
             )
           );
-          const sortedSubjects = [...allSubjects].sort();
+          allSubjects.sort();
+
+          const toggleSubjectSelection = (subj: string) => {
+            setTeacherSelectedSubjects((prev) =>
+              prev.includes(subj) ? prev.filter((s) => s !== subj) : [...prev, subj]
+            );
+          };
+
           return (
-            <div className="space-y-4 animate-fade-in">
+            <div className="space-y-6 animate-fade-in">
               <div className="flex items-center gap-2">
                 <Button variant="ghost" size="sm" onClick={() => { setView("teachers"); setSelectedTeacherCollegeId(""); }}>
                   <ArrowLeft className="h-4 w-4 mr-1" /> Back
                 </Button>
                 <Building2 className="h-5 w-5 text-primary" />
-                <span className="font-display font-semibold text-lg">{teacherFolderCollege.name} — Subjects</span>
-              </div>
-              {sortedSubjects.map((subj) => {
-                const count = collegeTeachers.filter((t) => t.subjectName === subj).length;
-                return (
-                  <Card key={subj} className="cursor-pointer hover:shadow-md transition-shadow"
-                    onClick={() => { setSelectedTeacherSubject(subj); setTeacherSubject(subj); setView("teachers-subject"); }}>
-                    <CardContent className="p-4 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <BookOpen className="h-5 w-5 text-primary" />
-                        <span className="font-medium">{subj}</span>
-                        <span className="text-xs text-muted-foreground">({count} teachers)</span>
-                      </div>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                    </CardContent>
-                  </Card>
-                );
-              })}
-              {sortedSubjects.length === 0 && (
-                <p className="text-center text-muted-foreground py-8">No subjects configured. Add subjects in the Content tab first.</p>
-              )}
-            </div>
-          );
-        })()}
-
-        {/* TEACHERS - Inside Subject folder */}
-        {view === "teachers-subject" && teacherFolderCollege && (() => {
-          const subjectTeachers = store.teachers.filter((t) => t.collegeName === teacherFolderCollege.name && t.subjectName === selectedTeacherSubject);
-          return (
-            <div className="space-y-6 animate-fade-in">
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="sm" onClick={() => { setView("teachers-college"); setSelectedTeacherSubject(""); }}>
-                  <ArrowLeft className="h-4 w-4 mr-1" /> Back
-                </Button>
-                <BookOpen className="h-5 w-5 text-primary" />
-                <span className="font-display font-semibold text-lg">{teacherFolderCollege.name} — {selectedTeacherSubject}</span>
+                <span className="font-display font-semibold text-lg">{teacherFolderCollege.name} — Teachers</span>
               </div>
 
               <Card>
@@ -691,14 +665,34 @@ const AdminDashboard = () => {
                       onChange={(e) => setTeacherDob(formatDob(e.target.value))} />
                     <Input placeholder="Email (optional)" type="email" value={teacherEmail} onChange={(e) => setTeacherEmail(e.target.value)} />
                   </div>
-                  <p className="text-xs text-muted-foreground mt-2">Subject: {selectedTeacherSubject} · College: {teacherFolderCollege.name}</p>
+                  <div className="mt-3">
+                    <p className="text-sm font-medium mb-2">Assign Subjects:</p>
+                    {allSubjects.length === 0 ? (
+                      <p className="text-xs text-muted-foreground">No subjects configured. Add subjects in the Content tab first.</p>
+                    ) : (
+                      <div className="flex flex-wrap gap-3">
+                        {allSubjects.map((subj) => (
+                          <label key={subj} className="flex items-center gap-2 cursor-pointer">
+                            <Checkbox
+                              checked={teacherSelectedSubjects.includes(subj)}
+                              onCheckedChange={() => toggleSubjectSelection(subj)}
+                            />
+                            <span className="text-sm">{subj}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">College: {teacherFolderCollege.name}</p>
                   <Button className="mt-3" onClick={() => {
-                    if (teacherStaffId && teacherName && teacherDob) {
+                    if (teacherStaffId && teacherName && teacherDob && teacherSelectedSubjects.length > 0) {
                       store.addTeacher({
                         staffId: teacherStaffId, name: teacherName, dob: teacherDob,
-                        email: teacherEmail, collegeName: teacherFolderCollege.name, subjectName: selectedTeacherSubject,
+                        email: teacherEmail, collegeName: teacherFolderCollege.name,
+                        subjectName: teacherSelectedSubjects.join(","),
                       });
                       setTeacherStaffId(""); setTeacherName(""); setTeacherDob(""); setTeacherEmail("");
+                      setTeacherSelectedSubjects([]);
                     }
                   }}>
                     <Plus className="h-4 w-4 mr-1" /> Create Account
@@ -707,8 +701,8 @@ const AdminDashboard = () => {
               </Card>
 
               <div className="space-y-2">
-                <h3 className="font-display font-semibold text-lg">Teachers ({subjectTeachers.length})</h3>
-                {subjectTeachers.map((t) => (
+                <h3 className="font-display font-semibold text-lg">Teachers ({collegeTeachers.length})</h3>
+                {collegeTeachers.map((t) => (
                   <Card key={t.id}>
                     <CardContent className="p-3">
                       {editingTeacher === t.id ? (
@@ -718,6 +712,28 @@ const AdminDashboard = () => {
                             <Input placeholder="Name" value={editTeacherData.name ?? ""} onChange={(e) => setEditTeacherData(d => ({ ...d, name: e.target.value }))} />
                             <Input placeholder="DOB (DD-MM-YYYY)" value={editTeacherData.dob ?? ""} maxLength={10} inputMode="numeric" onChange={(e) => setEditTeacherData(d => ({ ...d, dob: formatDob(e.target.value) }))} />
                             <Input placeholder="Email" type="email" value={editTeacherData.email ?? ""} onChange={(e) => setEditTeacherData(d => ({ ...d, email: e.target.value }))} />
+                          </div>
+                          <div className="mt-2">
+                            <p className="text-sm font-medium mb-2">Subjects:</p>
+                            <div className="flex flex-wrap gap-3">
+                              {allSubjects.map((subj) => {
+                                const currentSubjects = (editTeacherData.subjectName || "").split(",").map(s => s.trim()).filter(Boolean);
+                                return (
+                                  <label key={subj} className="flex items-center gap-2 cursor-pointer">
+                                    <Checkbox
+                                      checked={currentSubjects.includes(subj)}
+                                      onCheckedChange={() => {
+                                        const next = currentSubjects.includes(subj)
+                                          ? currentSubjects.filter(s => s !== subj)
+                                          : [...currentSubjects, subj];
+                                        setEditTeacherData(d => ({ ...d, subjectName: next.join(",") }));
+                                      }}
+                                    />
+                                    <span className="text-sm">{subj}</span>
+                                  </label>
+                                );
+                              })}
+                            </div>
                           </div>
                           <div className="flex gap-2">
                             <Button size="sm" onClick={async () => { await store.updateTeacher(t.id, editTeacherData); setEditingTeacher(null); }}>
@@ -732,7 +748,7 @@ const AdminDashboard = () => {
                         <div className="flex items-center justify-between">
                           <div className="text-sm">
                             <p className="font-medium">{t.name} <span className="text-muted-foreground">#{t.staffId}</span></p>
-                            <p className="text-xs text-muted-foreground">{t.subjectName}</p>
+                            <p className="text-xs text-muted-foreground">{getTeacherSubjects(t).join(", ")}</p>
                             {t.email && <p className="text-xs text-muted-foreground">{t.email}</p>}
                           </div>
                           <div className="flex items-center gap-1">
@@ -748,8 +764,8 @@ const AdminDashboard = () => {
                     </CardContent>
                   </Card>
                 ))}
-                {subjectTeachers.length === 0 && (
-                  <p className="text-center text-muted-foreground py-4">No teachers for this subject yet.</p>
+                {collegeTeachers.length === 0 && (
+                  <p className="text-center text-muted-foreground py-4">No teachers for this college yet.</p>
                 )}
               </div>
             </div>

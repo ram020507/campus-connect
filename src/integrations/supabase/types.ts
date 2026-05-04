@@ -247,6 +247,7 @@ export type Database = {
         Row: {
           answer: string | null
           answer_image_url: string | null
+          answer_image_urls: Json | null
           answered_at: string | null
           answered_by: string | null
           claimed_by: string | null
@@ -268,6 +269,7 @@ export type Database = {
         Insert: {
           answer?: string | null
           answer_image_url?: string | null
+          answer_image_urls?: Json | null
           answered_at?: string | null
           answered_by?: string | null
           claimed_by?: string | null
@@ -289,6 +291,7 @@ export type Database = {
         Update: {
           answer?: string | null
           answer_image_url?: string | null
+          answer_image_urls?: Json | null
           answered_at?: string | null
           answered_by?: string | null
           claimed_by?: string | null

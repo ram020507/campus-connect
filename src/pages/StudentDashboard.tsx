@@ -512,12 +512,20 @@ const StudentDashboard = () => {
                                 <span className="text-xs text-accent">Pending</span>
                               )}
                               <span className="text-xs text-muted-foreground ml-auto">{new Date(d.createdAt).toLocaleDateString()}</span>
-                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => startEditDoubt(d)}>
-                                <Pencil className="h-3 w-3" />
-                              </Button>
-                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-destructive" onClick={async () => { if (confirm("Delete this doubt?")) await store.deleteDoubt(d.id); }}>
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
+                              {/* Only show edit/delete if not claimed */}
+                              {!d.claimedBy && (
+                                <>
+                                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => startEditDoubt(d)}>
+                                    <Pencil className="h-3 w-3" />
+                                  </Button>
+                                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-destructive" onClick={async () => { if (confirm("Delete this doubt?")) await store.deleteDoubt(d.id); }}>
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                </>
+                              )}
+                              {d.claimedBy && !d.answer && (
+                                <span className="text-xs text-yellow-600 flex items-center gap-1">🔒 Claimed</span>
+                              )}
                             </div>
                             {editingDoubtId === d.id ? (
                               <div className="space-y-2 mt-1">
@@ -564,14 +572,18 @@ const StudentDashboard = () => {
                               <div className="mt-3 p-3 rounded bg-success/10 text-sm">
                                 <p className="text-xs text-muted-foreground mb-1">Answer by {d.answeredBy}:</p>
                                 <p>{d.answer}</p>
-                                {d.answerImageUrl && (
-                                  <div className="mt-2">
-                                    <img src={d.answerImageUrl} alt="Answer attachment" className="max-h-48 rounded border" />
-                                    <a href={d.answerImageUrl} download className="inline-flex items-center gap-1 text-xs text-primary mt-1 hover:underline">
+                                {/* Show all answer images */}
+                                {(d.answerImageUrls && d.answerImageUrls.length > 0
+                                  ? d.answerImageUrls
+                                  : d.answerImageUrl ? [d.answerImageUrl] : []
+                                ).map((url, idx) => (
+                                  <div key={idx} className="mt-2">
+                                    <img src={url} alt={`Answer attachment ${idx + 1}`} className="max-h-48 rounded border" />
+                                    <a href={url} download className="inline-flex items-center gap-1 text-xs text-primary mt-1 hover:underline">
                                       <Download className="h-3 w-3" /> Download Image
                                     </a>
                                   </div>
-                                )}
+                                ))}
                               </div>
                             )}
                           </div>
@@ -652,14 +664,18 @@ const StudentDashboard = () => {
                           <div className="p-4 rounded-lg bg-success/10">
                             <p className="text-xs font-medium text-muted-foreground mb-2">Answer by {d.answeredBy}</p>
                             <p className="text-sm leading-relaxed">{d.answer}</p>
-                            {d.answerImageUrl && (
-                              <div className="mt-3">
-                                <img src={d.answerImageUrl} alt="Answer" className="w-full max-h-64 object-contain rounded-lg border" />
-                                <a href={d.answerImageUrl} download className="inline-flex items-center gap-1 text-xs text-primary mt-2 hover:underline">
+                            {/* Show all answer images */}
+                            {(d.answerImageUrls && d.answerImageUrls.length > 0
+                              ? d.answerImageUrls
+                              : d.answerImageUrl ? [d.answerImageUrl] : []
+                            ).map((url, idx) => (
+                              <div key={idx} className="mt-3">
+                                <img src={url} alt={`Answer ${idx + 1}`} className="w-full max-h-64 object-contain rounded-lg border" />
+                                <a href={url} download className="inline-flex items-center gap-1 text-xs text-primary mt-2 hover:underline">
                                   <Download className="h-3 w-3" /> Download Image
                                 </a>
                               </div>
-                            )}
+                            ))}
                           </div>
 
                           {/* Footer: asked by + actions */}
@@ -799,14 +815,18 @@ function DoubtCard({ d, student, store, isHelpful, isSaved, showUnsave }: {
       <div className="p-3 rounded bg-success/10 text-sm">
         <p className="text-xs text-muted-foreground mb-1">Answer by {d.answeredBy}:</p>
         <p>{d.answer}</p>
-        {d.answerImageUrl && (
-          <div className="mt-2">
-            <img src={d.answerImageUrl} alt="Answer attachment" className="max-h-48 rounded border" />
-            <a href={d.answerImageUrl} download className="inline-flex items-center gap-1 text-xs text-primary mt-1 hover:underline">
+        {/* Show all answer images */}
+        {(d.answerImageUrls && d.answerImageUrls.length > 0
+          ? d.answerImageUrls
+          : d.answerImageUrl ? [d.answerImageUrl] : []
+        ).map((url: string, idx: number) => (
+          <div key={idx} className="mt-2">
+            <img src={url} alt={`Answer attachment ${idx + 1}`} className="max-h-48 rounded border" />
+            <a href={url} download className="inline-flex items-center gap-1 text-xs text-primary mt-1 hover:underline">
               <Download className="h-3 w-3" /> Download Image
             </a>
           </div>
-        )}
+        ))}
       </div>
       <p className="text-xs text-muted-foreground">Asked by {d.studentName}</p>
     </div>
