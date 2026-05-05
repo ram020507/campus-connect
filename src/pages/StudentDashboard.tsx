@@ -132,33 +132,70 @@ const StudentDashboard = () => {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const handleSendDoubt = async () => {
-    if (doubtSubject.trim() && (doubtText.trim() || doubtImage)) {
-      setSending(true);
-      let imageUrl: string | undefined;
-      if (doubtImage && doubtImagePreview?.startsWith("http")) {
+  const handleCheckAndSend = async () => {
+    if (!doubtSubject.trim()) return;
+    const hasText = doubtType !== "image" && doubtText.trim();
+    const hasImage = doubtType !== "text" && doubtImage;
+    if (!hasText && !hasImage) return;
+
+    setCheckingDuplicates(true);
+    
+    // For image/text+image, run OCR first if not done
+    let searchText = "";
+    if (doubtType === "text") {
+      searchText = doubtText.trim();
+    } else if (doubtType === "image") {
+      searchText = ocrText.trim();
+    } else {
+      // text+image: use OCR text for comparison per spec
+      searchText = ocrText.trim();
+    }
+
+    if (searchText.length >= 5 && student) {
+      const results = store.searchSimilarDoubts(searchText, {
+        subjectName: doubtSubject,
+        studentYear: student.year,
+        studentDepartment: student.department,
+      });
+      if (results.length > 0) {
+        setDuplicateResults(results);
+        setCheckingDuplicates(false);
+        return;
+      }
+    }
+    setDuplicateResults([]);
+    setCheckingDuplicates(false);
+    await submitDoubt();
+  };
+
+  const submitDoubt = async () => {
+    setSending(true);
+    let imageUrl: string | undefined;
+    if (doubtType !== "text" && doubtImage) {
+      if (doubtImagePreview?.startsWith("http")) {
         imageUrl = doubtImagePreview;
-      } else if (doubtImage) {
+      } else {
         const url = await store.uploadDoubtImage(doubtImage);
         if (url) imageUrl = url;
       }
-      await store.addDoubt({
-        studentName: student.name,
-        studentRegNo: student.registrationNumber,
-        studentYear: student.year,
-        studentDepartment: student.department,
-        studentCollege: student.collegeName,
-        subjectName: doubtSubject.trim(),
-        question: doubtText.trim(),
-        questionImageUrl: imageUrl,
-        ocrText: ocrText || undefined,
-      });
-      setDoubtText("");
-      setDoubtSubject("");
-      clearImage();
-      setSimilarDoubts([]);
-      setSending(false);
     }
+    await store.addDoubt({
+      studentName: student!.name,
+      studentRegNo: student!.registrationNumber,
+      studentYear: student!.year,
+      studentDepartment: student!.department,
+      studentCollege: student!.collegeName,
+      subjectName: doubtSubject.trim(),
+      question: doubtType === "image" ? (ocrText || "(Image doubt)") : doubtText.trim(),
+      questionImageUrl: imageUrl,
+      ocrText: ocrText || undefined,
+    });
+    setDoubtText("");
+    setDoubtSubject("");
+    setDoubtType("text");
+    clearImage();
+    setDuplicateResults(null);
+    setSending(false);
   };
 
   const handleEditImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
