@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  BookOpen, Video, LogOut, MessageCircle, ArrowLeft, Send, CheckCircle2, Play, Loader2, RefreshCw, ImagePlus, X, Download, FileText, Search, FolderOpen, ChevronDown, ChevronRight, Pencil, Trash2, Monitor, ThumbsUp, Bookmark, BookmarkCheck, Shuffle, ChevronUp
+  BookOpen, Video, LogOut, MessageCircle, ArrowLeft, Send, CheckCircle2, Play, Loader2, RefreshCw, ImagePlus, X, Download, FileText, Search, FolderOpen, ChevronDown, ChevronRight, Pencil, Trash2, Monitor, ThumbsUp, Bookmark, BookmarkCheck, Shuffle, ChevronUp, Type, Image, FileImage, Eye
 } from "lucide-react";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -16,6 +16,7 @@ import {
 import DigitalBoardStudent from "@/components/DigitalBoardStudent";
 
 type View = "dashboard" | "subjects" | "videos" | "video-player" | "doubts" | "digital-board" | "learning-feed" | "saved-doubts";
+type DoubtType = "text" | "image" | "text+image";
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
@@ -39,16 +40,17 @@ const StudentDashboard = () => {
   const [selectedVideoTitle, setSelectedVideoTitle] = useState("");
   const [selectedVideoId, setSelectedVideoId] = useState("");
   const [doubtSubject, setDoubtSubject] = useState("");
+  const [doubtType, setDoubtType] = useState<DoubtType>("text");
   const [doubtText, setDoubtText] = useState("");
   const [doubtImage, setDoubtImage] = useState<File | null>(null);
   const [doubtImagePreview, setDoubtImagePreview] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  const [checkingDuplicates, setCheckingDuplicates] = useState(false);
+  const [duplicateResults, setDuplicateResults] = useState<ReturnType<typeof store.searchSimilarDoubts> | null>(null);
   const [doubtSearch, setDoubtSearch] = useState<Record<string, string>>({});
   const [expandedDoubtSubjects, setExpandedDoubtSubjects] = useState<Record<string, boolean>>({});
   const [ocrProcessing, setOcrProcessing] = useState(false);
   const [ocrText, setOcrText] = useState("");
-  const [similarDoubts, setSimilarDoubts] = useState<ReturnType<typeof store.searchSimilarDoubts>>([]);
-  const [expandedSuggestion, setExpandedSuggestion] = useState<string | null>(null);
   const [editingDoubtId, setEditingDoubtId] = useState<string | null>(null);
   const [editDoubtText, setEditDoubtText] = useState("");
   const [editDoubtSubject, setEditDoubtSubject] = useState("");
@@ -61,20 +63,10 @@ const StudentDashboard = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editFileInputRef = useRef<HTMLInputElement>(null);
 
-  // Real-time duplicate detection
+  // Reset duplicate results when doubt type or inputs change
   useEffect(() => {
-    const searchText = `${doubtText} ${ocrText}`.trim();
-    if (searchText.length >= 5 && student) {
-      const results = store.searchSimilarDoubts(searchText, {
-        subjectName: doubtSubject || undefined,
-        studentYear: student.year,
-        studentDepartment: student.department,
-      });
-      setSimilarDoubts(results);
-    } else {
-      setSimilarDoubts([]);
-    }
-  }, [doubtText, ocrText, doubtSubject, store.doubts]);
+    setDuplicateResults(null);
+  }, [doubtType, doubtText, doubtImage, doubtSubject]);
 
   if (!student) {
     navigate("/student/login");
@@ -140,33 +132,70 @@ const StudentDashboard = () => {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const handleSendDoubt = async () => {
-    if (doubtSubject.trim() && (doubtText.trim() || doubtImage)) {
-      setSending(true);
-      let imageUrl: string | undefined;
-      if (doubtImage && doubtImagePreview?.startsWith("http")) {
+  const handleCheckAndSend = async () => {
+    if (!doubtSubject.trim()) return;
+    const hasText = doubtType !== "image" && doubtText.trim();
+    const hasImage = doubtType !== "text" && doubtImage;
+    if (!hasText && !hasImage) return;
+
+    setCheckingDuplicates(true);
+    
+    // For image/text+image, run OCR first if not done
+    let searchText = "";
+    if (doubtType === "text") {
+      searchText = doubtText.trim();
+    } else if (doubtType === "image") {
+      searchText = ocrText.trim();
+    } else {
+      // text+image: use OCR text for comparison per spec
+      searchText = ocrText.trim();
+    }
+
+    if (searchText.length >= 5 && student) {
+      const results = store.searchSimilarDoubts(searchText, {
+        subjectName: doubtSubject,
+        studentYear: student.year,
+        studentDepartment: student.department,
+      });
+      if (results.length > 0) {
+        setDuplicateResults(results);
+        setCheckingDuplicates(false);
+        return;
+      }
+    }
+    setDuplicateResults([]);
+    setCheckingDuplicates(false);
+    await submitDoubt();
+  };
+
+  const submitDoubt = async () => {
+    setSending(true);
+    let imageUrl: string | undefined;
+    if (doubtType !== "text" && doubtImage) {
+      if (doubtImagePreview?.startsWith("http")) {
         imageUrl = doubtImagePreview;
-      } else if (doubtImage) {
+      } else {
         const url = await store.uploadDoubtImage(doubtImage);
         if (url) imageUrl = url;
       }
-      await store.addDoubt({
-        studentName: student.name,
-        studentRegNo: student.registrationNumber,
-        studentYear: student.year,
-        studentDepartment: student.department,
-        studentCollege: student.collegeName,
-        subjectName: doubtSubject.trim(),
-        question: doubtText.trim(),
-        questionImageUrl: imageUrl,
-        ocrText: ocrText || undefined,
-      });
-      setDoubtText("");
-      setDoubtSubject("");
-      clearImage();
-      setSimilarDoubts([]);
-      setSending(false);
     }
+    await store.addDoubt({
+      studentName: student!.name,
+      studentRegNo: student!.registrationNumber,
+      studentYear: student!.year,
+      studentDepartment: student!.department,
+      studentCollege: student!.collegeName,
+      subjectName: doubtSubject.trim(),
+      question: doubtType === "image" ? (ocrText || "(Image doubt)") : doubtText.trim(),
+      questionImageUrl: imageUrl,
+      ocrText: ocrText || undefined,
+    });
+    setDoubtText("");
+    setDoubtSubject("");
+    setDoubtType("text");
+    clearImage();
+    setDuplicateResults(null);
+    setSending(false);
   };
 
   const handleEditImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -384,7 +413,8 @@ const StudentDashboard = () => {
               <CardHeader>
                 <CardTitle className="font-display text-lg">Ask a Doubt</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-4">
+                {/* Subject selector */}
                 <Select value={doubtSubject} onValueChange={setDoubtSubject}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select Subject" />
@@ -395,15 +425,76 @@ const StudentDashboard = () => {
                     ))}
                   </SelectContent>
                 </Select>
-                <Textarea placeholder="Type your doubt here..." value={doubtText} onChange={(e) => setDoubtText(e.target.value)} rows={4} />
 
+                {/* Doubt Type Selector */}
+                <div className="flex gap-2">
+                  {([
+                    { key: "text" as DoubtType, label: "Text", icon: <Type className="h-4 w-4" /> },
+                    { key: "image" as DoubtType, label: "Image", icon: <Image className="h-4 w-4" /> },
+                    { key: "text+image" as DoubtType, label: "Text + Image", icon: <FileImage className="h-4 w-4" /> },
+                  ]).map((opt) => (
+                    <button
+                      key={opt.key}
+                      onClick={() => { setDoubtType(opt.key); clearImage(); setDoubtText(""); setOcrText(""); }}
+                      className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg border-2 text-sm font-medium transition-all ${
+                        doubtType === opt.key
+                          ? "border-primary bg-primary/10 text-primary shadow-sm"
+                          : "border-border bg-card text-muted-foreground hover:border-primary/30 hover:bg-accent/5"
+                      }`}
+                    >
+                      {opt.icon} {opt.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Dynamic Input: Text */}
+                {(doubtType === "text" || doubtType === "text+image") && (
+                  <Textarea
+                    placeholder="Type your doubt clearly…"
+                    value={doubtText}
+                    onChange={(e) => setDoubtText(e.target.value)}
+                    rows={4}
+                    className="text-base"
+                  />
+                )}
+
+                {/* Dynamic Input: Image */}
+                {(doubtType === "image" || doubtType === "text+image") && (
+                  <div className="space-y-2">
+                    <input type="file" accept="image/*" ref={fileInputRef} className="hidden" onChange={handleImageSelect} />
+                    {doubtImagePreview ? (
+                      <div className="space-y-2">
+                        <div className="relative inline-block">
+                          <img src={doubtImagePreview} alt="Doubt attachment" className="max-h-48 rounded-lg border" />
+                          <button onClick={clearImage} className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1">
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm" onClick={() => { clearImage(); fileInputRef.current?.click(); }}>
+                            Replace Image
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div
+                        onClick={() => fileInputRef.current?.click()}
+                        className="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:border-primary/50 hover:bg-accent/5 transition-all"
+                      >
+                        <ImagePlus className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                        <p className="text-sm text-muted-foreground">Click or drag & drop to upload image</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* OCR Status */}
                 {ocrProcessing && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground p-2 rounded bg-secondary/50">
                     <Loader2 className="h-4 w-4 animate-spin" />
                     Extracting text from image...
                   </div>
                 )}
-
                 {ocrText && !ocrProcessing && (
                   <div className="p-2 rounded bg-secondary/50 text-xs text-muted-foreground">
                     <p className="font-semibold mb-1 flex items-center gap-1"><FileText className="h-3 w-3" /> OCR Extracted Text:</p>
@@ -411,58 +502,75 @@ const StudentDashboard = () => {
                   </div>
                 )}
 
-                {similarDoubts.length > 0 && (
-                  <div className="border rounded-md p-3 bg-accent/5 space-y-2">
-                    <p className="text-xs font-semibold text-accent flex items-center gap-1">
-                      <Search className="h-3 w-3" /> Similar answered doubts found:
+                {/* Duplicate Check Results */}
+                {checkingDuplicates && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground p-3 rounded-lg bg-accent/5 border border-accent/20">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Checking for similar doubts…
+                  </div>
+                )}
+
+                {duplicateResults && duplicateResults.length > 0 && (
+                  <div className="border-2 border-accent/30 rounded-lg p-4 bg-accent/5 space-y-3">
+                    <p className="text-sm font-semibold text-accent flex items-center gap-2">
+                      <Search className="h-4 w-4" /> Similar doubts found! Check existing solutions:
                     </p>
-                    {similarDoubts.map((sd) => (
-                      <div key={sd.id} className="border rounded p-2 bg-card text-sm cursor-pointer hover:bg-accent/10 transition-colors"
-                        onClick={() => setExpandedSuggestion(expandedSuggestion === sd.id ? null : sd.id)}>
-                        <p className="font-medium text-xs">{sd.question}</p>
-                        <span className="text-xs text-muted-foreground">{sd.subjectName}</span>
-                        {expandedSuggestion === sd.id && (
-                          <div className="mt-2 p-2 rounded bg-success/10 text-xs space-y-2">
-                            {sd.questionImageUrl && (
-                              <div>
-                                <p className="font-semibold text-muted-foreground mb-1">Question Image:</p>
-                                <img src={sd.questionImageUrl} alt="Question" className="max-h-32 rounded border" />
-                              </div>
-                            )}
-                            <p className="font-semibold text-muted-foreground mb-1">Answer by {sd.answeredBy}:</p>
-                            <p>{sd.answer}</p>
-                            {sd.answerImageUrl && (
-                              <div className="mt-2">
-                                <img src={sd.answerImageUrl} alt="Answer" className="max-h-32 rounded border" />
-                                <a href={sd.answerImageUrl} download className="inline-flex items-center gap-1 text-xs text-primary mt-1 hover:underline">
+                    {duplicateResults.map((sd) => (
+                      <Card key={sd.id} className="border-success/30">
+                        <CardContent className="p-4 space-y-2">
+                          <p className="text-xs text-muted-foreground">📌 Previous Question</p>
+                          <p className="text-sm font-medium">{sd.question}</p>
+                          {sd.questionImageUrl && (
+                            <img src={sd.questionImageUrl} alt="Question" className="max-h-32 rounded border" />
+                          )}
+                          <div className="p-3 rounded bg-success/10">
+                            <p className="text-xs text-muted-foreground mb-1">✅ Previous Answer by {sd.answeredBy}:</p>
+                            <p className="text-sm">{sd.answer}</p>
+                            {(sd.answerImageUrls && sd.answerImageUrls.length > 0
+                              ? sd.answerImageUrls
+                              : sd.answerImageUrl ? [sd.answerImageUrl] : []
+                            ).map((url, idx) => (
+                              <div key={idx} className="mt-2">
+                                <img src={url} alt={`Answer ${idx + 1}`} className="max-h-32 rounded border" />
+                                <a href={url} download className="inline-flex items-center gap-1 text-xs text-primary mt-1 hover:underline">
                                   <Download className="h-3 w-3" /> Download
                                 </a>
                               </div>
-                            )}
+                            ))}
                           </div>
-                        )}
-                      </div>
+                          <Button variant="outline" size="sm" onClick={() => setDuplicateResults(null)}>
+                            <Eye className="h-4 w-4 mr-1" /> View Full Solution
+                          </Button>
+                        </CardContent>
+                      </Card>
                     ))}
+                    <Button variant="default" size="sm" onClick={() => { setDuplicateResults(null); submitDoubt(); }}>
+                      Ask New Doubt Anyway
+                    </Button>
                   </div>
                 )}
 
-                <input type="file" accept="image/*" ref={fileInputRef} className="hidden" onChange={handleImageSelect} />
-                {doubtImagePreview ? (
-                  <div className="relative inline-block">
-                    <img src={doubtImagePreview} alt="Doubt attachment" className="max-h-40 rounded border" />
-                    <button onClick={clearImage} className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1">
-                      <X className="h-3 w-3" />
-                    </button>
+                {duplicateResults && duplicateResults.length === 0 && !sending && (
+                  <div className="text-sm text-muted-foreground p-2 rounded bg-secondary/50">
+                    ✅ No similar doubts found. Your doubt has been submitted!
                   </div>
-                ) : (
-                  <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
-                    <ImagePlus className="h-4 w-4 mr-1" /> Attach Photo
+                )}
+
+                {/* Submit Button */}
+                {(!duplicateResults || duplicateResults.length === 0) && (
+                  <Button
+                    onClick={handleCheckAndSend}
+                    disabled={
+                      !doubtSubject.trim() ||
+                      (doubtType === "text" && !doubtText.trim()) ||
+                      (doubtType === "image" && !doubtImage) ||
+                      (doubtType === "text+image" && (!doubtText.trim() || !doubtImage)) ||
+                      sending || ocrProcessing || checkingDuplicates
+                    }
+                  >
+                    {sending ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Send className="h-4 w-4 mr-1" />} Ask Doubt
                   </Button>
                 )}
-
-                <Button onClick={handleSendDoubt} disabled={!doubtSubject.trim() || (!doubtText.trim() && !doubtImage) || sending || ocrProcessing}>
-                  {sending ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Send className="h-4 w-4 mr-1" />} Send Doubt
-                </Button>
               </CardContent>
             </Card>
 
