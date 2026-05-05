@@ -371,22 +371,97 @@ const TeacherDashboard = () => {
                           <img src={d.questionImageUrl} alt="Student attachment" className="max-h-40 rounded border" />
                         </div>
                       )}
-                      <div className="mt-2 p-3 rounded bg-success/10 text-sm">
-                        <p className="text-xs text-muted-foreground mb-1">Answer:</p>
-                        <p>{d.answer}</p>
-                        {/* Show all answer images */}
-                        {(d.answerImageUrls && d.answerImageUrls.length > 0
-                          ? d.answerImageUrls
-                          : d.answerImageUrl ? [d.answerImageUrl] : []
-                        ).map((url, idx) => (
-                          <div key={idx} className="mt-2">
-                            <img src={url} alt={`Answer attachment ${idx + 1}`} className="max-h-40 rounded border" />
-                            <a href={url} download className="inline-flex items-center gap-1 text-xs text-primary mt-1 hover:underline">
-                              <Download className="h-3 w-3" /> Download
-                            </a>
+
+                      {/* Edit mode */}
+                      {editingAnswerId === d.id ? (
+                        <div className="mt-2 space-y-2 p-3 rounded border bg-card">
+                          <Textarea
+                            value={editAnswerText}
+                            onChange={(e) => setEditAnswerText(e.target.value)}
+                            rows={3}
+                          />
+                          {/* Existing answer images */}
+                          {editAnswerImages.length > 0 && (
+                            <div className="flex flex-wrap gap-2">
+                              {editAnswerImages.map((url, idx) => (
+                                <div key={idx} className="relative inline-block">
+                                  <img src={url} alt={`Answer ${idx + 1}`} className="max-h-24 rounded border" />
+                                  <button
+                                    onClick={() => setEditAnswerImages((prev) => prev.filter((_, i) => i !== idx))}
+                                    className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1"
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          <input
+                            type="file" accept="image/*" multiple className="hidden"
+                            ref={editAnswerFileRef}
+                            onChange={async (e) => {
+                              const files = Array.from(e.target.files || []);
+                              for (const file of files) {
+                                const url = await store.uploadDoubtImage(file);
+                                if (url) setEditAnswerImages((prev) => [...prev, url]);
+                              }
+                            }}
+                          />
+                          <Button variant="outline" size="sm" onClick={() => editAnswerFileRef.current?.click()}>
+                            <ImagePlus className="h-4 w-4 mr-1" /> Add Images
+                          </Button>
+                          <div className="flex gap-2">
+                            <Button size="sm" onClick={async () => {
+                              await store.updateDoubtAnswer(d.id, {
+                                answer: editAnswerText,
+                                answerImageUrl: editAnswerImages[0] || null,
+                                answerImageUrls: editAnswerImages,
+                              });
+                              setEditingAnswerId(null);
+                            }}>Save</Button>
+                            <Button size="sm" variant="outline" onClick={() => setEditingAnswerId(null)}>Cancel</Button>
                           </div>
-                        ))}
-                      </div>
+                        </div>
+                      ) : (
+                        <div className="mt-2 p-3 rounded bg-success/10 text-sm">
+                          <p className="text-xs text-muted-foreground mb-1">Answer:</p>
+                          <p>{d.answer}</p>
+                          {(d.answerImageUrls && d.answerImageUrls.length > 0
+                            ? d.answerImageUrls
+                            : d.answerImageUrl ? [d.answerImageUrl] : []
+                          ).map((url, idx) => (
+                            <div key={idx} className="mt-2">
+                              <img src={url} alt={`Answer attachment ${idx + 1}`} className="max-h-40 rounded border" />
+                              <a href={url} download className="inline-flex items-center gap-1 text-xs text-primary mt-1 hover:underline">
+                                <Download className="h-3 w-3" /> Download
+                              </a>
+                            </div>
+                          ))}
+                          {/* Edit/Delete only for the teacher who answered */}
+                          {d.answeredBy === teacher.name && (
+                            <div className="flex gap-2 mt-3">
+                              <Button variant="outline" size="sm" onClick={() => {
+                                setEditingAnswerId(d.id);
+                                setEditAnswerText(d.answer || "");
+                                setEditAnswerImages(
+                                  d.answerImageUrls && d.answerImageUrls.length > 0
+                                    ? d.answerImageUrls
+                                    : d.answerImageUrl ? [d.answerImageUrl] : []
+                                );
+                              }}>
+                                <Pencil className="h-3 w-3 mr-1" /> Edit Answer
+                              </Button>
+                              <Button variant="outline" size="sm" className="text-destructive" onClick={async () => {
+                                if (confirm("Delete this answer? The doubt will return to pending.")) {
+                                  await store.deleteDoubtAnswer(d.id);
+                                }
+                              }}>
+                                <Trash2 className="h-3 w-3 mr-1" /> Delete Answer
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 ))
