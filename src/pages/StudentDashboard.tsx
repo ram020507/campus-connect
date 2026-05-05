@@ -63,20 +63,10 @@ const StudentDashboard = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editFileInputRef = useRef<HTMLInputElement>(null);
 
-  // Real-time duplicate detection
+  // Reset duplicate results when doubt type or inputs change
   useEffect(() => {
-    const searchText = `${doubtText} ${ocrText}`.trim();
-    if (searchText.length >= 5 && student) {
-      const results = store.searchSimilarDoubts(searchText, {
-        subjectName: doubtSubject || undefined,
-        studentYear: student.year,
-        studentDepartment: student.department,
-      });
-      setSimilarDoubts(results);
-    } else {
-      setSimilarDoubts([]);
-    }
-  }, [doubtText, ocrText, doubtSubject, store.doubts]);
+    setDuplicateResults(null);
+  }, [doubtType, doubtText, doubtImage, doubtSubject]);
 
   if (!student) {
     navigate("/student/login");
