@@ -513,7 +513,7 @@ const StudentDashboard = () => {
                 {duplicateResults && duplicateResults.length > 0 && (
                   <div className="border-2 border-accent/30 rounded-lg p-4 bg-accent/5 space-y-3">
                     <p className="text-sm font-semibold text-accent flex items-center gap-2">
-                      <Search className="h-4 w-4" /> Similar doubts found! Check existing solutions:
+                      <Search className="h-4 w-4" /> Exact match found! Here's the solution:
                     </p>
                     {duplicateResults.map((sd) => (
                       <Card key={sd.id} className="border-success/30">
@@ -524,7 +524,7 @@ const StudentDashboard = () => {
                             <img src={sd.questionImageUrl} alt="Question" className="max-h-32 rounded border" />
                           )}
                           <div className="p-3 rounded bg-success/10">
-                            <p className="text-xs text-muted-foreground mb-1">✅ Previous Answer by {sd.answeredBy}:</p>
+                            <p className="text-xs text-muted-foreground mb-1">✅ Answer by {sd.answeredBy}:</p>
                             <p className="text-sm">{sd.answer}</p>
                             {(sd.answerImageUrls && sd.answerImageUrls.length > 0
                               ? sd.answerImageUrls
@@ -538,9 +538,6 @@ const StudentDashboard = () => {
                               </div>
                             ))}
                           </div>
-                          <Button variant="outline" size="sm" onClick={() => setDuplicateResults(null)}>
-                            <Eye className="h-4 w-4 mr-1" /> View Full Solution
-                          </Button>
                         </CardContent>
                       </Card>
                     ))}
@@ -677,7 +674,12 @@ const StudentDashboard = () => {
                               </div>
                             )}
                             {d.answer && editingDoubtId !== d.id && (
-                              <div className="mt-3 p-3 rounded bg-success/10 text-sm">
+                              <div className="mt-3 p-3 rounded bg-success/10 text-sm" ref={(el) => {
+                                // Mark as viewed when student sees the answer
+                                if (el && !d.viewedByStudent) {
+                                  store.markDoubtViewed(d.id);
+                                }
+                              }}>
                                 <p className="text-xs text-muted-foreground mb-1">Answer by {d.answeredBy}:</p>
                                 <p>{d.answer}</p>
                                 {/* Show all answer images */}

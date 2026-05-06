@@ -110,13 +110,17 @@ const DigitalBoardTeacher = ({ teacher }: DigitalBoardTeacherProps) => {
           </div>
 
           {(board.activeSession.doubtText || board.activeSession.questionImageUrl) && (
-            <div className="p-2 rounded bg-muted text-sm space-y-2">
+            <div className="p-3 rounded bg-muted text-sm space-y-2">
+              <p className="text-xs font-semibold text-primary">{board.activeSession.studentName}</p>
               {board.activeSession.doubtText && (
-                <div><strong>Doubt:</strong> {board.activeSession.doubtText}</div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-0.5">Question:</p>
+                  <p>{board.activeSession.doubtText}</p>
+                </div>
               )}
               {board.activeSession.questionImageUrl && (
                 <div>
-                  <p className="text-xs text-muted-foreground mb-1">Uploaded Image:</p>
+                  <p className="text-xs text-muted-foreground mb-1">Attachment:</p>
                   <img src={board.activeSession.questionImageUrl} alt="Question" className="max-h-32 rounded border" />
                 </div>
               )}

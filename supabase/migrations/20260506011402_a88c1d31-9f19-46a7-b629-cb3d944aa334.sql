@@ -1,0 +1,1 @@
+ALTER TABLE public.doubts ADD COLUMN viewed_by_student boolean NOT NULL DEFAULT false;
