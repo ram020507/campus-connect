@@ -661,6 +661,11 @@ export function useSupabaseData() {
     }
   };
 
+  const markDoubtViewed = async (doubtId: string) => {
+    await (supabase.from("doubts").update as any)({ viewed_by_student: true }).eq("id", doubtId);
+    await fetchAll();
+  };
+
   return {
     colleges, students, teachers, doubts, savedDoubts, helpfulByMe, loading,
     addCollege, removeCollege,
@@ -676,6 +681,7 @@ export function useSupabaseData() {
     searchSimilarDoubts, extractOcrText,
     updateDoubtQuestion, deleteDoubt, updateDoubtAnswer, deleteDoubtAnswer,
     saveDoubt, unsaveDoubt, toggleHelpful,
+    markDoubtViewed,
     refetch: fetchAll,
   };
 }
