@@ -501,7 +501,7 @@ export function useSupabaseData() {
     await fetchAll();
   };
 
-  const addDoubt = async (doubt: Omit<Doubt, "id" | "createdAt" | "helpfulCount">) => {
+  const addDoubt = async (doubt: Omit<Doubt, "id" | "createdAt" | "helpfulCount" | "viewedByStudent">) => {
     const { error, data } = await supabase.from("doubts").insert({
       student_name: doubt.studentName,
       student_reg_no: doubt.studentRegNo,
