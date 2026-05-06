@@ -677,7 +677,12 @@ const StudentDashboard = () => {
                               </div>
                             )}
                             {d.answer && editingDoubtId !== d.id && (
-                              <div className="mt-3 p-3 rounded bg-success/10 text-sm">
+                              <div className="mt-3 p-3 rounded bg-success/10 text-sm" ref={(el) => {
+                                // Mark as viewed when student sees the answer
+                                if (el && !d.viewedByStudent) {
+                                  store.markDoubtViewed(d.id);
+                                }
+                              }}>
                                 <p className="text-xs text-muted-foreground mb-1">Answer by {d.answeredBy}:</p>
                                 <p>{d.answer}</p>
                                 {/* Show all answer images */}
