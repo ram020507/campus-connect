@@ -548,18 +548,17 @@ export function useSupabaseData() {
     text: string,
     filters?: { subjectName?: string; studentYear?: number; studentDepartment?: string }
   ): Doubt[] => {
-    if (!text || text.trim().length < 5) return [];
+    if (!text || text.trim().length < 3) return [];
     const q = text.toLowerCase().trim();
-    const words = q.split(/\s+/).filter((w) => w.length > 2);
-    if (words.length === 0) return [];
     return doubts.filter((d) => {
       if (!d.answer) return false;
       if (filters?.subjectName && d.subjectName.toLowerCase() !== filters.subjectName.toLowerCase()) return false;
       if (filters?.studentYear && d.studentYear !== filters.studentYear) return false;
       if (filters?.studentDepartment && d.studentDepartment.toLowerCase() !== filters.studentDepartment.toLowerCase()) return false;
-      const target = `${d.question} ${d.ocrText || ""}`.toLowerCase();
-      const matchCount = words.filter((w) => target.includes(w)).length;
-      return matchCount >= Math.max(1, Math.floor(words.length * 0.4));
+      // Exact match: compare against question text and OCR text
+      const questionText = d.question.toLowerCase().trim();
+      const ocrTarget = (d.ocrText || "").toLowerCase().trim();
+      return questionText === q || (ocrTarget.length > 0 && ocrTarget === q);
     }).slice(0, 5);
   };
 
