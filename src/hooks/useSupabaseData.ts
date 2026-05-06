@@ -84,6 +84,7 @@ export interface Doubt {
   answeredAt?: string;
   ocrText?: string;
   helpfulCount: number;
+  viewedByStudent: boolean;
 }
 
 export interface SavedDoubt {
