@@ -265,6 +265,7 @@ export type Database = {
           student_reg_no: string
           student_year: number
           subject_name: string
+          viewed_by_student: boolean
         }
         Insert: {
           answer?: string | null
@@ -287,6 +288,7 @@ export type Database = {
           student_reg_no: string
           student_year: number
           subject_name: string
+          viewed_by_student?: boolean
         }
         Update: {
           answer?: string | null
@@ -309,6 +311,7 @@ export type Database = {
           student_reg_no?: string
           student_year?: number
           subject_name?: string
+          viewed_by_student?: boolean
         }
         Relationships: []
       }
