@@ -1,103 +1,60 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { useSupabaseData, StudentAccount, TeacherAccount } from "@/hooks/useSupabaseData";
+import { useSupabaseData, StudentAccount, TeacherAccount, getTeacherSubjects } from "@/hooks/useSupabaseData";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Building2, ChevronRight, Plus, Trash2, LogOut, Users, GraduationCap,
-  FolderOpen, BookOpen, Video, ArrowLeft, Loader2, RefreshCw, Pencil, X, Check, Upload, FileText
-} from "lucide-react";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
-
 import { Checkbox } from "@/components/ui/checkbox";
-import { getTeacherSubjects } from "@/hooks/useSupabaseData";
+import {
+  Building2, Plus, Trash2, LogOut, Users, GraduationCap,
+  FolderOpen, Video, ArrowLeft, Loader2, RefreshCw, Pencil, X, Check, Upload, FileText
+} from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
-type View = "colleges" | "years" | "departments" | "subjects" | "videos" | "students" | "students-college" | "students-year" | "students-dept" | "teachers" | "teachers-college";
+type Tab = "content" | "students" | "teachers";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const store = useSupabaseData();
+  const [tab, setTab] = useState<Tab>("content");
 
-  const [view, setView] = useState<View>("colleges");
-  const [selectedCollege, setSelectedCollege] = useState<string>("");
-  const [selectedYear, setSelectedYear] = useState<string>("");
-  const [selectedDept, setSelectedDept] = useState<string>("");
-  const [selectedSubject, setSelectedSubject] = useState<string>("");
-
-  // Form states
-  const [newCollegeName, setNewCollegeName] = useState("");
-  const [newYearNum, setNewYearNum] = useState("");
-  const [newDeptName, setNewDeptName] = useState("");
-  const [newSubjectName, setNewSubjectName] = useState("");
-  const [newSubjectSemester, setNewSubjectSemester] = useState<"odd" | "even">("odd");
+  // ===== CONTENT tab filters =====
+  const [cCollegeId, setCCollegeId] = useState("");
+  const [cYearId, setCYearId] = useState("");
+  const [cDeptId, setCDeptId] = useState("");
+  const [cSubjectId, setCSubjectId] = useState("");
   const [newVideoTitle, setNewVideoTitle] = useState("");
   const [newVideoUrl, setNewVideoUrl] = useState("");
-
-  // Selected college for student/teacher folder navigation
-  const [selectedStudentCollegeId, setSelectedStudentCollegeId] = useState("");
-  const [selectedStudentYearId, setSelectedStudentYearId] = useState("");
-  const [selectedStudentDeptId, setSelectedStudentDeptId] = useState("");
-  const [selectedTeacherCollegeId, setSelectedTeacherCollegeId] = useState("");
-  const [teacherSelectedSubjects, setTeacherSelectedSubjects] = useState<string[]>([]);
-
-  // Student form
-  const [studentRegNo, setStudentRegNo] = useState("");
-  const [studentName, setStudentName] = useState("");
-  const [studentDob, setStudentDob] = useState("");
-  const [studentDept, setStudentDept] = useState("");
-  const [studentYear, setStudentYear] = useState("");
-  const [studentEmail, setStudentEmail] = useState("");
-
-  // Teacher form
-  const [teacherStaffId, setTeacherStaffId] = useState("");
-  const [teacherName, setTeacherName] = useState("");
-  const [teacherDob, setTeacherDob] = useState("");
-  const [teacherSubject, setTeacherSubject] = useState("");
-  const [teacherEmail, setTeacherEmail] = useState("");
-
-  // Edit states
-  const [editingStudent, setEditingStudent] = useState<string | null>(null);
-  const [editStudentData, setEditStudentData] = useState<Partial<Omit<StudentAccount, "id">>>({});
-  const [editingTeacher, setEditingTeacher] = useState<string | null>(null);
-  const [editTeacherData, setEditTeacherData] = useState<Partial<Omit<TeacherAccount, "id">>>({});
-
-  // File upload states
   const [uploading, setUploading] = useState<Record<string, boolean>>({});
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
-  const handleLogout = () => {
-    sessionStorage.removeItem("admin-auth");
-    navigate("/");
-  };
+  // ===== STUDENTS tab filters & form =====
+  const [sCollegeId, setSCollegeId] = useState("");
+  const [sYearId, setSYearId] = useState("");
+  const [sDeptId, setSDeptId] = useState("");
+  const [studentRegNo, setStudentRegNo] = useState("");
+  const [studentName, setStudentName] = useState("");
+  const [studentDob, setStudentDob] = useState("");
+  const [studentEmail, setStudentEmail] = useState("");
+  const [editingStudent, setEditingStudent] = useState<string | null>(null);
+  const [editStudentData, setEditStudentData] = useState<Partial<Omit<StudentAccount, "id">>>({});
 
-  const college = store.colleges.find((c) => c.id === selectedCollege);
-  const year = college?.years.find((y) => y.id === selectedYear);
-  const dept = year?.departments.find((d) => d.id === selectedDept);
-  const subject = dept?.subjects.find((s) => s.id === selectedSubject);
+  // ===== TEACHERS tab filters & form =====
+  const [tCollegeId, setTCollegeId] = useState("");
+  const [tFilterSubject, setTFilterSubject] = useState<string>("all");
+  const [teacherStaffId, setTeacherStaffId] = useState("");
+  const [teacherName, setTeacherName] = useState("");
+  const [teacherDob, setTeacherDob] = useState("");
+  const [teacherEmail, setTeacherEmail] = useState("");
+  const [teacherSelectedSubjects, setTeacherSelectedSubjects] = useState<string[]>([]);
+  const [editingTeacher, setEditingTeacher] = useState<string | null>(null);
+  const [editTeacherData, setEditTeacherData] = useState<Partial<Omit<TeacherAccount, "id">>>({});
 
-  // Get college for student/teacher folder views
-  const studentFolderCollege = store.colleges.find((c) => c.id === selectedStudentCollegeId);
-  const teacherFolderCollege = store.colleges.find((c) => c.id === selectedTeacherCollegeId);
-
-  // Breadcrumb
-  const breadcrumbs: { label: string; onClick: () => void }[] = [
-    { label: "Colleges", onClick: () => { setView("colleges"); setSelectedCollege(""); } },
-  ];
-  if (view !== "colleges" && view !== "students" && view !== "teachers" && college) {
-    breadcrumbs.push({ label: college.name, onClick: () => { setView("years"); setSelectedYear(""); } });
-  }
-  if ((view === "departments" || view === "subjects" || view === "videos") && year) {
-    breadcrumbs.push({ label: `Year ${year.yearNumber}`, onClick: () => { setView("departments"); setSelectedDept(""); } });
-  }
-  if ((view === "subjects" || view === "videos") && dept) {
-    breadcrumbs.push({ label: dept.name, onClick: () => { setView("subjects"); setSelectedSubject(""); } });
-  }
-  if (view === "videos" && subject) {
-    breadcrumbs.push({ label: subject.name, onClick: () => {} });
-  }
+  const handleLogout = () => { sessionStorage.removeItem("admin-auth"); navigate("/"); };
 
   const formatDob = (val: string) => {
     let v = val.replace(/\D/g, "");
@@ -107,13 +64,61 @@ const AdminDashboard = () => {
     return v;
   };
 
+  // CONTENT lookups
+  const cCollege = store.colleges.find((c) => c.id === cCollegeId);
+  const cYear = cCollege?.years.find((y) => y.id === cYearId);
+  const cDept = cYear?.departments.find((d) => d.id === cDeptId);
+  const cSubject = cDept?.subjects.find((s) => s.id === cSubjectId);
+
+  // STUDENTS lookups
+  const sCollege = store.colleges.find((c) => c.id === sCollegeId);
+  const sYear = sCollege?.years.find((y) => y.id === sYearId);
+  const sDept = sYear?.departments.find((d) => d.id === sDeptId);
+
+  // TEACHERS lookups
+  const tCollege = store.colleges.find((c) => c.id === tCollegeId);
+  const teacherCollegeSubjects = useMemo(() => {
+    if (!tCollege) return [] as string[];
+    const out: string[] = [];
+    tCollege.years.forEach((y) =>
+      y.departments.forEach((d) =>
+        d.subjects.forEach((s) => { if (!out.includes(s.name)) out.push(s.name); })
+      )
+    );
+    return out.sort();
+  }, [tCollege]);
+
   const handleFileUpload = async (videoId: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setUploading((prev) => ({ ...prev, [videoId]: true }));
+    setUploading((p) => ({ ...p, [videoId]: true }));
     await store.uploadVideoFile(videoId, file);
-    setUploading((prev) => ({ ...prev, [videoId]: false }));
+    setUploading((p) => ({ ...p, [videoId]: false }));
     if (fileInputRefs.current[videoId]) fileInputRefs.current[videoId]!.value = "";
+  };
+
+  // Quick-add helpers (so dropdowns can still be populated without leaving page)
+  const quickAddCollege = async () => {
+    const name = prompt("New college name");
+    if (name?.trim()) await store.addCollege(name.trim());
+  };
+  const quickAddYear = async (collegeId: string, existing: number[]) => {
+    const opts = [1, 2, 3, 4].filter((y) => !existing.includes(y));
+    if (!opts.length) return alert("All years already added");
+    const yr = prompt(`New year (${opts.join(", ")})`);
+    const n = Number(yr);
+    if (opts.includes(n)) await store.addYear(collegeId, n);
+  };
+  const quickAddDept = async (collegeId: string, yearId: string) => {
+    const name = prompt("Department name (e.g., CSE)");
+    if (name?.trim()) await store.addDepartment(collegeId, yearId, name.trim());
+  };
+  const quickAddSubject = async (collegeId: string, yearId: string, deptId: string) => {
+    const name = prompt("Subject name");
+    if (!name?.trim()) return;
+    const sem = prompt("Semester (odd / even)", "odd");
+    const semester = sem === "even" ? "even" : "odd";
+    await store.addSubject(collegeId, yearId, deptId, name.trim(), semester);
   };
 
   if (store.loading) {
@@ -127,7 +132,7 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b bg-card px-4 py-3 flex items-center justify-between">
+      <header className="border-b bg-card px-4 py-3 flex items-center justify-between sticky top-0 z-10">
         <div className="flex items-center gap-2">
           <Building2 className="h-6 w-6 text-primary" />
           <h1 className="text-xl font-bold font-display text-foreground">Admin Panel</h1>
@@ -145,635 +150,488 @@ const AdminDashboard = () => {
         </div>
       </header>
 
-      {/* Navigation Tabs */}
-      <div className="border-b bg-card px-4 flex gap-1 overflow-x-auto">
-        {[
-          { key: "colleges" as View, label: "Content", icon: FolderOpen, matches: ["colleges", "years", "departments", "subjects", "videos"] },
-          { key: "students" as View, label: "Students", icon: Users, matches: ["students", "students-college", "students-year", "students-dept"] },
-          { key: "teachers" as View, label: "Teachers", icon: GraduationCap, matches: ["teachers", "teachers-college"] },
-        ].map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setView(tab.key)}
-            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-              tab.matches.includes(view)
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <tab.icon className="h-4 w-4" />
-            {tab.label}
+      {/* Tabs */}
+      <div className="border-b bg-card px-2 sm:px-4 flex gap-1 overflow-x-auto sticky top-[57px] z-10">
+        {([
+          { key: "content", label: "Content Management", icon: FolderOpen },
+          { key: "students", label: "Student Accounts", icon: Users },
+          { key: "teachers", label: "Teacher Management", icon: GraduationCap },
+        ] as { key: Tab; label: string; icon: typeof FolderOpen }[]).map((t) => (
+          <button key={t.key} onClick={() => setTab(t.key)}
+            className={`flex items-center gap-1.5 px-3 sm:px-4 py-2.5 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${
+              tab === t.key ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}>
+            <t.icon className="h-4 w-4" /> {t.label}
           </button>
         ))}
       </div>
 
-      <div className="max-w-4xl mx-auto p-4">
-        {/* Breadcrumb */}
-        {!["students", "students-college", "students-year", "students-dept", "teachers", "teachers-college"].includes(view) && (
-          <nav className="flex items-center gap-1 text-sm text-muted-foreground mb-4 flex-wrap">
-            {breadcrumbs.map((bc, i) => (
-              <span key={i} className="flex items-center gap-1">
-                {i > 0 && <ChevronRight className="h-3 w-3" />}
-                <button onClick={bc.onClick} className="hover:text-primary transition-colors">
-                  {bc.label}
-                </button>
-              </span>
-            ))}
-          </nav>
-        )}
+      <div className="max-w-6xl mx-auto p-4 space-y-6">
 
-        {/* COLLEGES VIEW */}
-        {view === "colleges" && (
-          <div className="space-y-4 animate-fade-in">
-            <div className="flex gap-2">
-              <Input placeholder="New college name" value={newCollegeName} onChange={(e) => setNewCollegeName(e.target.value)} />
-              <Button onClick={() => { if (newCollegeName.trim()) { store.addCollege(newCollegeName.trim()); setNewCollegeName(""); } }}>
-                <Plus className="h-4 w-4 mr-1" /> Add
-              </Button>
-            </div>
-            {store.colleges.map((c) => (
-              <Card key={c.id} className="cursor-pointer hover:shadow-md transition-shadow"
-                onClick={() => { setSelectedCollege(c.id); setView("years"); }}>
-                <CardContent className="p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Building2 className="h-5 w-5 text-primary" />
-                    <span className="font-medium">{c.name}</span>
-                    <span className="text-xs text-muted-foreground">({c.years.length} years)</span>
+        {/* ============================ CONTENT MANAGEMENT ============================ */}
+        {tab === "content" && (
+          <div className="space-y-6 animate-fade-in">
+            <Card>
+              <CardHeader><CardTitle className="text-lg font-display">Select Location</CardTitle></CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  {/* College */}
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">College</label>
+                    <div className="flex gap-1 mt-1">
+                      <Select value={cCollegeId} onValueChange={(v) => { setCCollegeId(v); setCYearId(""); setCDeptId(""); setCSubjectId(""); }}>
+                        <SelectTrigger><SelectValue placeholder="Select college" /></SelectTrigger>
+                        <SelectContent>
+                          {store.colleges.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      <Button variant="outline" size="icon" onClick={quickAddCollege} title="Add college"><Plus className="h-4 w-4" /></Button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); store.removeCollege(c.id); }}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  {/* Year */}
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">Year</label>
+                    <div className="flex gap-1 mt-1">
+                      <Select value={cYearId} onValueChange={(v) => { setCYearId(v); setCDeptId(""); setCSubjectId(""); }} disabled={!cCollege}>
+                        <SelectTrigger><SelectValue placeholder="Select year" /></SelectTrigger>
+                        <SelectContent>
+                          {cCollege?.years.slice().sort((a, b) => a.yearNumber - b.yearNumber).map((y) => (
+                            <SelectItem key={y.id} value={y.id}>Year {y.yearNumber}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Button variant="outline" size="icon" disabled={!cCollege}
+                        onClick={() => cCollege && quickAddYear(cCollege.id, cCollege.years.map((y) => y.yearNumber))}><Plus className="h-4 w-4" /></Button>
+                    </div>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-            {store.colleges.length === 0 && (
-              <p className="text-center text-muted-foreground py-8">No colleges added yet. Create one above.</p>
-            )}
-          </div>
-        )}
+                  {/* Department */}
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">Department</label>
+                    <div className="flex gap-1 mt-1">
+                      <Select value={cDeptId} onValueChange={(v) => { setCDeptId(v); setCSubjectId(""); }} disabled={!cYear}>
+                        <SelectTrigger><SelectValue placeholder="Select dept" /></SelectTrigger>
+                        <SelectContent>
+                          {cYear?.departments.map((d) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      <Button variant="outline" size="icon" disabled={!cYear}
+                        onClick={() => cCollege && cYear && quickAddDept(cCollege.id, cYear.id)}><Plus className="h-4 w-4" /></Button>
+                    </div>
+                  </div>
+                  {/* Subject */}
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">Subject</label>
+                    <div className="flex gap-1 mt-1">
+                      <Select value={cSubjectId} onValueChange={setCSubjectId} disabled={!cDept}>
+                        <SelectTrigger><SelectValue placeholder="Select subject" /></SelectTrigger>
+                        <SelectContent>
+                          {cDept?.subjects.map((s) => <SelectItem key={s.id} value={s.id}>{s.name} ({s.semester})</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      <Button variant="outline" size="icon" disabled={!cDept}
+                        onClick={() => cCollege && cYear && cDept && quickAddSubject(cCollege.id, cYear.id, cDept.id)}><Plus className="h-4 w-4" /></Button>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-        {/* YEARS VIEW */}
-        {view === "years" && college && (
-          <div className="space-y-4 animate-fade-in">
-            <Button variant="ghost" size="sm" onClick={() => { setView("colleges"); setSelectedCollege(""); }}>
-              <ArrowLeft className="h-4 w-4 mr-1" /> Back
-            </Button>
-            <div className="flex gap-2">
-              <Select value={newYearNum} onValueChange={setNewYearNum}>
-                <SelectTrigger className="w-40"><SelectValue placeholder="Year" /></SelectTrigger>
-                <SelectContent>
-                  {[1, 2, 3, 4].filter((y) => !college.years.find((yr) => yr.yearNumber === y)).map((y) => (
-                    <SelectItem key={y} value={String(y)}>Year {y}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button onClick={() => { if (newYearNum) { store.addYear(selectedCollege, Number(newYearNum)); setNewYearNum(""); } }}>
-                <Plus className="h-4 w-4 mr-1" /> Add
-              </Button>
-            </div>
-            {college.years.sort((a, b) => a.yearNumber - b.yearNumber).map((y) => (
-              <Card key={y.id} className="cursor-pointer hover:shadow-md transition-shadow"
-                onClick={() => { setSelectedYear(y.id); setView("departments"); }}>
-                <CardContent className="p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <FolderOpen className="h-5 w-5 text-primary" />
-                    <span className="font-medium">Year {y.yearNumber}</span>
-                    <span className="text-xs text-muted-foreground">({y.departments.length} depts)</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); store.removeYear(selectedCollege, y.id); }}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-
-        {/* DEPARTMENTS VIEW */}
-        {view === "departments" && college && year && (
-          <div className="space-y-4 animate-fade-in">
-            <Button variant="ghost" size="sm" onClick={() => { setView("years"); setSelectedYear(""); }}>
-              <ArrowLeft className="h-4 w-4 mr-1" /> Back
-            </Button>
-            <div className="flex gap-2">
-              <Input placeholder="Department name (e.g., CSE)" value={newDeptName} onChange={(e) => setNewDeptName(e.target.value)} />
-              <Button onClick={() => { if (newDeptName.trim()) { store.addDepartment(selectedCollege, selectedYear, newDeptName.trim()); setNewDeptName(""); } }}>
-                <Plus className="h-4 w-4 mr-1" /> Add
-              </Button>
-            </div>
-            {year.departments.map((d) => (
-              <Card key={d.id} className="cursor-pointer hover:shadow-md transition-shadow"
-                onClick={() => { setSelectedDept(d.id); setView("subjects"); }}>
-                <CardContent className="p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <FolderOpen className="h-5 w-5 text-primary" />
-                    <span className="font-medium">{d.name}</span>
-                    <span className="text-xs text-muted-foreground">({d.subjects.length} subjects)</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); store.removeDepartment(selectedCollege, selectedYear, d.id); }}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-
-        {/* SUBJECTS VIEW */}
-        {view === "subjects" && college && year && dept && (
-          <div className="space-y-4 animate-fade-in">
-            <Button variant="ghost" size="sm" onClick={() => { setView("departments"); setSelectedDept(""); }}>
-              <ArrowLeft className="h-4 w-4 mr-1" /> Back
-            </Button>
-            <div className="flex gap-2 flex-wrap">
-              <Input placeholder="Subject name" value={newSubjectName} onChange={(e) => setNewSubjectName(e.target.value)} className="flex-1 min-w-[120px]" />
-              <Select value={newSubjectSemester} onValueChange={(v) => setNewSubjectSemester(v as "odd" | "even")}>
-                <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="odd">Odd Sem</SelectItem>
-                  <SelectItem value="even">Even Sem</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button onClick={() => {
-                if (newSubjectName.trim()) {
-                  store.addSubject(selectedCollege, selectedYear, selectedDept, newSubjectName.trim(), newSubjectSemester);
-                  setNewSubjectName("");
-                }
-              }}>
-                <Plus className="h-4 w-4 mr-1" /> Add
-              </Button>
-            </div>
-            {dept.subjects.map((s) => (
-              <Card key={s.id} className="cursor-pointer hover:shadow-md transition-shadow"
-                onClick={() => { setSelectedSubject(s.id); setView("videos"); }}>
-                <CardContent className="p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <BookOpen className="h-5 w-5 text-primary" />
-                    <span className="font-medium">{s.name}</span>
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground">
-                      {s.semester === "odd" ? "Odd" : "Even"} Semester
-                    </span>
-                    <span className="text-xs text-muted-foreground">({s.videos.length} videos)</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); store.removeSubject(selectedCollege, selectedYear, selectedDept, s.id); }}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-
-        {/* VIDEOS VIEW */}
-        {view === "videos" && college && year && dept && subject && (
-          <div className="space-y-4 animate-fade-in">
-            <Button variant="ghost" size="sm" onClick={() => { setView("subjects"); setSelectedSubject(""); }}>
-              <ArrowLeft className="h-4 w-4 mr-1" /> Back
-            </Button>
-            <div className="flex gap-2 flex-wrap">
-              <Input placeholder="Video title" value={newVideoTitle} onChange={(e) => setNewVideoTitle(e.target.value)} className="flex-1 min-w-[120px]" />
-              <Input placeholder="Video URL" value={newVideoUrl} onChange={(e) => setNewVideoUrl(e.target.value)} className="flex-1 min-w-[120px]" />
-              <Button onClick={() => {
-                if (newVideoTitle.trim() && newVideoUrl.trim()) {
-                  store.addVideo(selectedCollege, selectedYear, selectedDept, selectedSubject, newVideoTitle.trim(), newVideoUrl.trim());
-                  setNewVideoTitle("");
-                  setNewVideoUrl("");
-                }
-              }}>
-                <Plus className="h-4 w-4 mr-1" /> Add
-              </Button>
-            </div>
-            {subject.videos.map((v) => (
-              <Card key={v.id}>
-                <CardContent className="p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Video className="h-5 w-5 text-primary" />
+            {/* Upload section */}
+            {cSubject ? (
+              <>
+                <Card>
+                  <CardHeader><CardTitle className="text-lg font-display">Add Video</CardTitle></CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <p className="font-medium text-sm">{v.title}</p>
-                        <p className="text-xs text-muted-foreground truncate max-w-[200px]">{v.url}</p>
+                        <label className="text-xs font-medium text-muted-foreground">Video Title</label>
+                        <Input value={newVideoTitle} onChange={(e) => setNewVideoTitle(e.target.value)} placeholder="e.g., Intro to Variables" className="mt-1" />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground">Video URL</label>
+                        <Input value={newVideoUrl} onChange={(e) => setNewVideoUrl(e.target.value)} placeholder="https://..." className="mt-1" />
                       </div>
                     </div>
-                    <Button variant="ghost" size="icon"
-                      onClick={() => store.removeVideo(selectedCollege, selectedYear, selectedDept, selectedSubject, v.id)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
+                    <Button onClick={() => {
+                      if (newVideoTitle.trim() && newVideoUrl.trim()) {
+                        store.addVideo(cCollegeId, cYearId, cDeptId, cSubjectId, newVideoTitle.trim(), newVideoUrl.trim());
+                        setNewVideoTitle(""); setNewVideoUrl("");
+                      }
+                    }}>
+                      <Plus className="h-4 w-4 mr-1" /> Add Video
                     </Button>
-                  </div>
-                  {/* File upload section */}
-                  <div className="border-t pt-2">
-                    <div className="flex items-center gap-2 mb-2">
-                      <input
-                        type="file"
-                        accept=".pdf,.ppt,.pptx,.doc,.docx"
-                        className="hidden"
-                        ref={(el) => { fileInputRefs.current[v.id] = el; }}
-                        onChange={(e) => handleFileUpload(v.id, e)}
-                      />
-                      <Button variant="outline" size="sm" onClick={() => fileInputRefs.current[v.id]?.click()} disabled={uploading[v.id]}>
-                        {uploading[v.id] ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Upload className="h-4 w-4 mr-1" />}
-                        Upload File
-                      </Button>
-                      <span className="text-xs text-muted-foreground">PDF, PPT, DOC</span>
-                    </div>
-                    {v.files.length > 0 && (
-                      <div className="space-y-1">
-                        {v.files.map((f) => (
-                          <div key={f.id} className="flex items-center gap-2 text-sm">
-                            <FileText className="h-3 w-3 text-muted-foreground" />
-                            <a href={f.fileUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex-1 truncate">{f.fileName}</a>
-                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => store.removeVideoFile(f.id)}>
-                              <Trash2 className="h-3 w-3 text-destructive" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-            {subject.videos.length === 0 && (
-              <p className="text-center text-muted-foreground py-8">No videos yet. Add video links above.</p>
-            )}
-          </div>
-        )}
-
-        {/* STUDENTS - College List */}
-        {view === "students" && (
-          <div className="space-y-4 animate-fade-in">
-            <h3 className="font-display font-semibold text-lg flex items-center gap-2">
-              <Users className="h-5 w-5 text-primary" /> Select College to Manage Students
-            </h3>
-            {store.colleges.map((c) => {
-              const count = store.students.filter((s) => s.collegeName === c.name).length;
-              return (
-                <Card key={c.id} className="cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => { setSelectedStudentCollegeId(c.id); setView("students-college"); }}>
-                  <CardContent className="p-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Building2 className="h-5 w-5 text-primary" />
-                      <span className="font-medium">{c.name}</span>
-                      <span className="text-xs text-muted-foreground">({count} students)</span>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   </CardContent>
                 </Card>
-              );
-            })}
-            {store.colleges.length === 0 && (
-              <p className="text-center text-muted-foreground py-8">No colleges. Create colleges in the Content tab first.</p>
-            )}
-          </div>
-        )}
 
-        {/* STUDENTS - Year List inside College */}
-        {view === "students-college" && studentFolderCollege && (
-          <div className="space-y-4 animate-fade-in">
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" onClick={() => { setView("students"); setSelectedStudentCollegeId(""); }}>
-                <ArrowLeft className="h-4 w-4 mr-1" /> Back
-              </Button>
-              <Building2 className="h-5 w-5 text-primary" />
-              <span className="font-display font-semibold text-lg">{studentFolderCollege.name} — Years</span>
-            </div>
-            {studentFolderCollege.years.sort((a, b) => a.yearNumber - b.yearNumber).map((y) => {
-              const count = store.students.filter((s) => s.collegeName === studentFolderCollege.name && s.year === y.yearNumber).length;
-              return (
-                <Card key={y.id} className="cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => { setSelectedStudentYearId(y.id); setView("students-year"); }}>
-                  <CardContent className="p-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <FolderOpen className="h-5 w-5 text-primary" />
-                      <span className="font-medium">Year {y.yearNumber}</span>
-                      <span className="text-xs text-muted-foreground">({count} students)</span>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                  </CardContent>
-                </Card>
-              );
-            })}
-            {studentFolderCollege.years.length === 0 && (
-              <p className="text-center text-muted-foreground py-8">No years configured for this college. Add years in the Content tab.</p>
-            )}
-          </div>
-        )}
-
-        {/* STUDENTS - Department List inside Year */}
-        {view === "students-year" && studentFolderCollege && (() => {
-          const sYear = studentFolderCollege.years.find((y) => y.id === selectedStudentYearId);
-          if (!sYear) return null;
-          return (
-            <div className="space-y-4 animate-fade-in">
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="sm" onClick={() => { setView("students-college"); setSelectedStudentYearId(""); }}>
-                  <ArrowLeft className="h-4 w-4 mr-1" /> Back
-                </Button>
-                <FolderOpen className="h-5 w-5 text-primary" />
-                <span className="font-display font-semibold text-lg">{studentFolderCollege.name} — Year {sYear.yearNumber} — Departments</span>
-              </div>
-              {sYear.departments.map((d) => {
-                const count = store.students.filter((s) => s.collegeName === studentFolderCollege.name && s.year === sYear.yearNumber && s.department === d.name).length;
-                return (
-                  <Card key={d.id} className="cursor-pointer hover:shadow-md transition-shadow"
-                    onClick={() => { setSelectedStudentDeptId(d.id); setStudentYear(String(sYear.yearNumber)); setStudentDept(d.name); setView("students-dept"); }}>
-                    <CardContent className="p-4 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <FolderOpen className="h-5 w-5 text-primary" />
-                        <span className="font-medium">{d.name}</span>
-                        <span className="text-xs text-muted-foreground">({count} students)</span>
-                      </div>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                    </CardContent>
-                  </Card>
-                );
-              })}
-              {sYear.departments.length === 0 && (
-                <p className="text-center text-muted-foreground py-8">No departments in this year. Add departments in the Content tab.</p>
-              )}
-            </div>
-          );
-        })()}
-
-        {/* STUDENTS - Inside Year+Dept folder */}
-        {view === "students-dept" && studentFolderCollege && (() => {
-          const sYear = studentFolderCollege.years.find((y) => y.id === selectedStudentYearId);
-          const sDept = sYear?.departments.find((d) => d.id === selectedStudentDeptId);
-          if (!sYear || !sDept) return null;
-          const folderStudents = store.students.filter((s) => s.collegeName === studentFolderCollege.name && s.year === sYear.yearNumber && s.department === sDept.name);
-          return (
-            <div className="space-y-6 animate-fade-in">
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="sm" onClick={() => { setView("students-year"); setSelectedStudentDeptId(""); }}>
-                  <ArrowLeft className="h-4 w-4 mr-1" /> Back
-                </Button>
-                <FolderOpen className="h-5 w-5 text-primary" />
-                <span className="font-display font-semibold text-lg">{studentFolderCollege.name} — Year {sYear.yearNumber} — {sDept.name}</span>
-              </div>
-
-              <Card>
-                <CardHeader><CardTitle className="text-lg font-display">Create Student Account</CardTitle></CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <Input placeholder="Registration Number (numbers only)" value={studentRegNo}
-                      onChange={(e) => setStudentRegNo(e.target.value.replace(/\D/g, ""))} inputMode="numeric" />
-                    <Input placeholder="Student Name" value={studentName} onChange={(e) => setStudentName(e.target.value)} />
-                    <Input placeholder="DOB (DD-MM-YYYY)" value={studentDob} maxLength={10} inputMode="numeric"
-                      onChange={(e) => setStudentDob(formatDob(e.target.value))} />
-                    <Input placeholder="Email (optional)" type="email" value={studentEmail} onChange={(e) => setStudentEmail(e.target.value)} />
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-2">Year: {sYear.yearNumber} · Department: {sDept.name} · College: {studentFolderCollege.name}</p>
-                  <Button className="mt-3" onClick={() => {
-                    if (studentRegNo && studentName && studentDob) {
-                      store.addStudent({
-                        registrationNumber: studentRegNo, name: studentName, dob: studentDob,
-                        email: studentEmail, collegeName: studentFolderCollege.name, department: sDept.name, year: sYear.yearNumber,
-                      });
-                      setStudentRegNo(""); setStudentName(""); setStudentDob(""); setStudentEmail("");
-                    }
-                  }}>
-                    <Plus className="h-4 w-4 mr-1" /> Create Account
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <div className="space-y-2">
-                <h3 className="font-display font-semibold text-lg">Students ({folderStudents.length})</h3>
-                {folderStudents.map((s) => (
-                  <Card key={s.id}>
-                    <CardContent className="p-3">
-                      {editingStudent === s.id ? (
-                        <div className="space-y-2">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            <Input placeholder="Registration Number" value={editStudentData.registrationNumber ?? ""} onChange={(e) => setEditStudentData(d => ({ ...d, registrationNumber: e.target.value.replace(/\D/g, "") }))} inputMode="numeric" />
-                            <Input placeholder="Name" value={editStudentData.name ?? ""} onChange={(e) => setEditStudentData(d => ({ ...d, name: e.target.value }))} />
-                            <Input placeholder="DOB (DD-MM-YYYY)" value={editStudentData.dob ?? ""} maxLength={10} inputMode="numeric" onChange={(e) => setEditStudentData(d => ({ ...d, dob: formatDob(e.target.value) }))} />
-                            <Input placeholder="Email" type="email" value={editStudentData.email ?? ""} onChange={(e) => setEditStudentData(d => ({ ...d, email: e.target.value }))} />
-                          </div>
-                          <div className="flex gap-2">
-                            <Button size="sm" onClick={async () => { await store.updateStudent(s.id, editStudentData); setEditingStudent(null); }}>
-                              <Check className="h-4 w-4 mr-1" /> Save
-                            </Button>
-                            <Button size="sm" variant="ghost" onClick={() => setEditingStudent(null)}>
-                              <X className="h-4 w-4 mr-1" /> Cancel
-                            </Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-between">
-                          <div className="text-sm">
-                            <p className="font-medium">{s.name} <span className="text-muted-foreground">#{s.registrationNumber}</span></p>
-                            <p className="text-xs text-muted-foreground">{s.department} · Year {s.year}</p>
-                            {s.email && <p className="text-xs text-muted-foreground">{s.email}</p>}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Button variant="ghost" size="icon" onClick={() => { setEditingStudent(s.id); setEditStudentData({ registrationNumber: s.registrationNumber, name: s.name, dob: s.dob, email: s.email, collegeName: s.collegeName, department: s.department, year: s.year }); }}>
-                              <Pencil className="h-4 w-4 text-primary" />
-                            </Button>
-                            <Button variant="ghost" size="icon" onClick={() => store.removeStudent(s.id)}>
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
-                {folderStudents.length === 0 && (
-                  <p className="text-center text-muted-foreground py-4">No students in this folder yet.</p>
-                )}
-              </div>
-            </div>
-          );
-        })()}
-
-        {/* TEACHERS - College List */}
-        {view === "teachers" && (
-          <div className="space-y-4 animate-fade-in">
-            <h3 className="font-display font-semibold text-lg flex items-center gap-2">
-              <GraduationCap className="h-5 w-5 text-primary" /> Select College to Manage Teachers
-            </h3>
-            {store.colleges.map((c) => {
-              const count = store.teachers.filter((t) => t.collegeName === c.name).length;
-              return (
-                <Card key={c.id} className="cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => { setSelectedTeacherCollegeId(c.id); setView("teachers-college"); }}>
-                  <CardContent className="p-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Building2 className="h-5 w-5 text-primary" />
-                      <span className="font-medium">{c.name}</span>
-                      <span className="text-xs text-muted-foreground">({count} teachers)</span>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                  </CardContent>
-                </Card>
-              );
-            })}
-            {store.colleges.length === 0 && (
-              <p className="text-center text-muted-foreground py-8">No colleges. Create colleges in the Content tab first.</p>
-            )}
-          </div>
-        )}
-
-        {/* TEACHERS - Inside College: list all teachers with multi-subject support */}
-        {view === "teachers-college" && teacherFolderCollege && (() => {
-          const collegeTeachers = store.teachers.filter((t) => t.collegeName === teacherFolderCollege.name);
-          // Get all subjects available in this college from the content hierarchy
-          const allSubjects: string[] = [];
-          teacherFolderCollege.years.forEach((y) =>
-            y.departments.forEach((d) =>
-              d.subjects.forEach((s) => { if (!allSubjects.includes(s.name)) allSubjects.push(s.name); })
-            )
-          );
-          allSubjects.sort();
-
-          const toggleSubjectSelection = (subj: string) => {
-            setTeacherSelectedSubjects((prev) =>
-              prev.includes(subj) ? prev.filter((s) => s !== subj) : [...prev, subj]
-            );
-          };
-
-          return (
-            <div className="space-y-6 animate-fade-in">
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="sm" onClick={() => { setView("teachers"); setSelectedTeacherCollegeId(""); }}>
-                  <ArrowLeft className="h-4 w-4 mr-1" /> Back
-                </Button>
-                <Building2 className="h-5 w-5 text-primary" />
-                <span className="font-display font-semibold text-lg">{teacherFolderCollege.name} — Teachers</span>
-              </div>
-
-              <Card>
-                <CardHeader><CardTitle className="text-lg font-display">Create Teacher Account</CardTitle></CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <Input placeholder="Staff ID (numbers only)" value={teacherStaffId}
-                      onChange={(e) => setTeacherStaffId(e.target.value.replace(/\D/g, ""))} inputMode="numeric" />
-                    <Input placeholder="Teacher Name" value={teacherName} onChange={(e) => setTeacherName(e.target.value)} />
-                    <Input placeholder="DOB (DD-MM-YYYY)" value={teacherDob} maxLength={10} inputMode="numeric"
-                      onChange={(e) => setTeacherDob(formatDob(e.target.value))} />
-                    <Input placeholder="Email (optional)" type="email" value={teacherEmail} onChange={(e) => setTeacherEmail(e.target.value)} />
-                  </div>
-                  <div className="mt-3">
-                    <p className="text-sm font-medium mb-2">Assign Subjects:</p>
-                    {allSubjects.length === 0 ? (
-                      <p className="text-xs text-muted-foreground">No subjects configured. Add subjects in the Content tab first.</p>
-                    ) : (
-                      <div className="flex flex-wrap gap-3">
-                        {allSubjects.map((subj) => (
-                          <label key={subj} className="flex items-center gap-2 cursor-pointer">
-                            <Checkbox
-                              checked={teacherSelectedSubjects.includes(subj)}
-                              onCheckedChange={() => toggleSubjectSelection(subj)}
-                            />
-                            <span className="text-sm">{subj}</span>
-                          </label>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-2">College: {teacherFolderCollege.name}</p>
-                  <Button className="mt-3" onClick={() => {
-                    if (teacherStaffId && teacherName && teacherDob && teacherSelectedSubjects.length > 0) {
-                      store.addTeacher({
-                        staffId: teacherStaffId, name: teacherName, dob: teacherDob,
-                        email: teacherEmail, collegeName: teacherFolderCollege.name,
-                        subjectName: teacherSelectedSubjects.join(","),
-                      });
-                      setTeacherStaffId(""); setTeacherName(""); setTeacherDob(""); setTeacherEmail("");
-                      setTeacherSelectedSubjects([]);
-                    }
-                  }}>
-                    <Plus className="h-4 w-4 mr-1" /> Create Account
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <div className="space-y-2">
-                <h3 className="font-display font-semibold text-lg">Teachers ({collegeTeachers.length})</h3>
-                {collegeTeachers.map((t) => (
-                  <Card key={t.id}>
-                    <CardContent className="p-3">
-                      {editingTeacher === t.id ? (
-                        <div className="space-y-2">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            <Input placeholder="Staff ID" value={editTeacherData.staffId ?? ""} onChange={(e) => setEditTeacherData(d => ({ ...d, staffId: e.target.value.replace(/\D/g, "") }))} inputMode="numeric" />
-                            <Input placeholder="Name" value={editTeacherData.name ?? ""} onChange={(e) => setEditTeacherData(d => ({ ...d, name: e.target.value }))} />
-                            <Input placeholder="DOB (DD-MM-YYYY)" value={editTeacherData.dob ?? ""} maxLength={10} inputMode="numeric" onChange={(e) => setEditTeacherData(d => ({ ...d, dob: formatDob(e.target.value) }))} />
-                            <Input placeholder="Email" type="email" value={editTeacherData.email ?? ""} onChange={(e) => setEditTeacherData(d => ({ ...d, email: e.target.value }))} />
-                          </div>
-                          <div className="mt-2">
-                            <p className="text-sm font-medium mb-2">Subjects:</p>
-                            <div className="flex flex-wrap gap-3">
-                              {allSubjects.map((subj) => {
-                                const currentSubjects = (editTeacherData.subjectName || "").split(",").map(s => s.trim()).filter(Boolean);
-                                return (
-                                  <label key={subj} className="flex items-center gap-2 cursor-pointer">
-                                    <Checkbox
-                                      checked={currentSubjects.includes(subj)}
-                                      onCheckedChange={() => {
-                                        const next = currentSubjects.includes(subj)
-                                          ? currentSubjects.filter(s => s !== subj)
-                                          : [...currentSubjects, subj];
-                                        setEditTeacherData(d => ({ ...d, subjectName: next.join(",") }));
-                                      }}
-                                    />
-                                    <span className="text-sm">{subj}</span>
-                                  </label>
-                                );
-                              })}
+                <div className="space-y-3">
+                  <h3 className="font-display font-semibold text-lg">Uploaded Content ({cSubject.videos.length})</h3>
+                  {cSubject.videos.map((v) => (
+                    <Card key={v.id}>
+                      <CardContent className="p-4 space-y-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <Video className="h-5 w-5 text-primary shrink-0" />
+                            <div className="min-w-0">
+                              <p className="font-medium text-sm truncate">{v.title}</p>
+                              <a href={v.url} target="_blank" rel="noreferrer" className="text-xs text-muted-foreground truncate block hover:text-primary">{v.url}</a>
                             </div>
                           </div>
-                          <div className="flex gap-2">
-                            <Button size="sm" onClick={async () => { await store.updateTeacher(t.id, editTeacherData); setEditingTeacher(null); }}>
-                              <Check className="h-4 w-4 mr-1" /> Save
-                            </Button>
-                            <Button size="sm" variant="ghost" onClick={() => setEditingTeacher(null)}>
-                              <X className="h-4 w-4 mr-1" /> Cancel
-                            </Button>
-                          </div>
+                          <ConfirmDelete title="Delete Video?" desc="This will remove the video and its notes."
+                            onConfirm={() => store.removeVideo(cCollegeId, cYearId, cDeptId, cSubjectId, v.id)} />
                         </div>
+                        <div className="border-t pt-2">
+                          <div className="flex items-center gap-2 mb-2 flex-wrap">
+                            <input type="file" accept=".pdf,.ppt,.pptx,.doc,.docx" className="hidden"
+                              ref={(el) => { fileInputRefs.current[v.id] = el; }}
+                              onChange={(e) => handleFileUpload(v.id, e)} />
+                            <Button variant="outline" size="sm" onClick={() => fileInputRefs.current[v.id]?.click()} disabled={uploading[v.id]}>
+                              {uploading[v.id] ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Upload className="h-4 w-4 mr-1" />}
+                              Upload Notes
+                            </Button>
+                            <span className="text-xs text-muted-foreground">PDF, DOCX, PPT</span>
+                          </div>
+                          {v.files.length > 0 && (
+                            <div className="space-y-1">
+                              {v.files.map((f) => (
+                                <div key={f.id} className="flex items-center gap-2 text-sm bg-muted/40 rounded px-2 py-1">
+                                  <FileText className="h-3 w-3 text-muted-foreground" />
+                                  <a href={f.fileUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline flex-1 truncate">{f.fileName}</a>
+                                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => store.removeVideoFile(f.id)}>
+                                    <Trash2 className="h-3 w-3 text-destructive" />
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                  {cSubject.videos.length === 0 && <p className="text-center text-muted-foreground py-6">No videos yet.</p>}
+                </div>
+              </>
+            ) : (
+              <Card>
+                <CardContent className="p-8 text-center text-muted-foreground">
+                  Select college, year, department, and subject to upload content.
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        )}
+
+        {/* ============================ STUDENT ACCOUNTS ============================ */}
+        {tab === "students" && (
+          <div className="space-y-6 animate-fade-in">
+            <Card>
+              <CardHeader><CardTitle className="text-lg font-display">Select Location</CardTitle></CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">College</label>
+                    <Select value={sCollegeId} onValueChange={(v) => { setSCollegeId(v); setSYearId(""); setSDeptId(""); }}>
+                      <SelectTrigger className="mt-1"><SelectValue placeholder="Select college" /></SelectTrigger>
+                      <SelectContent>
+                        {store.colleges.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">Year</label>
+                    <Select value={sYearId} onValueChange={(v) => { setSYearId(v); setSDeptId(""); }} disabled={!sCollege}>
+                      <SelectTrigger className="mt-1"><SelectValue placeholder="Select year" /></SelectTrigger>
+                      <SelectContent>
+                        {sCollege?.years.slice().sort((a, b) => a.yearNumber - b.yearNumber).map((y) => (
+                          <SelectItem key={y.id} value={y.id}>Year {y.yearNumber}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">Department</label>
+                    <Select value={sDeptId} onValueChange={setSDeptId} disabled={!sYear}>
+                      <SelectTrigger className="mt-1"><SelectValue placeholder="Select dept" /></SelectTrigger>
+                      <SelectContent>
+                        {sYear?.departments.map((d) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {sCollege && sYear && sDept ? (
+              <>
+                <Card>
+                  <CardHeader><CardTitle className="text-lg font-display">Create Student Account</CardTitle></CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <Input placeholder="Registration Number" value={studentRegNo} inputMode="numeric"
+                        onChange={(e) => setStudentRegNo(e.target.value.replace(/\D/g, ""))} />
+                      <Input placeholder="Student Name" value={studentName} onChange={(e) => setStudentName(e.target.value)} />
+                      <Input placeholder="DOB (DD-MM-YYYY)" value={studentDob} maxLength={10} inputMode="numeric"
+                        onChange={(e) => setStudentDob(formatDob(e.target.value))} />
+                      <Input placeholder="Email (optional)" type="email" value={studentEmail} onChange={(e) => setStudentEmail(e.target.value)} />
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {sCollege.name} · Year {sYear.yearNumber} · {sDept.name}
+                    </p>
+                    <Button className="mt-3" onClick={() => {
+                      if (studentRegNo && studentName && studentDob) {
+                        store.addStudent({
+                          registrationNumber: studentRegNo, name: studentName, dob: studentDob,
+                          email: studentEmail, collegeName: sCollege.name, department: sDept.name, year: sYear.yearNumber,
+                        });
+                        setStudentRegNo(""); setStudentName(""); setStudentDob(""); setStudentEmail("");
+                      }
+                    }}><Plus className="h-4 w-4 mr-1" /> Create Account</Button>
+                  </CardContent>
+                </Card>
+
+                {(() => {
+                  const list = store.students.filter((s) => s.collegeName === sCollege.name && s.year === sYear.yearNumber && s.department === sDept.name);
+                  return (
+                    <div className="space-y-2">
+                      <h3 className="font-display font-semibold text-lg">Students ({list.length})</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {list.map((s) => (
+                          <Card key={s.id}>
+                            <CardContent className="p-3">
+                              {editingStudent === s.id ? (
+                                <div className="space-y-2">
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    <Input placeholder="Reg No" value={editStudentData.registrationNumber ?? ""} inputMode="numeric"
+                                      onChange={(e) => setEditStudentData((d) => ({ ...d, registrationNumber: e.target.value.replace(/\D/g, "") }))} />
+                                    <Input placeholder="Name" value={editStudentData.name ?? ""}
+                                      onChange={(e) => setEditStudentData((d) => ({ ...d, name: e.target.value }))} />
+                                    <Input placeholder="DOB" value={editStudentData.dob ?? ""} maxLength={10} inputMode="numeric"
+                                      onChange={(e) => setEditStudentData((d) => ({ ...d, dob: formatDob(e.target.value) }))} />
+                                    <Input placeholder="Email" type="email" value={editStudentData.email ?? ""}
+                                      onChange={(e) => setEditStudentData((d) => ({ ...d, email: e.target.value }))} />
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <Button size="sm" onClick={async () => { await store.updateStudent(s.id, editStudentData); setEditingStudent(null); }}>
+                                      <Check className="h-4 w-4 mr-1" /> Save
+                                    </Button>
+                                    <Button size="sm" variant="ghost" onClick={() => setEditingStudent(null)}>
+                                      <X className="h-4 w-4 mr-1" /> Cancel
+                                    </Button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="flex items-center justify-between gap-2">
+                                  <div className="text-sm min-w-0">
+                                    <p className="font-medium truncate">{s.name} <span className="text-muted-foreground">#{s.registrationNumber}</span></p>
+                                    <p className="text-xs text-muted-foreground">Year {s.year} · {s.department}</p>
+                                    {s.email && <p className="text-xs text-muted-foreground truncate">{s.email}</p>}
+                                  </div>
+                                  <div className="flex items-center gap-1 shrink-0">
+                                    <Button variant="ghost" size="icon" onClick={() => {
+                                      setEditingStudent(s.id);
+                                      setEditStudentData({ registrationNumber: s.registrationNumber, name: s.name, dob: s.dob, email: s.email, collegeName: s.collegeName, department: s.department, year: s.year });
+                                    }}><Pencil className="h-4 w-4 text-primary" /></Button>
+                                    <ConfirmDelete title={`Delete ${s.name}?`}
+                                      desc="This removes the student account, their doubts, and related data from teacher and learning feed sections."
+                                      onConfirm={() => store.removeStudent(s.id)} />
+                                  </div>
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                      {list.length === 0 && <p className="text-center text-muted-foreground py-6">No students yet.</p>}
+                    </div>
+                  );
+                })()}
+              </>
+            ) : (
+              <Card><CardContent className="p-8 text-center text-muted-foreground">Select college, year and department to manage students.</CardContent></Card>
+            )}
+          </div>
+        )}
+
+        {/* ============================ TEACHER MANAGEMENT ============================ */}
+        {tab === "teachers" && (
+          <div className="space-y-6 animate-fade-in">
+            <Card>
+              <CardHeader><CardTitle className="text-lg font-display">Select Location</CardTitle></CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">College</label>
+                    <Select value={tCollegeId} onValueChange={(v) => { setTCollegeId(v); setTFilterSubject("all"); }}>
+                      <SelectTrigger className="mt-1"><SelectValue placeholder="Select college" /></SelectTrigger>
+                      <SelectContent>
+                        {store.colleges.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">Subject (filter)</label>
+                    <Select value={tFilterSubject} onValueChange={setTFilterSubject} disabled={!tCollege}>
+                      <SelectTrigger className="mt-1"><SelectValue placeholder="All subjects" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All subjects</SelectItem>
+                        {teacherCollegeSubjects.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {tCollege ? (
+              <>
+                <Card>
+                  <CardHeader><CardTitle className="text-lg font-display">Create Teacher Account</CardTitle></CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <Input placeholder="Staff ID" value={teacherStaffId} inputMode="numeric"
+                        onChange={(e) => setTeacherStaffId(e.target.value.replace(/\D/g, ""))} />
+                      <Input placeholder="Teacher Name" value={teacherName} onChange={(e) => setTeacherName(e.target.value)} />
+                      <Input placeholder="DOB (DD-MM-YYYY)" value={teacherDob} maxLength={10} inputMode="numeric"
+                        onChange={(e) => setTeacherDob(formatDob(e.target.value))} />
+                      <Input placeholder="Email (optional)" type="email" value={teacherEmail} onChange={(e) => setTeacherEmail(e.target.value)} />
+                    </div>
+                    <div className="mt-3">
+                      <p className="text-sm font-medium mb-2">Assign Subjects</p>
+                      {teacherCollegeSubjects.length === 0 ? (
+                        <p className="text-xs text-muted-foreground">No subjects in this college. Add some in Content Management.</p>
                       ) : (
-                        <div className="flex items-center justify-between">
-                          <div className="text-sm">
-                            <p className="font-medium">{t.name} <span className="text-muted-foreground">#{t.staffId}</span></p>
-                            <p className="text-xs text-muted-foreground">{getTeacherSubjects(t).join(", ")}</p>
-                            {t.email && <p className="text-xs text-muted-foreground">{t.email}</p>}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Button variant="ghost" size="icon" onClick={() => { setEditingTeacher(t.id); setEditTeacherData({ staffId: t.staffId, name: t.name, dob: t.dob, email: t.email, collegeName: t.collegeName, subjectName: t.subjectName }); }}>
-                              <Pencil className="h-4 w-4 text-primary" />
-                            </Button>
-                            <Button variant="ghost" size="icon" onClick={() => store.removeTeacher(t.id)}>
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                          {teacherCollegeSubjects.map((subj) => (
+                            <label key={subj} className="flex items-center gap-2 cursor-pointer border rounded-md px-2 py-1.5 hover:bg-muted/40">
+                              <Checkbox checked={teacherSelectedSubjects.includes(subj)}
+                                onCheckedChange={() => setTeacherSelectedSubjects((prev) => prev.includes(subj) ? prev.filter((s) => s !== subj) : [...prev, subj])} />
+                              <span className="text-sm truncate">{subj}</span>
+                            </label>
+                          ))}
                         </div>
                       )}
-                    </CardContent>
-                  </Card>
-                ))}
-                {collegeTeachers.length === 0 && (
-                  <p className="text-center text-muted-foreground py-4">No teachers for this college yet.</p>
-                )}
-              </div>
-            </div>
-          );
-        })()}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">College: {tCollege.name}</p>
+                    <Button className="mt-3" onClick={() => {
+                      if (teacherStaffId && teacherName && teacherDob && teacherSelectedSubjects.length > 0) {
+                        store.addTeacher({
+                          staffId: teacherStaffId, name: teacherName, dob: teacherDob,
+                          email: teacherEmail, collegeName: tCollege.name,
+                          subjectName: teacherSelectedSubjects.join(","),
+                        });
+                        setTeacherStaffId(""); setTeacherName(""); setTeacherDob(""); setTeacherEmail("");
+                        setTeacherSelectedSubjects([]);
+                      }
+                    }}><Plus className="h-4 w-4 mr-1" /> Create Account</Button>
+                  </CardContent>
+                </Card>
+
+                {(() => {
+                  const list = store.teachers.filter((t) => {
+                    if (t.collegeName !== tCollege.name) return false;
+                    if (tFilterSubject === "all") return true;
+                    return getTeacherSubjects(t).includes(tFilterSubject);
+                  });
+                  return (
+                    <div className="space-y-2">
+                      <h3 className="font-display font-semibold text-lg">Teachers ({list.length})</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {list.map((t) => (
+                          <Card key={t.id}>
+                            <CardContent className="p-3">
+                              {editingTeacher === t.id ? (
+                                <div className="space-y-2">
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    <Input placeholder="Staff ID" value={editTeacherData.staffId ?? ""} inputMode="numeric"
+                                      onChange={(e) => setEditTeacherData((d) => ({ ...d, staffId: e.target.value.replace(/\D/g, "") }))} />
+                                    <Input placeholder="Name" value={editTeacherData.name ?? ""}
+                                      onChange={(e) => setEditTeacherData((d) => ({ ...d, name: e.target.value }))} />
+                                    <Input placeholder="DOB" value={editTeacherData.dob ?? ""} maxLength={10} inputMode="numeric"
+                                      onChange={(e) => setEditTeacherData((d) => ({ ...d, dob: formatDob(e.target.value) }))} />
+                                    <Input placeholder="Email" type="email" value={editTeacherData.email ?? ""}
+                                      onChange={(e) => setEditTeacherData((d) => ({ ...d, email: e.target.value }))} />
+                                  </div>
+                                  <div>
+                                    <p className="text-sm font-medium mb-2">Subjects</p>
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                      {teacherCollegeSubjects.map((subj) => {
+                                        const cur = (editTeacherData.subjectName || "").split(",").map((s) => s.trim()).filter(Boolean);
+                                        return (
+                                          <label key={subj} className="flex items-center gap-2 cursor-pointer border rounded-md px-2 py-1.5">
+                                            <Checkbox checked={cur.includes(subj)} onCheckedChange={() => {
+                                              const next = cur.includes(subj) ? cur.filter((s) => s !== subj) : [...cur, subj];
+                                              setEditTeacherData((d) => ({ ...d, subjectName: next.join(",") }));
+                                            }} />
+                                            <span className="text-sm truncate">{subj}</span>
+                                          </label>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <Button size="sm" onClick={async () => { await store.updateTeacher(t.id, editTeacherData); setEditingTeacher(null); }}>
+                                      <Check className="h-4 w-4 mr-1" /> Save
+                                    </Button>
+                                    <Button size="sm" variant="ghost" onClick={() => setEditingTeacher(null)}>
+                                      <X className="h-4 w-4 mr-1" /> Cancel
+                                    </Button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="flex items-center justify-between gap-2">
+                                  <div className="text-sm min-w-0">
+                                    <p className="font-medium truncate">{t.name} <span className="text-muted-foreground">#{t.staffId}</span></p>
+                                    <p className="text-xs text-muted-foreground truncate">Subjects: {getTeacherSubjects(t).join(", ") || "—"}</p>
+                                    {t.email && <p className="text-xs text-muted-foreground truncate">{t.email}</p>}
+                                  </div>
+                                  <div className="flex items-center gap-1 shrink-0">
+                                    <Button variant="ghost" size="icon" onClick={() => {
+                                      setEditingTeacher(t.id);
+                                      setEditTeacherData({ staffId: t.staffId, name: t.name, dob: t.dob, email: t.email, collegeName: t.collegeName, subjectName: t.subjectName });
+                                    }}><Pencil className="h-4 w-4 text-primary" /></Button>
+                                    <ConfirmDelete title={`Delete ${t.name}?`}
+                                      desc="This removes the teacher account, their answers in the doubt system and learning feed, and any active digital board sessions."
+                                      onConfirm={() => store.removeTeacher(t.id)} />
+                                  </div>
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                      {list.length === 0 && <p className="text-center text-muted-foreground py-6">No teachers yet.</p>}
+                    </div>
+                  );
+                })()}
+              </>
+            ) : (
+              <Card><CardContent className="p-8 text-center text-muted-foreground">Select a college to manage teachers.</CardContent></Card>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
 };
+
+// Reusable confirm-delete button with AlertDialog
+function ConfirmDelete({ title, desc, onConfirm }: { title: string; desc: string; onConfirm: () => void }) {
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button variant="ghost" size="icon"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{title}</AlertDialogTitle>
+          <AlertDialogDescription>{desc}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={onConfirm}>Delete</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
 
 export default AdminDashboard;
