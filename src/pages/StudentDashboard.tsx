@@ -888,11 +888,12 @@ const StudentDashboard = () => {
                             <div className="flex items-center gap-2">
                               <Button
                                 variant="outline" size="sm" className="gap-1"
-                                onClick={() => store.toggleHelpful(student.registrationNumber, d.id)}
+                                onClick={() => isSaved(d.id) ? store.unsaveDoubt(student.registrationNumber, d.id) : store.saveDoubt(student.registrationNumber, d.id)}
                               >
-                                <ThumbsUp className={`h-4 w-4 ${isHelpful(d.id) ? "fill-primary text-primary" : ""}`} />
-                                <span className="text-xs font-medium">{d.helpfulCount || 0} Insightful</span>
+                                {isSaved(d.id) ? <BookmarkCheck className="h-4 w-4 text-success" /> : <Bookmark className="h-4 w-4" />}
+                                <span className="text-xs font-medium">{isSaved(d.id) ? "Saved" : "Save"}</span>
                               </Button>
+                            </div>
                               <Button
                                 variant="outline" size="sm" className="gap-1"
                                 onClick={() => isSaved(d.id) ? store.unsaveDoubt(student.registrationNumber, d.id) : store.saveDoubt(student.registrationNumber, d.id)}
