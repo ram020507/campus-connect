@@ -88,6 +88,7 @@ const StudentDashboard = () => {
   const feedDoubts = useMemo(() => {
     const all = store.doubts.filter(
       (d) => d.answer && d.studentYear === student.year && d.studentDepartment === student.department && d.studentRegNo !== student.registrationNumber
+        && (feedSubjectFilter === "all" || d.subjectName === feedSubjectFilter)
     );
     const shuffled = [...all];
     for (let i = shuffled.length - 1; i > 0; i--) {
@@ -95,6 +96,13 @@ const StudentDashboard = () => {
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
     return shuffled;
+  }, [store.doubts.length, student.year, student.department, feedSubjectFilter]);
+
+  const feedSubjectOptions = useMemo(() => {
+    const all = store.doubts.filter(
+      (d) => d.answer && d.studentYear === student.year && d.studentDepartment === student.department && d.studentRegNo !== student.registrationNumber
+    );
+    return [...new Set(all.map((d) => d.subjectName))].sort();
   }, [store.doubts.length, student.year, student.department]);
 
   // Saved doubts
