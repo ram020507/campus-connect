@@ -981,13 +981,6 @@ function DoubtCard({ d, student, store, isHelpful, isSaved, showUnsave }: {
           <span className="text-xs text-muted-foreground">{new Date(d.createdAt).toLocaleDateString()}</span>
         </div>
         <div className="flex items-center gap-1">
-          <Button
-            variant="ghost" size="sm" className="h-7 px-2 gap-1"
-            onClick={() => store.toggleHelpful(student.registrationNumber, d.id)}
-          >
-            <ThumbsUp className={`h-3.5 w-3.5 ${isHelpful(d.id) ? "fill-primary text-primary" : ""}`} />
-            <span className="text-xs">{d.helpfulCount || 0}</span>
-          </Button>
           {showUnsave ? (
             <Button
               variant="ghost" size="sm" className="h-7 px-2"
