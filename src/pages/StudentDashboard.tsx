@@ -70,7 +70,9 @@ const StudentDashboard = () => {
   // Reset duplicate results when doubt type or inputs change
   useEffect(() => {
     setDuplicateResults(null);
-  }, [doubtType, doubtText, doubtImage, doubtSubject]);
+  }, [doubtType, doubtText, doubtImage, doubtImage2, doubtSubject]);
+
+  useEffect(() => { setFeedCurrentIndex(0); }, [feedSubjectFilter]);
 
   if (!student) {
     navigate("/student/login");
