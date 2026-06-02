@@ -273,7 +273,12 @@ const DigitalBoardStudent = ({ student, subjects, onBack }: DigitalBoardStudentP
                 </Button>
               )}
             </div>
-            <Button className="w-full" onClick={handleCall} disabled={!selectedSubject || calling || uploadingImage}>
+            {!isWithinHours && (
+              <p className="text-xs text-center p-2 rounded bg-muted text-muted-foreground">
+                Digital Board is available daily from 6:00 PM to 9:00 PM.
+              </p>
+            )}
+            <Button className="w-full" onClick={handleCall} disabled={!selectedSubject || calling || uploadingImage || !isWithinHours}>
               {calling ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Phone className="h-4 w-4 mr-1" />}
               Call Teacher
             </Button>
