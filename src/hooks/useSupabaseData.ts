@@ -220,7 +220,7 @@ export function useSupabaseData() {
           subjectName: d.subject_name,
           question: d.question,
           questionImageUrl: d.question_image_url || undefined,
-          answer: d.answer || undefined,
+          questionImageUrl2: (d as any).question_image_url_2 || undefined,
           answerImageUrl: d.answer_image_url || undefined,
           answerImageUrls: (d as any).answer_image_urls || [],
           answeredBy: d.answered_by || undefined,
