@@ -498,6 +498,9 @@ const StudentDashboard = () => {
                 {/* Dynamic Input: Image */}
                 {(doubtType === "image" || doubtType === "text+image") && (
                   <div className="space-y-2">
+                    {doubtType === "text+image" && (
+                      <p className="text-xs font-medium text-muted-foreground">1st Image · Question Image (used for OCR matching)</p>
+                    )}
                     <input type="file" accept="image/*" ref={fileInputRef} className="hidden" onChange={handleImageSelect} />
                     {doubtImagePreview ? (
                       <div className="space-y-2">
@@ -520,6 +523,30 @@ const StudentDashboard = () => {
                       >
                         <ImagePlus className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
                         <p className="text-sm text-muted-foreground">Click or drag & drop to upload image</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* 2nd image for text+image: full problem image */}
+                {doubtType === "text+image" && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground">2nd Image · Full Problem Image (derivation, rough work, full problem)</p>
+                    <input type="file" accept="image/*" ref={fileInput2Ref} className="hidden" onChange={handleImage2Select} />
+                    {doubtImage2Preview ? (
+                      <div className="relative inline-block">
+                        <img src={doubtImage2Preview} alt="Full problem" className="max-h-48 rounded-lg border" />
+                        <button onClick={clearImage2} className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1">
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div
+                        onClick={() => fileInput2Ref.current?.click()}
+                        className="border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 hover:bg-accent/5 transition-all"
+                      >
+                        <ImagePlus className="h-6 w-6 mx-auto mb-1 text-muted-foreground" />
+                        <p className="text-xs text-muted-foreground">Upload full problem image</p>
                       </div>
                     )}
                   </div>
