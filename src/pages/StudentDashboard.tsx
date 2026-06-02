@@ -737,6 +737,12 @@ const StudentDashboard = () => {
                                 <img src={d.questionImageUrl} alt="Doubt attachment" className="max-h-48 rounded border" />
                               </div>
                             )}
+                            {d.questionImageUrl2 && editingDoubtId !== d.id && (
+                              <div className="mt-2">
+                                <p className="text-xs text-muted-foreground mb-1">Full problem</p>
+                                <img src={d.questionImageUrl2} alt="Full problem" className="max-h-48 rounded border" />
+                              </div>
+                            )}
                             {d.answer && editingDoubtId !== d.id && (
                               <div className="mt-3 p-3 rounded bg-success/10 text-sm" ref={(el) => {
                                 // Mark as viewed when student sees the answer
