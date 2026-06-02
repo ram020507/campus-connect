@@ -258,6 +258,7 @@ export type Database = {
           ocr_text: string | null
           question: string
           question_image_url: string | null
+          question_image_url_2: string | null
           status: string
           student_college: string
           student_department: string
@@ -281,6 +282,7 @@ export type Database = {
           ocr_text?: string | null
           question: string
           question_image_url?: string | null
+          question_image_url_2?: string | null
           status?: string
           student_college: string
           student_department: string
@@ -304,6 +306,7 @@ export type Database = {
           ocr_text?: string | null
           question?: string
           question_image_url?: string | null
+          question_image_url_2?: string | null
           status?: string
           student_college?: string
           student_department?: string
@@ -414,6 +417,7 @@ export type Database = {
       }
       teacher_status: {
         Row: {
+          availability: string
           college_name: string
           current_session_id: string | null
           id: string
@@ -426,6 +430,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          availability?: string
           college_name: string
           current_session_id?: string | null
           id?: string
@@ -438,6 +443,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          availability?: string
           college_name?: string
           current_session_id?: string | null
           id?: string
