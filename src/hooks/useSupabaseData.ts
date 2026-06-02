@@ -75,6 +75,7 @@ export interface Doubt {
   subjectName: string;
   question: string;
   questionImageUrl?: string;
+  questionImageUrl2?: string;
   answer?: string;
   answerImageUrl?: string;
   answerImageUrls?: string[];
