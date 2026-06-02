@@ -549,19 +549,21 @@ export function useSupabaseData() {
 
   const searchSimilarDoubts = (
     text: string,
-    filters?: { subjectName?: string; studentYear?: number; studentDepartment?: string }
+    filters?: { subjectName?: string; studentYear?: number; studentDepartment?: string; ocrText?: string }
   ): Doubt[] => {
-    if (!text || text.trim().length < 3) return [];
-    const q = text.toLowerCase().trim();
+    const typed = (text || "").toLowerCase().trim();
+    const ocr = (filters?.ocrText || "").toLowerCase().trim();
+    if (typed.length < 3 && ocr.length < 3) return [];
     return doubts.filter((d) => {
       if (!d.answer) return false;
       if (filters?.subjectName && d.subjectName.toLowerCase() !== filters.subjectName.toLowerCase()) return false;
       if (filters?.studentYear && d.studentYear !== filters.studentYear) return false;
       if (filters?.studentDepartment && d.studentDepartment.toLowerCase() !== filters.studentDepartment.toLowerCase()) return false;
-      // Exact match: compare against question text and OCR text
       const questionText = d.question.toLowerCase().trim();
       const ocrTarget = (d.ocrText || "").toLowerCase().trim();
-      return questionText === q || (ocrTarget.length > 0 && ocrTarget === q);
+      // Match if typed OR OCR matches stored question OR stored OCR
+      const candidates = [typed, ocr].filter((s) => s.length >= 3);
+      return candidates.some((c) => c === questionText || (ocrTarget.length > 0 && c === ocrTarget));
     }).slice(0, 5);
   };
 
