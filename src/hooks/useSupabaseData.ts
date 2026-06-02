@@ -513,6 +513,7 @@ export function useSupabaseData() {
       subject_name: doubt.subjectName,
       question: doubt.question,
       question_image_url: doubt.questionImageUrl || null,
+      question_image_url_2: doubt.questionImageUrl2 || null,
       ocr_text: doubt.ocrText || null,
     } as any).select("id").single();
     if (!error && data) {
