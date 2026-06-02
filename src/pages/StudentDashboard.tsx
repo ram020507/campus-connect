@@ -894,14 +894,6 @@ const StudentDashboard = () => {
                                 <span className="text-xs font-medium">{isSaved(d.id) ? "Saved" : "Save"}</span>
                               </Button>
                             </div>
-                              <Button
-                                variant="outline" size="sm" className="gap-1"
-                                onClick={() => isSaved(d.id) ? store.unsaveDoubt(student.registrationNumber, d.id) : store.saveDoubt(student.registrationNumber, d.id)}
-                              >
-                                {isSaved(d.id) ? <BookmarkCheck className="h-4 w-4 text-success" /> : <Bookmark className="h-4 w-4" />}
-                                <span className="text-xs font-medium">{isSaved(d.id) ? "Saved" : "Save"}</span>
-                              </Button>
-                            </div>
                           </div>
                         </div>
                       </CardContent>
