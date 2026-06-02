@@ -59,6 +59,10 @@ const StudentDashboard = () => {
   const [savedSearch, setSavedSearch] = useState("");
   const [savedSubjectFilter, setSavedSubjectFilter] = useState("all");
   const [feedCurrentIndex, setFeedCurrentIndex] = useState(0);
+  const [feedSubjectFilter, setFeedSubjectFilter] = useState<string>("all");
+  const [doubtImage2, setDoubtImage2] = useState<File | null>(null);
+  const [doubtImage2Preview, setDoubtImage2Preview] = useState<string | null>(null);
+  const fileInput2Ref = useRef<HTMLInputElement>(null);
   const feedContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editFileInputRef = useRef<HTMLInputElement>(null);
