@@ -360,6 +360,7 @@ export function useDigitalBoard() {
     cancelCallRequest,
     acceptCallRequest,
     setTeacherOnline,
+    setTeacherAvailability,
     setTeacherOffline,
     setTeacherBusy,
     updateCanvasData,
