@@ -146,6 +146,24 @@ const StudentDashboard = () => {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  const clearImage2 = () => {
+    setDoubtImage2(null);
+    setDoubtImage2Preview(null);
+    if (fileInput2Ref.current) fileInput2Ref.current.value = "";
+  };
+
+  const handleImage2Select = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setDoubtImage2(file);
+      setDoubtImage2Preview(URL.createObjectURL(file));
+      try {
+        const url = await store.uploadDoubtImage(file);
+        if (url) setDoubtImage2Preview(url);
+      } catch (err) { console.error(err); }
+    }
+  };
+
   const handleCheckAndSend = async () => {
     if (!doubtSubject.trim()) return;
     const hasText = doubtType !== "image" && doubtText.trim();
@@ -153,23 +171,17 @@ const StudentDashboard = () => {
     if (!hasText && !hasImage) return;
 
     setCheckingDuplicates(true);
-    
-    // For image/text+image, run OCR first if not done
-    let searchText = "";
-    if (doubtType === "text") {
-      searchText = doubtText.trim();
-    } else if (doubtType === "image") {
-      searchText = ocrText.trim();
-    } else {
-      // text+image: use OCR text for comparison per spec
-      searchText = ocrText.trim();
-    }
 
-    if (searchText.length >= 5 && student) {
-      const results = store.searchSimilarDoubts(searchText, {
+    // Run search with both typed text and OCR text
+    const typedSearch = doubtType !== "image" ? doubtText.trim() : "";
+    const ocrSearch = doubtType !== "text" ? ocrText.trim() : "";
+
+    if ((typedSearch.length >= 3 || ocrSearch.length >= 3) && student) {
+      const results = store.searchSimilarDoubts(typedSearch || ocrSearch, {
         subjectName: doubtSubject,
         studentYear: student.year,
         studentDepartment: student.department,
+        ocrText: ocrSearch,
       });
       if (results.length > 0) {
         setDuplicateResults(results);
@@ -185,12 +197,21 @@ const StudentDashboard = () => {
   const submitDoubt = async () => {
     setSending(true);
     let imageUrl: string | undefined;
+    let imageUrl2: string | undefined;
     if (doubtType !== "text" && doubtImage) {
       if (doubtImagePreview?.startsWith("http")) {
         imageUrl = doubtImagePreview;
       } else {
         const url = await store.uploadDoubtImage(doubtImage);
         if (url) imageUrl = url;
+      }
+    }
+    if (doubtType === "text+image" && doubtImage2) {
+      if (doubtImage2Preview?.startsWith("http")) {
+        imageUrl2 = doubtImage2Preview;
+      } else {
+        const url = await store.uploadDoubtImage(doubtImage2);
+        if (url) imageUrl2 = url;
       }
     }
     await store.addDoubt({
@@ -202,12 +223,14 @@ const StudentDashboard = () => {
       subjectName: doubtSubject.trim(),
       question: doubtType === "image" ? (ocrText || "(Image doubt)") : doubtText.trim(),
       questionImageUrl: imageUrl,
+      questionImageUrl2: imageUrl2,
       ocrText: ocrText || undefined,
     });
     setDoubtText("");
     setDoubtSubject("");
     setDoubtType("text");
     clearImage();
+    clearImage2();
     setDuplicateResults(null);
     setSending(false);
   };
