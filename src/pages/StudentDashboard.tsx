@@ -857,10 +857,16 @@ const StudentDashboard = () => {
                             <p className="text-base font-medium leading-relaxed">{d.question}</p>
                           </div>
 
-                          {/* Question image */}
+                          {/* Question images */}
                           {d.questionImageUrl && (
                             <div>
                               <img src={d.questionImageUrl} alt="Question" className="w-full max-h-64 object-contain rounded-lg border" />
+                            </div>
+                          )}
+                          {d.questionImageUrl2 && (
+                            <div>
+                              <p className="text-xs text-muted-foreground mb-1">Full problem</p>
+                              <img src={d.questionImageUrl2} alt="Full problem" className="w-full max-h-64 object-contain rounded-lg border" />
                             </div>
                           )}
 
