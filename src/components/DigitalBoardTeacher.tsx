@@ -25,6 +25,7 @@ const DigitalBoardTeacher = ({ teacher }: DigitalBoardTeacherProps) => {
   const whiteboardRef = useRef<WhiteboardRef>(null);
   const [accepting, setAccepting] = useState<string | null>(null);
   const [teacherLocked, setTeacherLocked] = useState(false);
+  const [availability, setAvailability] = useState<"in" | "out">("out");
 
   // WebRTC voice
   const webrtc = useWebRTC({
@@ -32,19 +33,27 @@ const DigitalBoardTeacher = ({ teacher }: DigitalBoardTeacherProps) => {
     userId: `teacher-${teacher.staffId}`,
   });
 
-  // Set teacher online when component mounts
+  // Set teacher online (OUT by default) when component mounts
   useEffect(() => {
-    board.setTeacherOnline(teacher.staffId, teacher.name, teacher.collegeName, teacher.subjectName);
+    board.setTeacherOnline(teacher.staffId, teacher.name, teacher.collegeName, teacher.subjectName, "out");
     return () => { board.setTeacherOffline(teacher.staffId); };
   }, [teacher.staffId]);
 
-  // Filter requests for any of this teacher's subjects, exclude if busy
+  const toggleAvailability = async () => {
+    const next = availability === "in" ? "out" : "in";
+    setAvailability(next);
+    await board.setTeacherAvailability(teacher.staffId, next);
+  };
+
+  // Filter requests for any of this teacher's subjects, exclude if busy or OUT
   const teacherSubjects = getTeacherSubjects(teacher as any);
-  const incomingRequests = board.callRequests.filter(
-    (r) =>
-      teacherSubjects.some(s => s.toLowerCase() === r.subjectName.toLowerCase()) &&
-      r.status === "pending"
-  );
+  const incomingRequests = availability === "in"
+    ? board.callRequests.filter(
+        (r) =>
+          teacherSubjects.some(s => s.toLowerCase() === r.subjectName.toLowerCase()) &&
+          r.status === "pending"
+      )
+    : [];
 
   const handleAccept = async (request: CallRequest) => {
     setAccepting(request.id);
@@ -150,41 +159,66 @@ const DigitalBoardTeacher = ({ teacher }: DigitalBoardTeacherProps) => {
     );
   }
 
-  // Incoming requests
-  if (incomingRequests.length === 0) return null;
-
   return (
     <div className="space-y-3">
-      <h3 className="font-display font-semibold text-base flex items-center gap-2">
-        <Bell className="h-5 w-5 text-accent animate-pulse" />
-        Incoming Board Requests ({incomingRequests.length})
-      </h3>
-      {incomingRequests.map((req) => (
-        <Card key={req.id} className="border-accent/50 animate-fade-in">
-          <CardContent className="p-4">
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex-1">
-                <p className="font-medium text-sm">{req.studentName}</p>
-                <p className="text-xs text-muted-foreground">
-                  {req.studentDepartment} · Year {req.studentYear} · {req.mode === "whiteboard" ? "Writing Board" : "C Compiler"}
-                </p>
-                {req.doubtText && (
-                  <p className="text-xs mt-1 text-muted-foreground italic">"{req.doubtText}"</p>
-                )}
-                {req.questionImageUrl && (
-                  <div className="mt-1">
-                    <img src={req.questionImageUrl} alt="Question" className="max-h-20 rounded border" />
+      {/* Availability toggle */}
+      <Card className={availability === "in" ? "border-success/50" : "border-border"}>
+        <CardContent className="p-3 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Monitor className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium">Digital Board</span>
+            <span className={`text-xs px-2 py-0.5 rounded-full ${availability === "in" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}`}>
+              {availability === "in" ? "Available (IN)" : "Unavailable (OUT)"}
+            </span>
+          </div>
+          <Button
+            variant={availability === "in" ? "outline" : "default"}
+            size="sm"
+            onClick={toggleAvailability}
+          >
+            {availability === "in" ? "Go OUT" : "Go IN"}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {availability === "in" && incomingRequests.length === 0 && (
+        <p className="text-xs text-muted-foreground">Waiting for student board calls…</p>
+      )}
+
+      {incomingRequests.length > 0 && (
+        <>
+          <h3 className="font-display font-semibold text-base flex items-center gap-2">
+            <Bell className="h-5 w-5 text-accent animate-pulse" />
+            Incoming Board Requests ({incomingRequests.length})
+          </h3>
+          {incomingRequests.map((req) => (
+            <Card key={req.id} className="border-accent/50 animate-fade-in">
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1">
+                    <p className="font-medium text-sm">{req.studentName}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {req.studentDepartment} · Year {req.studentYear} · {req.mode === "whiteboard" ? "Writing Board" : "C Compiler"}
+                    </p>
+                    {req.doubtText && (
+                      <p className="text-xs mt-1 text-muted-foreground italic">"{req.doubtText}"</p>
+                    )}
+                    {req.questionImageUrl && (
+                      <div className="mt-1">
+                        <img src={req.questionImageUrl} alt="Question" className="max-h-20 rounded border" />
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              <Button size="sm" onClick={() => handleAccept(req)} disabled={accepting === req.id}>
-                {accepting === req.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4 mr-1" />}
-                Accept
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+                  <Button size="sm" onClick={() => handleAccept(req)} disabled={accepting === req.id}>
+                    {accepting === req.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4 mr-1" />}
+                    Accept
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </>
+      )}
     </div>
   );
 };

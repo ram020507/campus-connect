@@ -59,6 +59,10 @@ const StudentDashboard = () => {
   const [savedSearch, setSavedSearch] = useState("");
   const [savedSubjectFilter, setSavedSubjectFilter] = useState("all");
   const [feedCurrentIndex, setFeedCurrentIndex] = useState(0);
+  const [feedSubjectFilter, setFeedSubjectFilter] = useState<string>("all");
+  const [doubtImage2, setDoubtImage2] = useState<File | null>(null);
+  const [doubtImage2Preview, setDoubtImage2Preview] = useState<string | null>(null);
+  const fileInput2Ref = useRef<HTMLInputElement>(null);
   const feedContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editFileInputRef = useRef<HTMLInputElement>(null);
@@ -66,7 +70,9 @@ const StudentDashboard = () => {
   // Reset duplicate results when doubt type or inputs change
   useEffect(() => {
     setDuplicateResults(null);
-  }, [doubtType, doubtText, doubtImage, doubtSubject]);
+  }, [doubtType, doubtText, doubtImage, doubtImage2, doubtSubject]);
+
+  useEffect(() => { setFeedCurrentIndex(0); }, [feedSubjectFilter]);
 
   if (!student) {
     navigate("/student/login");
@@ -84,6 +90,7 @@ const StudentDashboard = () => {
   const feedDoubts = useMemo(() => {
     const all = store.doubts.filter(
       (d) => d.answer && d.studentYear === student.year && d.studentDepartment === student.department && d.studentRegNo !== student.registrationNumber
+        && (feedSubjectFilter === "all" || d.subjectName === feedSubjectFilter)
     );
     const shuffled = [...all];
     for (let i = shuffled.length - 1; i > 0; i--) {
@@ -91,6 +98,13 @@ const StudentDashboard = () => {
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
     return shuffled;
+  }, [store.doubts.length, student.year, student.department, feedSubjectFilter]);
+
+  const feedSubjectOptions = useMemo(() => {
+    const all = store.doubts.filter(
+      (d) => d.answer && d.studentYear === student.year && d.studentDepartment === student.department && d.studentRegNo !== student.registrationNumber
+    );
+    return [...new Set(all.map((d) => d.subjectName))].sort();
   }, [store.doubts.length, student.year, student.department]);
 
   // Saved doubts
@@ -132,6 +146,24 @@ const StudentDashboard = () => {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  const clearImage2 = () => {
+    setDoubtImage2(null);
+    setDoubtImage2Preview(null);
+    if (fileInput2Ref.current) fileInput2Ref.current.value = "";
+  };
+
+  const handleImage2Select = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setDoubtImage2(file);
+      setDoubtImage2Preview(URL.createObjectURL(file));
+      try {
+        const url = await store.uploadDoubtImage(file);
+        if (url) setDoubtImage2Preview(url);
+      } catch (err) { console.error(err); }
+    }
+  };
+
   const handleCheckAndSend = async () => {
     if (!doubtSubject.trim()) return;
     const hasText = doubtType !== "image" && doubtText.trim();
@@ -139,23 +171,17 @@ const StudentDashboard = () => {
     if (!hasText && !hasImage) return;
 
     setCheckingDuplicates(true);
-    
-    // For image/text+image, run OCR first if not done
-    let searchText = "";
-    if (doubtType === "text") {
-      searchText = doubtText.trim();
-    } else if (doubtType === "image") {
-      searchText = ocrText.trim();
-    } else {
-      // text+image: use OCR text for comparison per spec
-      searchText = ocrText.trim();
-    }
 
-    if (searchText.length >= 5 && student) {
-      const results = store.searchSimilarDoubts(searchText, {
+    // Run search with both typed text and OCR text
+    const typedSearch = doubtType !== "image" ? doubtText.trim() : "";
+    const ocrSearch = doubtType !== "text" ? ocrText.trim() : "";
+
+    if ((typedSearch.length >= 3 || ocrSearch.length >= 3) && student) {
+      const results = store.searchSimilarDoubts(typedSearch || ocrSearch, {
         subjectName: doubtSubject,
         studentYear: student.year,
         studentDepartment: student.department,
+        ocrText: ocrSearch,
       });
       if (results.length > 0) {
         setDuplicateResults(results);
@@ -171,12 +197,21 @@ const StudentDashboard = () => {
   const submitDoubt = async () => {
     setSending(true);
     let imageUrl: string | undefined;
+    let imageUrl2: string | undefined;
     if (doubtType !== "text" && doubtImage) {
       if (doubtImagePreview?.startsWith("http")) {
         imageUrl = doubtImagePreview;
       } else {
         const url = await store.uploadDoubtImage(doubtImage);
         if (url) imageUrl = url;
+      }
+    }
+    if (doubtType === "text+image" && doubtImage2) {
+      if (doubtImage2Preview?.startsWith("http")) {
+        imageUrl2 = doubtImage2Preview;
+      } else {
+        const url = await store.uploadDoubtImage(doubtImage2);
+        if (url) imageUrl2 = url;
       }
     }
     await store.addDoubt({
@@ -188,12 +223,14 @@ const StudentDashboard = () => {
       subjectName: doubtSubject.trim(),
       question: doubtType === "image" ? (ocrText || "(Image doubt)") : doubtText.trim(),
       questionImageUrl: imageUrl,
+      questionImageUrl2: imageUrl2,
       ocrText: ocrText || undefined,
     });
     setDoubtText("");
     setDoubtSubject("");
     setDoubtType("text");
     clearImage();
+    clearImage2();
     setDuplicateResults(null);
     setSending(false);
   };
@@ -461,6 +498,9 @@ const StudentDashboard = () => {
                 {/* Dynamic Input: Image */}
                 {(doubtType === "image" || doubtType === "text+image") && (
                   <div className="space-y-2">
+                    {doubtType === "text+image" && (
+                      <p className="text-xs font-medium text-muted-foreground">1st Image · Question Image (used for OCR matching)</p>
+                    )}
                     <input type="file" accept="image/*" ref={fileInputRef} className="hidden" onChange={handleImageSelect} />
                     {doubtImagePreview ? (
                       <div className="space-y-2">
@@ -483,6 +523,30 @@ const StudentDashboard = () => {
                       >
                         <ImagePlus className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
                         <p className="text-sm text-muted-foreground">Click or drag & drop to upload image</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* 2nd image for text+image: full problem image */}
+                {doubtType === "text+image" && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground">2nd Image · Full Problem Image (derivation, rough work, full problem)</p>
+                    <input type="file" accept="image/*" ref={fileInput2Ref} className="hidden" onChange={handleImage2Select} />
+                    {doubtImage2Preview ? (
+                      <div className="relative inline-block">
+                        <img src={doubtImage2Preview} alt="Full problem" className="max-h-48 rounded-lg border" />
+                        <button onClick={clearImage2} className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1">
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div
+                        onClick={() => fileInput2Ref.current?.click()}
+                        className="border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 hover:bg-accent/5 transition-all"
+                      >
+                        <ImagePlus className="h-6 w-6 mx-auto mb-1 text-muted-foreground" />
+                        <p className="text-xs text-muted-foreground">Upload full problem image</p>
                       </div>
                     )}
                   </div>
@@ -561,7 +625,7 @@ const StudentDashboard = () => {
                       !doubtSubject.trim() ||
                       (doubtType === "text" && !doubtText.trim()) ||
                       (doubtType === "image" && !doubtImage) ||
-                      (doubtType === "text+image" && (!doubtText.trim() || !doubtImage)) ||
+                      (doubtType === "text+image" && (!doubtText.trim() || !doubtImage || !doubtImage2)) ||
                       sending || ocrProcessing || checkingDuplicates
                     }
                   >
@@ -673,6 +737,12 @@ const StudentDashboard = () => {
                                 <img src={d.questionImageUrl} alt="Doubt attachment" className="max-h-48 rounded border" />
                               </div>
                             )}
+                            {d.questionImageUrl2 && editingDoubtId !== d.id && (
+                              <div className="mt-2">
+                                <p className="text-xs text-muted-foreground mb-1">Full problem</p>
+                                <img src={d.questionImageUrl2} alt="Full problem" className="max-h-48 rounded border" />
+                              </div>
+                            )}
                             {d.answer && editingDoubtId !== d.id && (
                               <div className="mt-3 p-3 rounded bg-success/10 text-sm" ref={(el) => {
                                 // Mark as viewed when student sees the answer
@@ -724,6 +794,36 @@ const StudentDashboard = () => {
               </Button>
             </div>
 
+            {/* Subject filter for Learning Feed */}
+            {feedSubjectOptions.length > 0 && (
+              <div className="mb-4 flex items-center gap-2 flex-wrap">
+                <span className="text-xs text-muted-foreground">Filter by subject:</span>
+                <button
+                  onClick={() => setFeedSubjectFilter("all")}
+                  className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                    feedSubjectFilter === "all"
+                      ? "border-primary bg-primary/10 text-primary font-medium"
+                      : "border-border bg-card text-muted-foreground hover:bg-accent/10"
+                  }`}
+                >
+                  All
+                </button>
+                {feedSubjectOptions.map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => setFeedSubjectFilter(s)}
+                    className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                      feedSubjectFilter === s
+                        ? "border-primary bg-primary/10 text-primary font-medium"
+                        : "border-border bg-card text-muted-foreground hover:bg-accent/10"
+                    }`}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
+
             {feedDoubts.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
                 <Shuffle className="h-12 w-12 mb-4 opacity-30" />
@@ -763,10 +863,16 @@ const StudentDashboard = () => {
                             <p className="text-base font-medium leading-relaxed">{d.question}</p>
                           </div>
 
-                          {/* Question image */}
+                          {/* Question images */}
                           {d.questionImageUrl && (
                             <div>
                               <img src={d.questionImageUrl} alt="Question" className="w-full max-h-64 object-contain rounded-lg border" />
+                            </div>
+                          )}
+                          {d.questionImageUrl2 && (
+                            <div>
+                              <p className="text-xs text-muted-foreground mb-1">Full problem</p>
+                              <img src={d.questionImageUrl2} alt="Full problem" className="w-full max-h-64 object-contain rounded-lg border" />
                             </div>
                           )}
 
@@ -792,13 +898,6 @@ const StudentDashboard = () => {
                           <div className="flex items-center justify-between pt-2 border-t">
                             <p className="text-xs text-muted-foreground">Asked by {d.studentName}</p>
                             <div className="flex items-center gap-2">
-                              <Button
-                                variant="outline" size="sm" className="gap-1"
-                                onClick={() => store.toggleHelpful(student.registrationNumber, d.id)}
-                              >
-                                <ThumbsUp className={`h-4 w-4 ${isHelpful(d.id) ? "fill-primary text-primary" : ""}`} />
-                                <span className="text-xs font-medium">{d.helpfulCount || 0} Insightful</span>
-                              </Button>
                               <Button
                                 variant="outline" size="sm" className="gap-1"
                                 onClick={() => isSaved(d.id) ? store.unsaveDoubt(student.registrationNumber, d.id) : store.saveDoubt(student.registrationNumber, d.id)}
@@ -894,13 +993,6 @@ function DoubtCard({ d, student, store, isHelpful, isSaved, showUnsave }: {
           <span className="text-xs text-muted-foreground">{new Date(d.createdAt).toLocaleDateString()}</span>
         </div>
         <div className="flex items-center gap-1">
-          <Button
-            variant="ghost" size="sm" className="h-7 px-2 gap-1"
-            onClick={() => store.toggleHelpful(student.registrationNumber, d.id)}
-          >
-            <ThumbsUp className={`h-3.5 w-3.5 ${isHelpful(d.id) ? "fill-primary text-primary" : ""}`} />
-            <span className="text-xs">{d.helpfulCount || 0}</span>
-          </Button>
           {showUnsave ? (
             <Button
               variant="ghost" size="sm" className="h-7 px-2"

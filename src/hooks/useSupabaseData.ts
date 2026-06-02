@@ -75,6 +75,7 @@ export interface Doubt {
   subjectName: string;
   question: string;
   questionImageUrl?: string;
+  questionImageUrl2?: string;
   answer?: string;
   answerImageUrl?: string;
   answerImageUrls?: string[];
@@ -219,6 +220,7 @@ export function useSupabaseData() {
           subjectName: d.subject_name,
           question: d.question,
           questionImageUrl: d.question_image_url || undefined,
+          questionImageUrl2: (d as any).question_image_url_2 || undefined,
           answer: d.answer || undefined,
           answerImageUrl: d.answer_image_url || undefined,
           answerImageUrls: (d as any).answer_image_urls || [],
@@ -511,6 +513,7 @@ export function useSupabaseData() {
       subject_name: doubt.subjectName,
       question: doubt.question,
       question_image_url: doubt.questionImageUrl || null,
+      question_image_url_2: doubt.questionImageUrl2 || null,
       ocr_text: doubt.ocrText || null,
     } as any).select("id").single();
     if (!error && data) {
@@ -546,19 +549,21 @@ export function useSupabaseData() {
 
   const searchSimilarDoubts = (
     text: string,
-    filters?: { subjectName?: string; studentYear?: number; studentDepartment?: string }
+    filters?: { subjectName?: string; studentYear?: number; studentDepartment?: string; ocrText?: string }
   ): Doubt[] => {
-    if (!text || text.trim().length < 3) return [];
-    const q = text.toLowerCase().trim();
+    const typed = (text || "").toLowerCase().trim();
+    const ocr = (filters?.ocrText || "").toLowerCase().trim();
+    if (typed.length < 3 && ocr.length < 3) return [];
     return doubts.filter((d) => {
       if (!d.answer) return false;
       if (filters?.subjectName && d.subjectName.toLowerCase() !== filters.subjectName.toLowerCase()) return false;
       if (filters?.studentYear && d.studentYear !== filters.studentYear) return false;
       if (filters?.studentDepartment && d.studentDepartment.toLowerCase() !== filters.studentDepartment.toLowerCase()) return false;
-      // Exact match: compare against question text and OCR text
       const questionText = d.question.toLowerCase().trim();
       const ocrTarget = (d.ocrText || "").toLowerCase().trim();
-      return questionText === q || (ocrTarget.length > 0 && ocrTarget === q);
+      // Match if typed OR OCR matches stored question OR stored OCR
+      const candidates = [typed, ocr].filter((s) => s.length >= 3);
+      return candidates.some((c) => c === questionText || (ocrTarget.length > 0 && c === ocrTarget));
     }).slice(0, 5);
   };
 

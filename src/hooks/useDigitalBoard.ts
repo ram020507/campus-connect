@@ -148,7 +148,7 @@ export function useDigitalBoard() {
   };
 
   // Teacher: set online status
-  const setTeacherOnline = async (staffId: string, name: string, collegeName: string, subjectName: string) => {
+  const setTeacherOnline = async (staffId: string, name: string, collegeName: string, subjectName: string, availability: "in" | "out" = "out") => {
     const { data: existing } = await supabase
       .from("teacher_status")
       .select("id")
@@ -161,6 +161,7 @@ export function useDigitalBoard() {
         .update({
           is_online: true,
           is_busy: false,
+          availability,
           last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         } as any)
@@ -173,8 +174,16 @@ export function useDigitalBoard() {
         subject_name: subjectName,
         is_online: true,
         is_busy: false,
-      });
+        availability,
+      } as any);
     }
+  };
+
+  const setTeacherAvailability = async (staffId: string, availability: "in" | "out") => {
+    await supabase
+      .from("teacher_status")
+      .update({ availability, updated_at: new Date().toISOString() } as any)
+      .eq("staff_id", staffId);
   };
 
   const setTeacherOffline = async (staffId: string) => {
@@ -351,6 +360,7 @@ export function useDigitalBoard() {
     cancelCallRequest,
     acceptCallRequest,
     setTeacherOnline,
+    setTeacherAvailability,
     setTeacherOffline,
     setTeacherBusy,
     updateCanvasData,
