@@ -25,6 +25,7 @@ const DigitalBoardTeacher = ({ teacher }: DigitalBoardTeacherProps) => {
   const whiteboardRef = useRef<WhiteboardRef>(null);
   const [accepting, setAccepting] = useState<string | null>(null);
   const [teacherLocked, setTeacherLocked] = useState(false);
+  const [availability, setAvailability] = useState<"in" | "out">("out");
 
   // WebRTC voice
   const webrtc = useWebRTC({
@@ -32,19 +33,27 @@ const DigitalBoardTeacher = ({ teacher }: DigitalBoardTeacherProps) => {
     userId: `teacher-${teacher.staffId}`,
   });
 
-  // Set teacher online when component mounts
+  // Set teacher online (OUT by default) when component mounts
   useEffect(() => {
-    board.setTeacherOnline(teacher.staffId, teacher.name, teacher.collegeName, teacher.subjectName);
+    board.setTeacherOnline(teacher.staffId, teacher.name, teacher.collegeName, teacher.subjectName, "out");
     return () => { board.setTeacherOffline(teacher.staffId); };
   }, [teacher.staffId]);
 
-  // Filter requests for any of this teacher's subjects, exclude if busy
+  const toggleAvailability = async () => {
+    const next = availability === "in" ? "out" : "in";
+    setAvailability(next);
+    await board.setTeacherAvailability(teacher.staffId, next);
+  };
+
+  // Filter requests for any of this teacher's subjects, exclude if busy or OUT
   const teacherSubjects = getTeacherSubjects(teacher as any);
-  const incomingRequests = board.callRequests.filter(
-    (r) =>
-      teacherSubjects.some(s => s.toLowerCase() === r.subjectName.toLowerCase()) &&
-      r.status === "pending"
-  );
+  const incomingRequests = availability === "in"
+    ? board.callRequests.filter(
+        (r) =>
+          teacherSubjects.some(s => s.toLowerCase() === r.subjectName.toLowerCase()) &&
+          r.status === "pending"
+      )
+    : [];
 
   const handleAccept = async (request: CallRequest) => {
     setAccepting(request.id);
