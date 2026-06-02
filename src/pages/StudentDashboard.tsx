@@ -788,6 +788,36 @@ const StudentDashboard = () => {
               </Button>
             </div>
 
+            {/* Subject filter for Learning Feed */}
+            {feedSubjectOptions.length > 0 && (
+              <div className="mb-4 flex items-center gap-2 flex-wrap">
+                <span className="text-xs text-muted-foreground">Filter by subject:</span>
+                <button
+                  onClick={() => setFeedSubjectFilter("all")}
+                  className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                    feedSubjectFilter === "all"
+                      ? "border-primary bg-primary/10 text-primary font-medium"
+                      : "border-border bg-card text-muted-foreground hover:bg-accent/10"
+                  }`}
+                >
+                  All
+                </button>
+                {feedSubjectOptions.map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => setFeedSubjectFilter(s)}
+                    className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                      feedSubjectFilter === s
+                        ? "border-primary bg-primary/10 text-primary font-medium"
+                        : "border-border bg-card text-muted-foreground hover:bg-accent/10"
+                    }`}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
+
             {feedDoubts.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
                 <Shuffle className="h-12 w-12 mb-4 opacity-30" />
