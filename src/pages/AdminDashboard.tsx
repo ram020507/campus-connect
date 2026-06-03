@@ -533,7 +533,6 @@ const AdminDashboard = () => {
                       <Input placeholder="Teacher Name" value={teacherName} onChange={(e) => setTeacherName(e.target.value)} />
                       <Input placeholder="DOB (DD-MM-YYYY)" value={teacherDob} maxLength={10} inputMode="numeric"
                         onChange={(e) => setTeacherDob(formatDob(e.target.value))} />
-                      <Input placeholder="Email (optional)" type="email" value={teacherEmail} onChange={(e) => setTeacherEmail(e.target.value)} />
                     </div>
                     <div className="mt-3">
                       <p className="text-sm font-medium mb-2">Assign Subjects</p>
@@ -556,10 +555,10 @@ const AdminDashboard = () => {
                       if (teacherStaffId && teacherName && teacherDob && teacherSelectedSubjects.length > 0) {
                         store.addTeacher({
                           staffId: teacherStaffId, name: teacherName, dob: teacherDob,
-                          email: teacherEmail, collegeName: tCollege.name,
+                          email: "", collegeName: tCollege.name,
                           subjectName: teacherSelectedSubjects.join(","),
                         });
-                        setTeacherStaffId(""); setTeacherName(""); setTeacherDob(""); setTeacherEmail("");
+                        setTeacherStaffId(""); setTeacherName(""); setTeacherDob("");
                         setTeacherSelectedSubjects([]);
                       }
                     }}><Plus className="h-4 w-4 mr-1" /> Create Account</Button>
