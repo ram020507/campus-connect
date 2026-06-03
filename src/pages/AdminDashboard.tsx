@@ -619,7 +619,6 @@ const AdminDashboard = () => {
                                   <div className="text-sm min-w-0">
                                     <p className="font-medium truncate">{t.name} <span className="text-muted-foreground">#{t.staffId}</span></p>
                                     <p className="text-xs text-muted-foreground truncate">Subjects: {getTeacherSubjects(t).join(", ") || "—"}</p>
-                                    {t.email && <p className="text-xs text-muted-foreground truncate">{t.email}</p>}
                                   </div>
                                   <div className="flex items-center gap-1 shrink-0">
                                     <Button variant="ghost" size="icon" onClick={() => {
