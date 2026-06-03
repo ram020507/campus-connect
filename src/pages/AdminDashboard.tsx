@@ -587,8 +587,6 @@ const AdminDashboard = () => {
                                       onChange={(e) => setEditTeacherData((d) => ({ ...d, name: e.target.value }))} />
                                     <Input placeholder="DOB" value={editTeacherData.dob ?? ""} maxLength={10} inputMode="numeric"
                                       onChange={(e) => setEditTeacherData((d) => ({ ...d, dob: formatDob(e.target.value) }))} />
-                                    <Input placeholder="Email" type="email" value={editTeacherData.email ?? ""}
-                                      onChange={(e) => setEditTeacherData((d) => ({ ...d, email: e.target.value }))} />
                                   </div>
                                   <div>
                                     <p className="text-sm font-medium mb-2">Subjects</p>
