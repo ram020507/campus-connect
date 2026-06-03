@@ -469,7 +469,7 @@ const AdminDashboard = () => {
                                   <div className="flex items-center gap-1 shrink-0">
                                     <Button variant="ghost" size="icon" onClick={() => {
                                       setEditingStudent(s.id);
-                                      setEditStudentData({ registrationNumber: s.registrationNumber, name: s.name, dob: s.dob, email: s.email, collegeName: s.collegeName, department: s.department, year: s.year });
+                                      setEditStudentData({ registrationNumber: s.registrationNumber, name: s.name, dob: s.dob, email: "", collegeName: s.collegeName, department: s.department, year: s.year });
                                     }}><Pencil className="h-4 w-4 text-primary" /></Button>
                                     <ConfirmDelete title={`Delete ${s.name}?`}
                                       desc="This removes the student account, their doubts, and related data from teacher and learning feed sections."
