@@ -450,8 +450,6 @@ const AdminDashboard = () => {
                                       onChange={(e) => setEditStudentData((d) => ({ ...d, name: e.target.value }))} />
                                     <Input placeholder="DOB" value={editStudentData.dob ?? ""} maxLength={10} inputMode="numeric"
                                       onChange={(e) => setEditStudentData((d) => ({ ...d, dob: formatDob(e.target.value) }))} />
-                                    <Input placeholder="Email" type="email" value={editStudentData.email ?? ""}
-                                      onChange={(e) => setEditStudentData((d) => ({ ...d, email: e.target.value }))} />
                                   </div>
                                   <div className="flex gap-2">
                                     <Button size="sm" onClick={async () => { await store.updateStudent(s.id, editStudentData); setEditingStudent(null); }}>
