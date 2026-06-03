@@ -416,7 +416,6 @@ const AdminDashboard = () => {
                       <Input placeholder="Student Name" value={studentName} onChange={(e) => setStudentName(e.target.value)} />
                       <Input placeholder="DOB (DD-MM-YYYY)" value={studentDob} maxLength={10} inputMode="numeric"
                         onChange={(e) => setStudentDob(formatDob(e.target.value))} />
-                      <Input placeholder="Email (optional)" type="email" value={studentEmail} onChange={(e) => setStudentEmail(e.target.value)} />
                     </div>
                     <p className="text-xs text-muted-foreground mt-2">
                       {sCollege.name} · Year {sYear.yearNumber} · {sDept.name}
@@ -425,9 +424,9 @@ const AdminDashboard = () => {
                       if (studentRegNo && studentName && studentDob) {
                         store.addStudent({
                           registrationNumber: studentRegNo, name: studentName, dob: studentDob,
-                          email: studentEmail, collegeName: sCollege.name, department: sDept.name, year: sYear.yearNumber,
+                          email: "", collegeName: sCollege.name, department: sDept.name, year: sYear.yearNumber,
                         });
-                        setStudentRegNo(""); setStudentName(""); setStudentDob(""); setStudentEmail("");
+                        setStudentRegNo(""); setStudentName(""); setStudentDob("");
                       }
                     }}><Plus className="h-4 w-4 mr-1" /> Create Account</Button>
                   </CardContent>
