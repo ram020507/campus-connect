@@ -39,7 +39,7 @@ const AdminDashboard = () => {
   const [studentRegNo, setStudentRegNo] = useState("");
   const [studentName, setStudentName] = useState("");
   const [studentDob, setStudentDob] = useState("");
-  const [studentEmail, setStudentEmail] = useState("");
+  // email field removed from admin panel
   const [editingStudent, setEditingStudent] = useState<string | null>(null);
   const [editStudentData, setEditStudentData] = useState<Partial<Omit<StudentAccount, "id">>>({});
 
