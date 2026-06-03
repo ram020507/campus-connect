@@ -465,7 +465,6 @@ const AdminDashboard = () => {
                                   <div className="text-sm min-w-0">
                                     <p className="font-medium truncate">{s.name} <span className="text-muted-foreground">#{s.registrationNumber}</span></p>
                                     <p className="text-xs text-muted-foreground">Year {s.year} · {s.department}</p>
-                                    {s.email && <p className="text-xs text-muted-foreground truncate">{s.email}</p>}
                                   </div>
                                   <div className="flex items-center gap-1 shrink-0">
                                     <Button variant="ghost" size="icon" onClick={() => {
