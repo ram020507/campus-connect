@@ -234,8 +234,18 @@ const TeacherDashboard = () => {
                       <p className="text-sm font-medium mb-3">{d.question}</p>
                       {d.questionImageUrl && (
                         <div className="mb-3">
-                          <img src={d.questionImageUrl} alt="Student attachment" className="max-h-48 rounded border" />
+                          <p className="text-xs text-muted-foreground mb-1">Question Image</p>
+                          <img src={d.questionImageUrl} alt="Question" className="max-h-48 rounded border" />
                           <a href={d.questionImageUrl} download className="inline-flex items-center gap-1 text-xs text-primary mt-1 hover:underline">
+                            <Download className="h-3 w-3" /> Download Image
+                          </a>
+                        </div>
+                      )}
+                      {d.questionImageUrl2 && (
+                        <div className="mb-3">
+                          <p className="text-xs text-muted-foreground mb-1">Full Problem Image</p>
+                          <img src={d.questionImageUrl2} alt="Full problem" className="max-h-48 rounded border" />
+                          <a href={d.questionImageUrl2} download className="inline-flex items-center gap-1 text-xs text-primary mt-1 hover:underline">
                             <Download className="h-3 w-3" /> Download Image
                           </a>
                         </div>
@@ -279,8 +289,18 @@ const TeacherDashboard = () => {
                       <p className="text-sm font-medium mb-3">{d.question}</p>
                       {d.questionImageUrl && (
                         <div className="mb-3">
-                          <img src={d.questionImageUrl} alt="Student attachment" className="max-h-48 rounded border" />
+                          <p className="text-xs text-muted-foreground mb-1">Question Image</p>
+                          <img src={d.questionImageUrl} alt="Question" className="max-h-48 rounded border" />
                           <a href={d.questionImageUrl} download className="inline-flex items-center gap-1 text-xs text-primary mt-1 hover:underline">
+                            <Download className="h-3 w-3" /> Download Image
+                          </a>
+                        </div>
+                      )}
+                      {d.questionImageUrl2 && (
+                        <div className="mb-3">
+                          <p className="text-xs text-muted-foreground mb-1">Full Problem Image</p>
+                          <img src={d.questionImageUrl2} alt="Full problem" className="max-h-48 rounded border" />
+                          <a href={d.questionImageUrl2} download className="inline-flex items-center gap-1 text-xs text-primary mt-1 hover:underline">
                             <Download className="h-3 w-3" /> Download Image
                           </a>
                         </div>
@@ -368,7 +388,14 @@ const TeacherDashboard = () => {
                       <p className="text-sm font-medium">{d.question}</p>
                       {d.questionImageUrl && (
                         <div className="mt-2">
-                          <img src={d.questionImageUrl} alt="Student attachment" className="max-h-40 rounded border" />
+                          <p className="text-xs text-muted-foreground mb-1">Question Image</p>
+                          <img src={d.questionImageUrl} alt="Question" className="max-h-40 rounded border" />
+                        </div>
+                      )}
+                      {d.questionImageUrl2 && (
+                        <div className="mt-2">
+                          <p className="text-xs text-muted-foreground mb-1">Full Problem Image</p>
+                          <img src={d.questionImageUrl2} alt="Full problem" className="max-h-40 rounded border" />
                         </div>
                       )}
 

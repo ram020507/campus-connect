@@ -39,7 +39,7 @@ const AdminDashboard = () => {
   const [studentRegNo, setStudentRegNo] = useState("");
   const [studentName, setStudentName] = useState("");
   const [studentDob, setStudentDob] = useState("");
-  const [studentEmail, setStudentEmail] = useState("");
+  // email field removed from admin panel
   const [editingStudent, setEditingStudent] = useState<string | null>(null);
   const [editStudentData, setEditStudentData] = useState<Partial<Omit<StudentAccount, "id">>>({});
 
@@ -49,7 +49,7 @@ const AdminDashboard = () => {
   const [teacherStaffId, setTeacherStaffId] = useState("");
   const [teacherName, setTeacherName] = useState("");
   const [teacherDob, setTeacherDob] = useState("");
-  const [teacherEmail, setTeacherEmail] = useState("");
+  // email field removed from admin panel
   const [teacherSelectedSubjects, setTeacherSelectedSubjects] = useState<string[]>([]);
   const [editingTeacher, setEditingTeacher] = useState<string | null>(null);
   const [editTeacherData, setEditTeacherData] = useState<Partial<Omit<TeacherAccount, "id">>>({});
@@ -186,6 +186,17 @@ const AdminDashboard = () => {
                         </SelectContent>
                       </Select>
                       <Button variant="outline" size="icon" onClick={quickAddCollege} title="Add college"><Plus className="h-4 w-4" /></Button>
+                      {cCollege && (
+                        <>
+                          <Button variant="outline" size="icon" title="Rename college" onClick={() => {
+                            const name = prompt("New college name", cCollege.name);
+                            if (name?.trim()) store.updateCollege(cCollege.id, name.trim());
+                          }}><Pencil className="h-4 w-4" /></Button>
+                          <ConfirmDelete title={`Delete ${cCollege.name}?`}
+                            desc="This permanently removes the college and all its years, departments, subjects, and videos."
+                            onConfirm={() => { store.removeCollege(cCollege.id); setCCollegeId(""); setCYearId(""); setCDeptId(""); setCSubjectId(""); }} />
+                        </>
+                      )}
                     </div>
                   </div>
                   {/* Year */}
@@ -202,6 +213,18 @@ const AdminDashboard = () => {
                       </Select>
                       <Button variant="outline" size="icon" disabled={!cCollege}
                         onClick={() => cCollege && quickAddYear(cCollege.id, cCollege.years.map((y) => y.yearNumber))}><Plus className="h-4 w-4" /></Button>
+                      {cYear && (
+                        <>
+                          <Button variant="outline" size="icon" title="Change year number" onClick={() => {
+                            const v = prompt("New year number (1-4)", String(cYear.yearNumber));
+                            const n = Number(v);
+                            if ([1,2,3,4].includes(n)) store.updateYear(cYear.id, n);
+                          }}><Pencil className="h-4 w-4" /></Button>
+                          <ConfirmDelete title={`Delete Year ${cYear.yearNumber}?`}
+                            desc="This permanently removes the year and all its departments, subjects, and videos."
+                            onConfirm={() => { store.removeYear(cCollege!.id, cYear.id); setCYearId(""); setCDeptId(""); setCSubjectId(""); }} />
+                        </>
+                      )}
                     </div>
                   </div>
                   {/* Department */}
@@ -216,6 +239,17 @@ const AdminDashboard = () => {
                       </Select>
                       <Button variant="outline" size="icon" disabled={!cYear}
                         onClick={() => cCollege && cYear && quickAddDept(cCollege.id, cYear.id)}><Plus className="h-4 w-4" /></Button>
+                      {cDept && (
+                        <>
+                          <Button variant="outline" size="icon" title="Rename department" onClick={() => {
+                            const name = prompt("New department name", cDept.name);
+                            if (name?.trim()) store.updateDepartment(cDept.id, name.trim());
+                          }}><Pencil className="h-4 w-4" /></Button>
+                          <ConfirmDelete title={`Delete ${cDept.name}?`}
+                            desc="This permanently removes the department and all its subjects and videos."
+                            onConfirm={() => { store.removeDepartment(cCollege!.id, cYear!.id, cDept.id); setCDeptId(""); setCSubjectId(""); }} />
+                        </>
+                      )}
                     </div>
                   </div>
                   {/* Subject */}
@@ -230,6 +264,17 @@ const AdminDashboard = () => {
                       </Select>
                       <Button variant="outline" size="icon" disabled={!cDept}
                         onClick={() => cCollege && cYear && cDept && quickAddSubject(cCollege.id, cYear.id, cDept.id)}><Plus className="h-4 w-4" /></Button>
+                      {cSubject && (
+                        <>
+                          <Button variant="outline" size="icon" title="Rename subject" onClick={() => {
+                            const name = prompt("New subject name", cSubject.name);
+                            if (name?.trim()) store.updateSubject(cSubject.id, name.trim());
+                          }}><Pencil className="h-4 w-4" /></Button>
+                          <ConfirmDelete title={`Delete ${cSubject.name}?`}
+                            desc="This permanently removes the subject and all its videos and notes."
+                            onConfirm={() => { store.removeSubject(cCollege!.id, cYear!.id, cDept!.id, cSubject.id); setCSubjectId(""); }} />
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -371,7 +416,6 @@ const AdminDashboard = () => {
                       <Input placeholder="Student Name" value={studentName} onChange={(e) => setStudentName(e.target.value)} />
                       <Input placeholder="DOB (DD-MM-YYYY)" value={studentDob} maxLength={10} inputMode="numeric"
                         onChange={(e) => setStudentDob(formatDob(e.target.value))} />
-                      <Input placeholder="Email (optional)" type="email" value={studentEmail} onChange={(e) => setStudentEmail(e.target.value)} />
                     </div>
                     <p className="text-xs text-muted-foreground mt-2">
                       {sCollege.name} · Year {sYear.yearNumber} · {sDept.name}
@@ -380,9 +424,9 @@ const AdminDashboard = () => {
                       if (studentRegNo && studentName && studentDob) {
                         store.addStudent({
                           registrationNumber: studentRegNo, name: studentName, dob: studentDob,
-                          email: studentEmail, collegeName: sCollege.name, department: sDept.name, year: sYear.yearNumber,
+                          email: "", collegeName: sCollege.name, department: sDept.name, year: sYear.yearNumber,
                         });
-                        setStudentRegNo(""); setStudentName(""); setStudentDob(""); setStudentEmail("");
+                        setStudentRegNo(""); setStudentName(""); setStudentDob("");
                       }
                     }}><Plus className="h-4 w-4 mr-1" /> Create Account</Button>
                   </CardContent>
@@ -406,8 +450,6 @@ const AdminDashboard = () => {
                                       onChange={(e) => setEditStudentData((d) => ({ ...d, name: e.target.value }))} />
                                     <Input placeholder="DOB" value={editStudentData.dob ?? ""} maxLength={10} inputMode="numeric"
                                       onChange={(e) => setEditStudentData((d) => ({ ...d, dob: formatDob(e.target.value) }))} />
-                                    <Input placeholder="Email" type="email" value={editStudentData.email ?? ""}
-                                      onChange={(e) => setEditStudentData((d) => ({ ...d, email: e.target.value }))} />
                                   </div>
                                   <div className="flex gap-2">
                                     <Button size="sm" onClick={async () => { await store.updateStudent(s.id, editStudentData); setEditingStudent(null); }}>
@@ -423,12 +465,11 @@ const AdminDashboard = () => {
                                   <div className="text-sm min-w-0">
                                     <p className="font-medium truncate">{s.name} <span className="text-muted-foreground">#{s.registrationNumber}</span></p>
                                     <p className="text-xs text-muted-foreground">Year {s.year} · {s.department}</p>
-                                    {s.email && <p className="text-xs text-muted-foreground truncate">{s.email}</p>}
                                   </div>
                                   <div className="flex items-center gap-1 shrink-0">
                                     <Button variant="ghost" size="icon" onClick={() => {
                                       setEditingStudent(s.id);
-                                      setEditStudentData({ registrationNumber: s.registrationNumber, name: s.name, dob: s.dob, email: s.email, collegeName: s.collegeName, department: s.department, year: s.year });
+                                      setEditStudentData({ registrationNumber: s.registrationNumber, name: s.name, dob: s.dob, email: "", collegeName: s.collegeName, department: s.department, year: s.year });
                                     }}><Pencil className="h-4 w-4 text-primary" /></Button>
                                     <ConfirmDelete title={`Delete ${s.name}?`}
                                       desc="This removes the student account, their doubts, and related data from teacher and learning feed sections."
@@ -492,7 +533,6 @@ const AdminDashboard = () => {
                       <Input placeholder="Teacher Name" value={teacherName} onChange={(e) => setTeacherName(e.target.value)} />
                       <Input placeholder="DOB (DD-MM-YYYY)" value={teacherDob} maxLength={10} inputMode="numeric"
                         onChange={(e) => setTeacherDob(formatDob(e.target.value))} />
-                      <Input placeholder="Email (optional)" type="email" value={teacherEmail} onChange={(e) => setTeacherEmail(e.target.value)} />
                     </div>
                     <div className="mt-3">
                       <p className="text-sm font-medium mb-2">Assign Subjects</p>
@@ -515,10 +555,10 @@ const AdminDashboard = () => {
                       if (teacherStaffId && teacherName && teacherDob && teacherSelectedSubjects.length > 0) {
                         store.addTeacher({
                           staffId: teacherStaffId, name: teacherName, dob: teacherDob,
-                          email: teacherEmail, collegeName: tCollege.name,
+                          email: "", collegeName: tCollege.name,
                           subjectName: teacherSelectedSubjects.join(","),
                         });
-                        setTeacherStaffId(""); setTeacherName(""); setTeacherDob(""); setTeacherEmail("");
+                        setTeacherStaffId(""); setTeacherName(""); setTeacherDob("");
                         setTeacherSelectedSubjects([]);
                       }
                     }}><Plus className="h-4 w-4 mr-1" /> Create Account</Button>
@@ -547,8 +587,6 @@ const AdminDashboard = () => {
                                       onChange={(e) => setEditTeacherData((d) => ({ ...d, name: e.target.value }))} />
                                     <Input placeholder="DOB" value={editTeacherData.dob ?? ""} maxLength={10} inputMode="numeric"
                                       onChange={(e) => setEditTeacherData((d) => ({ ...d, dob: formatDob(e.target.value) }))} />
-                                    <Input placeholder="Email" type="email" value={editTeacherData.email ?? ""}
-                                      onChange={(e) => setEditTeacherData((d) => ({ ...d, email: e.target.value }))} />
                                   </div>
                                   <div>
                                     <p className="text-sm font-medium mb-2">Subjects</p>
@@ -581,12 +619,11 @@ const AdminDashboard = () => {
                                   <div className="text-sm min-w-0">
                                     <p className="font-medium truncate">{t.name} <span className="text-muted-foreground">#{t.staffId}</span></p>
                                     <p className="text-xs text-muted-foreground truncate">Subjects: {getTeacherSubjects(t).join(", ") || "—"}</p>
-                                    {t.email && <p className="text-xs text-muted-foreground truncate">{t.email}</p>}
                                   </div>
                                   <div className="flex items-center gap-1 shrink-0">
                                     <Button variant="ghost" size="icon" onClick={() => {
                                       setEditingTeacher(t.id);
-                                      setEditTeacherData({ staffId: t.staffId, name: t.name, dob: t.dob, email: t.email, collegeName: t.collegeName, subjectName: t.subjectName });
+                                      setEditTeacherData({ staffId: t.staffId, name: t.name, dob: t.dob, email: "", collegeName: t.collegeName, subjectName: t.subjectName });
                                     }}><Pencil className="h-4 w-4 text-primary" /></Button>
                                     <ConfirmDelete title={`Delete ${t.name}?`}
                                       desc="This removes the teacher account, their answers in the doubt system and learning feed, and any active digital board sessions."

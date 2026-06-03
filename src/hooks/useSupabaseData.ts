@@ -338,6 +338,26 @@ export function useSupabaseData() {
     await fetchAll();
   };
 
+  const updateCollege = async (id: string, name: string) => {
+    const { error } = await supabase.from("colleges").update({ name }).eq("id", id);
+    if (!error) await fetchAll();
+  };
+
+  const updateYear = async (id: string, yearNumber: number) => {
+    const { error } = await supabase.from("years").update({ year_number: yearNumber }).eq("id", id);
+    if (!error) await fetchAll();
+  };
+
+  const updateDepartment = async (id: string, name: string) => {
+    const { error } = await supabase.from("departments").update({ name }).eq("id", id);
+    if (!error) await fetchAll();
+  };
+
+  const updateSubject = async (id: string, name: string) => {
+    const { error } = await supabase.from("subjects").update({ name }).eq("id", id);
+    if (!error) await fetchAll();
+  };
+
   const addVideo = async (_collegeId: string, _yearId: string, _deptId: string, subjectId: string, title: string, url: string) => {
     const { error } = await supabase.from("videos").insert({ subject_id: subjectId, title, url });
     if (!error) await fetchAll();
@@ -672,10 +692,10 @@ export function useSupabaseData() {
 
   return {
     colleges, students, teachers, doubts, savedDoubts, helpfulByMe, loading,
-    addCollege, removeCollege,
-    addYear, removeYear,
-    addDepartment, removeDepartment,
-    addSubject, removeSubject,
+    addCollege, removeCollege, updateCollege,
+    addYear, removeYear, updateYear,
+    addDepartment, removeDepartment, updateDepartment,
+    addSubject, removeSubject, updateSubject,
     addVideo, removeVideo,
     uploadVideoFile, removeVideoFile,
     uploadDoubtImage,
