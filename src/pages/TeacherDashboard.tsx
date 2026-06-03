@@ -388,7 +388,14 @@ const TeacherDashboard = () => {
                       <p className="text-sm font-medium">{d.question}</p>
                       {d.questionImageUrl && (
                         <div className="mt-2">
-                          <img src={d.questionImageUrl} alt="Student attachment" className="max-h-40 rounded border" />
+                          <p className="text-xs text-muted-foreground mb-1">Question Image</p>
+                          <img src={d.questionImageUrl} alt="Question" className="max-h-40 rounded border" />
+                        </div>
+                      )}
+                      {d.questionImageUrl2 && (
+                        <div className="mt-2">
+                          <p className="text-xs text-muted-foreground mb-1">Full Problem Image</p>
+                          <img src={d.questionImageUrl2} alt="Full problem" className="max-h-40 rounded border" />
                         </div>
                       )}
 
