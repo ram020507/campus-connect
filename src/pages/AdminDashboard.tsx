@@ -186,6 +186,17 @@ const AdminDashboard = () => {
                         </SelectContent>
                       </Select>
                       <Button variant="outline" size="icon" onClick={quickAddCollege} title="Add college"><Plus className="h-4 w-4" /></Button>
+                      {cCollege && (
+                        <>
+                          <Button variant="outline" size="icon" title="Rename college" onClick={() => {
+                            const name = prompt("New college name", cCollege.name);
+                            if (name?.trim()) store.updateCollege(cCollege.id, name.trim());
+                          }}><Pencil className="h-4 w-4" /></Button>
+                          <ConfirmDelete title={`Delete ${cCollege.name}?`}
+                            desc="This permanently removes the college and all its years, departments, subjects, and videos."
+                            onConfirm={() => { store.removeCollege(cCollege.id); setCCollegeId(""); setCYearId(""); setCDeptId(""); setCSubjectId(""); }} />
+                        </>
+                      )}
                     </div>
                   </div>
                   {/* Year */}
@@ -202,6 +213,18 @@ const AdminDashboard = () => {
                       </Select>
                       <Button variant="outline" size="icon" disabled={!cCollege}
                         onClick={() => cCollege && quickAddYear(cCollege.id, cCollege.years.map((y) => y.yearNumber))}><Plus className="h-4 w-4" /></Button>
+                      {cYear && (
+                        <>
+                          <Button variant="outline" size="icon" title="Change year number" onClick={() => {
+                            const v = prompt("New year number (1-4)", String(cYear.yearNumber));
+                            const n = Number(v);
+                            if ([1,2,3,4].includes(n)) store.updateYear(cYear.id, n);
+                          }}><Pencil className="h-4 w-4" /></Button>
+                          <ConfirmDelete title={`Delete Year ${cYear.yearNumber}?`}
+                            desc="This permanently removes the year and all its departments, subjects, and videos."
+                            onConfirm={() => { store.removeYear(cCollege!.id, cYear.id); setCYearId(""); setCDeptId(""); setCSubjectId(""); }} />
+                        </>
+                      )}
                     </div>
                   </div>
                   {/* Department */}
@@ -216,6 +239,17 @@ const AdminDashboard = () => {
                       </Select>
                       <Button variant="outline" size="icon" disabled={!cYear}
                         onClick={() => cCollege && cYear && quickAddDept(cCollege.id, cYear.id)}><Plus className="h-4 w-4" /></Button>
+                      {cDept && (
+                        <>
+                          <Button variant="outline" size="icon" title="Rename department" onClick={() => {
+                            const name = prompt("New department name", cDept.name);
+                            if (name?.trim()) store.updateDepartment(cDept.id, name.trim());
+                          }}><Pencil className="h-4 w-4" /></Button>
+                          <ConfirmDelete title={`Delete ${cDept.name}?`}
+                            desc="This permanently removes the department and all its subjects and videos."
+                            onConfirm={() => { store.removeDepartment(cCollege!.id, cYear!.id, cDept.id); setCDeptId(""); setCSubjectId(""); }} />
+                        </>
+                      )}
                     </div>
                   </div>
                   {/* Subject */}
@@ -230,6 +264,17 @@ const AdminDashboard = () => {
                       </Select>
                       <Button variant="outline" size="icon" disabled={!cDept}
                         onClick={() => cCollege && cYear && cDept && quickAddSubject(cCollege.id, cYear.id, cDept.id)}><Plus className="h-4 w-4" /></Button>
+                      {cSubject && (
+                        <>
+                          <Button variant="outline" size="icon" title="Rename subject" onClick={() => {
+                            const name = prompt("New subject name", cSubject.name);
+                            if (name?.trim()) store.updateSubject(cSubject.id, name.trim());
+                          }}><Pencil className="h-4 w-4" /></Button>
+                          <ConfirmDelete title={`Delete ${cSubject.name}?`}
+                            desc="This permanently removes the subject and all its videos and notes."
+                            onConfirm={() => { store.removeSubject(cCollege!.id, cYear!.id, cDept!.id, cSubject.id); setCSubjectId(""); }} />
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
