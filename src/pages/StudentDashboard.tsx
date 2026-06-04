@@ -585,7 +585,16 @@ const StudentDashboard = () => {
                           <p className="text-xs text-muted-foreground">📌 Previous Question</p>
                           <p className="text-sm font-medium">{sd.question}</p>
                           {sd.questionImageUrl && (
-                            <img src={sd.questionImageUrl} alt="Question" className="max-h-32 rounded border" />
+                            <div>
+                              <p className="text-xs text-muted-foreground mb-1">Question Image:</p>
+                              <img src={sd.questionImageUrl} alt="Question" className="max-h-40 rounded border" />
+                            </div>
+                          )}
+                          {sd.questionImageUrl2 && (
+                            <div>
+                              <p className="text-xs text-muted-foreground mb-1">Full Problem Image:</p>
+                              <img src={sd.questionImageUrl2} alt="Full problem" className="max-h-40 rounded border" />
+                            </div>
                           )}
                           <div className="p-3 rounded bg-success/10">
                             <p className="text-xs text-muted-foreground mb-1">✅ Answer by {sd.answeredBy}:</p>
@@ -595,7 +604,7 @@ const StudentDashboard = () => {
                               : sd.answerImageUrl ? [sd.answerImageUrl] : []
                             ).map((url, idx) => (
                               <div key={idx} className="mt-2">
-                                <img src={url} alt={`Answer ${idx + 1}`} className="max-h-32 rounded border" />
+                                <img src={url} alt={`Answer ${idx + 1}`} className="max-h-40 rounded border" />
                                 <a href={url} download className="inline-flex items-center gap-1 text-xs text-primary mt-1 hover:underline">
                                   <Download className="h-3 w-3" /> Download
                                 </a>
@@ -605,6 +614,7 @@ const StudentDashboard = () => {
                         </CardContent>
                       </Card>
                     ))}
+
                     <Button variant="default" size="sm" onClick={() => { setDuplicateResults(null); submitDoubt(); }}>
                       Ask New Doubt Anyway
                     </Button>
