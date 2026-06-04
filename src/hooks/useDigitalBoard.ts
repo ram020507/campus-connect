@@ -242,7 +242,7 @@ export function useDigitalBoard() {
         department: req.student_department,
         student_year: req.student_year,
         status: "active",
-      })
+      } as any)
       .select()
       .single();
 
