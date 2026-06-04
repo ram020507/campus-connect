@@ -361,18 +361,23 @@ const DigitalBoardStudent = ({ student, subjects, onBack }: DigitalBoardStudentP
 
       {/* Question panel */}
       {(board.activeSession.doubtText || board.activeSession.questionImageUrl) && (
-        <div className="p-3 rounded bg-muted text-sm space-y-2">
-          <p className="text-xs font-semibold text-primary">{student.name}</p>
+        <div className="p-3 rounded-lg border-2 border-primary/40 bg-primary/5 text-sm space-y-2 sticky top-0 z-10">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-semibold text-primary uppercase tracking-wide">📌 Your Question (Live)</p>
+            <p className="text-xs font-medium">{student.name}</p>
+          </div>
           {board.activeSession.doubtText && (
             <div>
               <p className="text-xs text-muted-foreground mb-0.5">Question:</p>
-              <p>{board.activeSession.doubtText}</p>
+              <p className="font-medium">{board.activeSession.doubtText}</p>
             </div>
           )}
           {board.activeSession.questionImageUrl && (
             <div>
               <p className="text-xs text-muted-foreground mb-1">Attachment:</p>
-              <img src={board.activeSession.questionImageUrl} alt="Question" className="max-h-32 rounded border" />
+              <a href={board.activeSession.questionImageUrl} target="_blank" rel="noreferrer">
+                <img src={board.activeSession.questionImageUrl} alt="Question" className="max-h-56 rounded border hover:opacity-90 transition" />
+              </a>
             </div>
           )}
         </div>
