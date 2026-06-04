@@ -44,17 +44,8 @@ const DigitalBoardStudent = ({ student, subjects, onBack }: DigitalBoardStudentP
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [duplicateAnswer, setDuplicateAnswer] = useState<{ question: string; answer: string } | null>(null);
-  const [now, setNow] = useState<Date>(new Date());
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Update time each minute to refresh availability window
-  useEffect(() => {
-    const t = setInterval(() => setNow(new Date()), 60_000);
-    return () => clearInterval(t);
-  }, []);
-
-  const currentHour = now.getHours();
-  const isWithinHours = currentHour >= 18 && currentHour < 21; // 6PM – 9PM
 
   // WebRTC voice
   const webrtc = useWebRTC({
