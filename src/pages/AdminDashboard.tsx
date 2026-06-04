@@ -509,8 +509,17 @@ const AdminDashboard = () => {
                     </Select>
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-muted-foreground">Subject (filter)</label>
-                    <Select value={tFilterSubject} onValueChange={setTFilterSubject} disabled={!tCollege}>
+                    <label className="text-xs font-medium text-muted-foreground">Subject Filter</label>
+                    <Select
+                      value={tFilterSubject}
+                      onValueChange={(v) => {
+                        setTFilterSubject(v);
+                        if (v !== "all" && !teacherSelectedSubjects.includes(v)) {
+                          setTeacherSelectedSubjects((prev) => [...prev, v]);
+                        }
+                      }}
+                      disabled={!tCollege}
+                    >
                       <SelectTrigger className="mt-1"><SelectValue placeholder="All subjects" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All subjects</SelectItem>
@@ -518,6 +527,7 @@ const AdminDashboard = () => {
                       </SelectContent>
                     </Select>
                   </div>
+
                 </div>
               </CardContent>
             </Card>
