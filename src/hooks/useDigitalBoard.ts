@@ -237,11 +237,12 @@ export function useDigitalBoard() {
         subject_name: req.subject_name,
         mode: req.mode,
         doubt_text: req.doubt_text,
+        question_image_url: (req as any).question_image_url,
         college_name: req.student_college,
         department: req.student_department,
         student_year: req.student_year,
         status: "active",
-      })
+      } as any)
       .select()
       .single();
 
