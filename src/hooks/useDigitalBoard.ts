@@ -354,7 +354,6 @@ export function useDigitalBoard() {
     setTeacherOffline,
     setTeacherBusy,
     updateCanvasData,
-    updateCodeContent,
     endSession,
     fetchSession,
     fetchCallRequests,
