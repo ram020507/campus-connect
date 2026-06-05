@@ -91,7 +91,7 @@ export function useDigitalBoard() {
         teacherStaffId: data.teacher_staff_id,
         teacherName: data.teacher_name,
         subjectName: data.subject_name,
-        mode: data.mode as "whiteboard" | "compiler",
+        mode: data.mode as "whiteboard",
         doubtText: data.doubt_text,
         questionImageUrl: (data as any).question_image_url || null,
         canvasData: (data.canvas_data as any) || [],
