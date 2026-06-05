@@ -186,7 +186,7 @@ const DigitalBoardTeacher = ({ teacher }: DigitalBoardTeacherProps) => {
                   <div className="flex-1">
                     <p className="font-medium text-sm">{req.studentName}</p>
                     <p className="text-xs text-muted-foreground">
-                      {req.studentDepartment} · Year {req.studentYear} · {req.mode === "whiteboard" ? "Writing Board" : "C Compiler"}
+                      {req.studentDepartment} · Year {req.studentYear} · Writing Board
                     </p>
                     {req.doubtText && (
                       <p className="text-xs mt-1 text-muted-foreground italic">"{req.doubtText}"</p>
