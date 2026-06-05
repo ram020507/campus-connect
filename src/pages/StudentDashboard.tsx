@@ -30,20 +30,6 @@ const StudentDashboard = () => {
     } catch { return null; }
   })();
 
-  const [authChecked, setAuthChecked] = useState(false);
-  useEffect(() => {
-    let cancelled = false;
-    verifySession("student").then((ok) => {
-      if (cancelled) return;
-      if (!ok) {
-        clearSession("student");
-        navigate("/student/login");
-      } else {
-        setAuthChecked(true);
-      }
-    });
-    return () => { cancelled = true; };
-  }, [navigate]);
 
   useStudentNotifications(student?.registrationNumber);
 
