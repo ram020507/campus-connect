@@ -10,7 +10,7 @@ export interface CallRequest {
   studentDepartment: string;
   studentYear: number;
   subjectName: string;
-  mode: "whiteboard" | "compiler";
+  mode: "whiteboard";
   doubtText: string | null;
   questionImageUrl: string | null;
   status: string;
