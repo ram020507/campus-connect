@@ -271,13 +271,6 @@ export function useDigitalBoard() {
       .eq("id", sessionId);
   };
 
-  // Update code content
-  const updateCodeContent = async (sessionId: string, code: string) => {
-    await supabase
-      .from("digital_board_sessions")
-      .update({ code_content: code } as any)
-      .eq("id", sessionId);
-  };
 
   // End session
   const endSession = async (sessionId: string, teacherStaffId?: string) => {
