@@ -20,20 +20,6 @@ type Tab = "content" | "students" | "teachers";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const [authChecked, setAuthChecked] = useState(false);
-  useEffect(() => {
-    let cancelled = false;
-    verifySession("admin").then((ok) => {
-      if (cancelled) return;
-      if (!ok) {
-        clearSession("admin");
-        navigate("/admin/login");
-      } else {
-        setAuthChecked(true);
-      }
-    });
-    return () => { cancelled = true; };
-  }, [navigate]);
   const store = useSupabaseData();
   const [tab, setTab] = useState<Tab>("content");
 
