@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSupabaseData, StudentAccount, TeacherAccount, getTeacherSubjects } from "@/hooks/useSupabaseData";
 import { Button } from "@/components/ui/button";
@@ -14,14 +14,32 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { verifySession, clearSession } from "@/lib/authGuard";
 
 type Tab = "content" | "students" | "teachers";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  if (typeof window !== "undefined" && sessionStorage.getItem("admin-auth") !== "true") {
-    navigate("/admin/login");
-    return null;
+  const [authChecked, setAuthChecked] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    verifySession("admin").then((ok) => {
+      if (cancelled) return;
+      if (!ok) {
+        clearSession("admin");
+        navigate("/admin/login");
+      } else {
+        setAuthChecked(true);
+      }
+    });
+    return () => { cancelled = true; };
+  }, [navigate]);
+  if (!authChecked) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
   }
   const store = useSupabaseData();
   const [tab, setTab] = useState<Tab>("content");
