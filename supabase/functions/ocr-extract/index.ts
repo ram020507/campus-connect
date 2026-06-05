@@ -6,13 +6,42 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// Restrict OCR to images served from this project's Supabase Storage,
+// to prevent SSRF and abuse of the AI Gateway credit pool.
+function isAllowedImageUrl(raw: string): boolean {
+  let url: URL;
+  try {
+    url = new URL(raw);
+  } catch {
+    return false;
+  }
+  if (url.protocol !== "https:") return false;
+  const supaUrl = Deno.env.get("SUPABASE_URL");
+  if (!supaUrl) return false;
+  try {
+    const supaHost = new URL(supaUrl).host;
+    if (url.host !== supaHost) return false;
+  } catch {
+    return false;
+  }
+  // Only allow public storage object paths
+  return url.pathname.startsWith("/storage/v1/object/");
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
     const { imageUrl } = await req.json();
-    if (!imageUrl || typeof imageUrl !== "string") {
+    if (!imageUrl || typeof imageUrl !== "string" || imageUrl.length > 2048) {
       return new Response(JSON.stringify({ error: "imageUrl is required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (!isAllowedImageUrl(imageUrl)) {
+      return new Response(JSON.stringify({ error: "imageUrl is not allowed" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -81,7 +110,7 @@ serve(async (req) => {
   } catch (e) {
     console.error("OCR error:", e);
     return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
+      JSON.stringify({ error: "OCR request failed" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

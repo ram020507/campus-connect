@@ -34,10 +34,8 @@ serve(async (req) => {
         .map((t: any) => t.email);
 
       if (emails.length > 0) {
-        // Use Lovable AI to send notification (log for now since no email service configured)
-        console.log(`[Email Notification] New doubt in ${doubt.subject_name} by ${doubt.student_name}`);
-        console.log(`Would send to teachers: ${emails.join(", ")}`);
-        console.log(`Question: ${doubt.question}`);
+        // Avoid logging teacher emails or doubt text (info leakage in shared logs)
+        console.log(`[notify-doubt] new_doubt notified=${emails.length} subject=${doubt.subject_name}`);
       }
 
       return new Response(JSON.stringify({ success: true, notifiedCount: emails.length }), {
@@ -60,9 +58,7 @@ serve(async (req) => {
       const email = student?.email;
 
       if (email) {
-        console.log(`[Email Notification] Doubt answered in ${doubt.subject_name} by ${doubt.answered_by}`);
-        console.log(`Would send to student: ${email}`);
-        console.log(`Answer: ${doubt.answer}`);
+        console.log(`[notify-doubt] doubt_answered subject=${doubt.subject_name}`);
       }
 
       return new Response(JSON.stringify({ success: true, notifiedCount: email ? 1 : 0 }), {
