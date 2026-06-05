@@ -20,20 +20,6 @@ type Tab = "content" | "students" | "teachers";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const [authChecked, setAuthChecked] = useState(false);
-  useEffect(() => {
-    let cancelled = false;
-    verifySession("admin").then((ok) => {
-      if (cancelled) return;
-      if (!ok) {
-        clearSession("admin");
-        navigate("/admin/login");
-      } else {
-        setAuthChecked(true);
-      }
-    });
-    return () => { cancelled = true; };
-  }, [navigate]);
   const store = useSupabaseData();
   const [tab, setTab] = useState<Tab>("content");
 
@@ -136,7 +122,7 @@ const AdminDashboard = () => {
     await store.addSubject(collegeId, yearId, deptId, name.trim(), semester);
   };
 
-  if (!authChecked || store.loading) {
+  if (store.loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
