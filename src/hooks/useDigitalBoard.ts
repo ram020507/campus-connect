@@ -31,7 +31,6 @@ export interface BoardSession {
   doubtText: string | null;
   questionImageUrl: string | null;
   canvasData: Stroke[];
-  codeContent: string;
   status: string;
   collegeName: string;
   department: string;
