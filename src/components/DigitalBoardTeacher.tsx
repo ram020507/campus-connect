@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import { getTeacherSubjects } from "@/hooks/useSupabaseData";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -6,7 +6,6 @@ import {
   Phone, PhoneOff, Loader2, Monitor, Check, Bell, Mic, MicOff, Lock, Unlock, Image as ImageIcon,
 } from "lucide-react";
 import DigitalWhiteboard, { type WhiteboardRef } from "@/components/DigitalWhiteboard";
-import CCompilerEditor from "@/components/CCompilerEditor";
 import { useDigitalBoard, type CallRequest } from "@/hooks/useDigitalBoard";
 import { useWebRTC } from "@/hooks/useWebRTC";
 import { supabase } from "@/integrations/supabase/client";
