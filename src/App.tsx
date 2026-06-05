@@ -24,11 +24,11 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/dashboard" element={<AuthGate role="admin" loginPath="/admin/login"><AdminDashboard /></AuthGate>} />
           <Route path="/student/login" element={<StudentLogin />} />
-          <Route path="/student/dashboard" element={<StudentDashboard />} />
+          <Route path="/student/dashboard" element={<AuthGate role="student" loginPath="/student/login"><StudentDashboard /></AuthGate>} />
           <Route path="/teacher/login" element={<TeacherLogin />} />
-          <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
+          <Route path="/teacher/dashboard" element={<AuthGate role="teacher" loginPath="/teacher/login"><TeacherDashboard /></AuthGate>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
