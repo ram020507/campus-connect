@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  GraduationCap, LogOut, MessageCircle, Send, CheckCircle2, Clock, Loader2, ArrowLeft, RefreshCw, ImagePlus, X, Download, Pencil, Lock, Eye
+  GraduationCap, LogOut, MessageCircle, Send, CheckCircle2, Clock, Loader2, ArrowLeft, RefreshCw, ImagePlus, X, Download, Pencil, Lock, Eye, FolderOpen, ChevronDown, ChevronRight
 } from "lucide-react";
 import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
@@ -53,6 +53,7 @@ const TeacherDashboard = () => {
   const [editAnswerImages, setEditAnswerImages] = useState<string[]>([]);
   const editAnswerFileRef = useRef<HTMLInputElement | null>(null);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const [expandedSubjects, setExpandedSubjects] = useState<Record<string, boolean>>({});
 
   if (!teacher) {
     navigate("/teacher/login");
@@ -372,130 +373,154 @@ const TeacherDashboard = () => {
                 </CardContent>
               </Card>
             ) : (
-              allSolvedDoubts
-                .sort((a, b) => new Date(b.answeredAt!).getTime() - new Date(a.answeredAt!).getTime())
-                .map((d) => (
-                  <Card key={d.id} className="border-success/30">
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-medium bg-primary/10 text-primary px-2 py-0.5 rounded">{d.subjectName}</span>
-                        <span className="text-xs text-muted-foreground ml-auto">
-                          Answered by {d.answeredBy} · {d.answeredAt ? new Date(d.answeredAt).toLocaleDateString() : ""}
-                        </span>
-                      </div>
-                      <p className="text-xs text-muted-foreground mb-1">
-                        Q from {d.studentName} · {d.studentDepartment} · Year {d.studentYear}
-                      </p>
-                      <p className="text-sm font-medium">{d.question}</p>
-                      {d.questionImageUrl && (
-                        <div className="mt-2">
-                          <p className="text-xs text-muted-foreground mb-1">Question Image</p>
-                          <img src={d.questionImageUrl} alt="Question" className="max-h-40 rounded border" />
-                        </div>
-                      )}
-                      {d.questionImageUrl2 && (
-                        <div className="mt-2">
-                          <p className="text-xs text-muted-foreground mb-1">Full Problem Image</p>
-                          <img src={d.questionImageUrl2} alt="Full problem" className="max-h-40 rounded border" />
-                        </div>
-                      )}
-
-                      {/* Edit mode */}
-                      {editingAnswerId === d.id ? (
-                        <div className="mt-2 space-y-2 p-3 rounded border bg-card">
-                          <Textarea
-                            value={editAnswerText}
-                            onChange={(e) => setEditAnswerText(e.target.value)}
-                            rows={3}
-                          />
-                          {/* Existing answer images */}
-                          {editAnswerImages.length > 0 && (
-                            <div className="flex flex-wrap gap-2">
-                              {editAnswerImages.map((url, idx) => (
-                                <div key={idx} className="relative inline-block">
-                                  <img src={url} alt={`Answer ${idx + 1}`} className="max-h-24 rounded border" />
-                                  <button
-                                    onClick={() => setEditAnswerImages((prev) => prev.filter((_, i) => i !== idx))}
-                                    className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1"
-                                  >
-                                    <X className="h-3 w-3" />
-                                  </button>
+              (() => {
+                const sorted = [...allSolvedDoubts].sort(
+                  (a, b) => new Date(b.answeredAt!).getTime() - new Date(a.answeredAt!).getTime()
+                );
+                const grouped = sorted.reduce<Record<string, typeof sorted>>((acc, d) => {
+                  (acc[d.subjectName] = acc[d.subjectName] || []).push(d);
+                  return acc;
+                }, {});
+                const subjectNames = Object.keys(grouped).sort((a, b) => a.localeCompare(b));
+                return subjectNames.map((subject) => {
+                  const isOpen = expandedSubjects[subject] ?? true;
+                  const doubts = grouped[subject];
+                  return (
+                    <div key={subject} className="space-y-2">
+                      <button
+                        onClick={() => setExpandedSubjects((prev) => ({ ...prev, [subject]: !isOpen }))}
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-md bg-muted/50 hover:bg-muted text-left"
+                      >
+                        {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                        <FolderOpen className="h-4 w-4 text-primary" />
+                        <span className="font-medium text-sm">{subject}</span>
+                        <span className="ml-auto text-xs text-muted-foreground">{doubts.length}</span>
+                      </button>
+                      {isOpen && (
+                        <div className="space-y-3 pl-4 border-l-2 border-muted">
+                          {doubts.map((d) => (
+                            <Card key={d.id} className="border-success/30">
+                              <CardContent className="p-4">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-xs text-muted-foreground ml-auto">
+                                    Answered by {d.answeredBy} · {d.answeredAt ? new Date(d.answeredAt).toLocaleDateString() : ""}
+                                  </span>
                                 </div>
-                              ))}
-                            </div>
-                          )}
-                          <input
-                            type="file" accept="image/*" multiple className="hidden"
-                            ref={editAnswerFileRef}
-                            onChange={async (e) => {
-                              const files = Array.from(e.target.files || []);
-                              for (const file of files) {
-                                const url = await store.uploadDoubtImage(file);
-                                if (url) setEditAnswerImages((prev) => [...prev, url]);
-                              }
-                            }}
-                          />
-                          <Button variant="outline" size="sm" onClick={() => editAnswerFileRef.current?.click()}>
-                            <ImagePlus className="h-4 w-4 mr-1" /> Add Images
-                          </Button>
-                          <div className="flex gap-2">
-                            <Button size="sm" onClick={async () => {
-                              await store.updateDoubtAnswer(d.id, {
-                                answer: editAnswerText,
-                                answerImageUrl: editAnswerImages[0] || null,
-                                answerImageUrls: editAnswerImages,
-                              });
-                              setEditingAnswerId(null);
-                            }}>Save</Button>
-                            <Button size="sm" variant="outline" onClick={() => setEditingAnswerId(null)}>Cancel</Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="mt-2 p-3 rounded bg-success/10 text-sm">
-                          <p className="text-xs text-muted-foreground mb-1">Answer:</p>
-                          <p>{d.answer}</p>
-                          {(d.answerImageUrls && d.answerImageUrls.length > 0
-                            ? d.answerImageUrls
-                            : d.answerImageUrl ? [d.answerImageUrl] : []
-                          ).map((url, idx) => (
-                            <div key={idx} className="mt-2">
-                              <img src={url} alt={`Answer attachment ${idx + 1}`} className="max-h-40 rounded border" />
-                              {/* Hide download for own uploads, show for other teachers */}
-                              {d.answeredBy !== teacher.name && (
-                                <a href={url} download className="inline-flex items-center gap-1 text-xs text-primary mt-1 hover:underline">
-                                  <Download className="h-3 w-3" /> Download
-                                </a>
-                              )}
-                            </div>
-                          ))}
-                          {/* Edit only for the teacher who answered, disabled if student viewed */}
-                          {d.answeredBy === teacher.name && (
-                            <div className="flex gap-2 mt-3">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                disabled={d.viewedByStudent}
-                                title={d.viewedByStudent ? "Editing disabled after student has viewed the answer" : "Edit your answer"}
-                                onClick={() => {
-                                  setEditingAnswerId(d.id);
-                                  setEditAnswerText(d.answer || "");
-                                  setEditAnswerImages(
-                                    d.answerImageUrls && d.answerImageUrls.length > 0
+                                <p className="text-xs text-muted-foreground mb-1">
+                                  Q from {d.studentName} · {d.studentDepartment} · Year {d.studentYear}
+                                </p>
+                                <p className="text-sm font-medium">{d.question}</p>
+                                {d.questionImageUrl && (
+                                  <div className="mt-2">
+                                    <p className="text-xs text-muted-foreground mb-1">Question Image</p>
+                                    <img src={d.questionImageUrl} alt="Question" className="max-h-40 rounded border" />
+                                  </div>
+                                )}
+                                {d.questionImageUrl2 && (
+                                  <div className="mt-2">
+                                    <p className="text-xs text-muted-foreground mb-1">Full Problem Image</p>
+                                    <img src={d.questionImageUrl2} alt="Full problem" className="max-h-40 rounded border" />
+                                  </div>
+                                )}
+
+                                {editingAnswerId === d.id ? (
+                                  <div className="mt-2 space-y-2 p-3 rounded border bg-card">
+                                    <Textarea
+                                      value={editAnswerText}
+                                      onChange={(e) => setEditAnswerText(e.target.value)}
+                                      rows={3}
+                                    />
+                                    {editAnswerImages.length > 0 && (
+                                      <div className="flex flex-wrap gap-2">
+                                        {editAnswerImages.map((url, idx) => (
+                                          <div key={idx} className="relative inline-block">
+                                            <img src={url} alt={`Answer ${idx + 1}`} className="max-h-24 rounded border" />
+                                            <button
+                                              onClick={() => setEditAnswerImages((prev) => prev.filter((_, i) => i !== idx))}
+                                              className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1"
+                                            >
+                                              <X className="h-3 w-3" />
+                                            </button>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                    <input
+                                      type="file" accept="image/*" multiple className="hidden"
+                                      ref={editAnswerFileRef}
+                                      onChange={async (e) => {
+                                        const files = Array.from(e.target.files || []);
+                                        for (const file of files) {
+                                          const url = await store.uploadDoubtImage(file);
+                                          if (url) setEditAnswerImages((prev) => [...prev, url]);
+                                        }
+                                      }}
+                                    />
+                                    <Button variant="outline" size="sm" onClick={() => editAnswerFileRef.current?.click()}>
+                                      <ImagePlus className="h-4 w-4 mr-1" /> Add Images
+                                    </Button>
+                                    <div className="flex gap-2">
+                                      <Button size="sm" onClick={async () => {
+                                        await store.updateDoubtAnswer(d.id, {
+                                          answer: editAnswerText,
+                                          answerImageUrl: editAnswerImages[0] || null,
+                                          answerImageUrls: editAnswerImages,
+                                        });
+                                        setEditingAnswerId(null);
+                                      }}>Save</Button>
+                                      <Button size="sm" variant="outline" onClick={() => setEditingAnswerId(null)}>Cancel</Button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="mt-2 p-3 rounded bg-success/10 text-sm">
+                                    <p className="text-xs text-muted-foreground mb-1">Answer:</p>
+                                    <p>{d.answer}</p>
+                                    {(d.answerImageUrls && d.answerImageUrls.length > 0
                                       ? d.answerImageUrls
                                       : d.answerImageUrl ? [d.answerImageUrl] : []
-                                  );
-                                }}
-                              >
-                                <Pencil className="h-3 w-3 mr-1" /> Edit Answer
-                                {d.viewedByStudent && <span className="ml-1 text-xs text-muted-foreground">(Viewed)</span>}
-                              </Button>
-                            </div>
-                          )}
+                                    ).map((url, idx) => (
+                                      <div key={idx} className="mt-2">
+                                        <img src={url} alt={`Answer attachment ${idx + 1}`} className="max-h-40 rounded border" />
+                                        {d.answeredBy !== teacher.name && (
+                                          <a href={url} download className="inline-flex items-center gap-1 text-xs text-primary mt-1 hover:underline">
+                                            <Download className="h-3 w-3" /> Download
+                                          </a>
+                                        )}
+                                      </div>
+                                    ))}
+                                    {d.answeredBy === teacher.name && (
+                                      <div className="flex gap-2 mt-3">
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          disabled={d.viewedByStudent}
+                                          title={d.viewedByStudent ? "Editing disabled after student has viewed the answer" : "Edit your answer"}
+                                          onClick={() => {
+                                            setEditingAnswerId(d.id);
+                                            setEditAnswerText(d.answer || "");
+                                            setEditAnswerImages(
+                                              d.answerImageUrls && d.answerImageUrls.length > 0
+                                                ? d.answerImageUrls
+                                                : d.answerImageUrl ? [d.answerImageUrl] : []
+                                            );
+                                          }}
+                                        >
+                                          <Pencil className="h-3 w-3 mr-1" /> Edit Answer
+                                          {d.viewedByStudent && <span className="ml-1 text-xs text-muted-foreground">(Viewed)</span>}
+                                        </Button>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </CardContent>
+                            </Card>
+                          ))}
                         </div>
                       )}
-                    </CardContent>
-                  </Card>
-                ))
+                    </div>
+                  );
+                });
+              })()
             )}
           </div>
         )}
