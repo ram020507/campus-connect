@@ -366,15 +366,14 @@ const DigitalBoardStudent = ({ student, subjects, onBack }: DigitalBoardStudentP
         </div>
       )}
 
-      {board.activeSession.mode === "whiteboard" ? (
-        <div className="border rounded-lg overflow-hidden" style={{ height: "calc(100vh - 240px)" }}>
-          <DigitalWhiteboard
-            ref={whiteboardRef}
-            sessionId={board.activeSession.id}
-            userId={`student-${student.registrationNumber}`}
-            disabled={isLocked}
-          />
-        </div>
+      <div className="border rounded-lg overflow-hidden" style={{ height: "calc(100vh - 240px)" }}>
+        <DigitalWhiteboard
+          ref={whiteboardRef}
+          sessionId={board.activeSession.id}
+          userId={`student-${student.registrationNumber}`}
+          disabled={isLocked}
+        />
+      </div>
     </div>
   );
 };
