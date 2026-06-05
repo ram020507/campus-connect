@@ -6,6 +6,30 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const TOKEN_TTL_SECONDS = 60 * 60 * 12; // 12 hours
+
+function b64urlEncode(bytes: Uint8Array): string {
+  let bin = "";
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+async function signToken(payload: Record<string, unknown>): Promise<string> {
+  const secret = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const body = { ...payload, exp: Math.floor(Date.now() / 1000) + TOKEN_TTL_SECONDS };
+  const payloadStr = JSON.stringify(body);
+  const payloadB64 = b64urlEncode(new TextEncoder().encode(payloadStr));
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payloadB64));
+  return `${payloadB64}.${b64urlEncode(new Uint8Array(sig))}`;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -40,8 +64,11 @@ serve(async (req) => {
         });
       }
 
+      const token = await signToken({ role: "teacher", sub: data.staff_id });
+
       return new Response(JSON.stringify({
         success: true,
+        token,
         user: {
           id: data.id,
           staffId: data.staff_id,
@@ -76,8 +103,11 @@ serve(async (req) => {
         });
       }
 
+      const token = await signToken({ role: "student", sub: data.registration_number });
+
       return new Response(JSON.stringify({
         success: true,
+        token,
         user: {
           id: data.id,
           registrationNumber: data.registration_number,
@@ -116,7 +146,9 @@ serve(async (req) => {
         });
       }
 
-      return new Response(JSON.stringify({ success: true }), {
+      const token = await signToken({ role: "admin", sub: adminUsername });
+
+      return new Response(JSON.stringify({ success: true, token }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }

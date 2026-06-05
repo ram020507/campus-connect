@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { BookOpen, Loader2, ArrowLeft, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { storeSession } from "@/lib/authGuard";
 
 const StudentLogin = () => {
   const [regNo, setRegNo] = useState("");
@@ -36,10 +37,10 @@ const StudentLogin = () => {
       const { data, error: fnError } = await supabase.functions.invoke("auth-login", {
         body: { type: "student", registrationNumber: regNo, dob },
       });
-      if (fnError || !data?.success) {
+      if (fnError || !data?.success || !data?.token) {
         setError("Invalid credentials. Contact your admin.");
       } else {
-        sessionStorage.setItem("student-auth", JSON.stringify({
+        storeSession("student", data.token, JSON.stringify({
           id: data.user.id,
           registrationNumber: data.user.registrationNumber,
           name: data.user.name,

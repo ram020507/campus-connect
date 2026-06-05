@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Shield, ArrowLeft, RefreshCw, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { storeSession } from "@/lib/authGuard";
 
 const AdminLogin = () => {
   const [username, setUsername] = useState("");
@@ -20,10 +21,10 @@ const AdminLogin = () => {
       const { data, error: fnError } = await supabase.functions.invoke("auth-login", {
         body: { type: "admin", username, password },
       });
-      if (fnError || !data?.success) {
+      if (fnError || !data?.success || !data?.token) {
         setError("Incorrect username or password");
       } else {
-        sessionStorage.setItem("admin-auth", "true");
+        storeSession("admin", data.token, "true");
         navigate("/admin/dashboard");
       }
     } catch {

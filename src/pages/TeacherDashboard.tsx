@@ -13,6 +13,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 import DigitalBoardTeacher from "@/components/DigitalBoardTeacher";
+import { verifySession, clearSession } from "@/lib/authGuard";
 
 type Section = "unclaimed" | "claimed" | "all";
 
@@ -53,13 +54,35 @@ const TeacherDashboard = () => {
   const editAnswerFileRef = useRef<HTMLInputElement | null>(null);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
+  const [authChecked, setAuthChecked] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    verifySession("teacher").then((ok) => {
+      if (cancelled) return;
+      if (!ok) {
+        clearSession("teacher");
+        navigate("/teacher/login");
+      } else {
+        setAuthChecked(true);
+      }
+    });
+    return () => { cancelled = true; };
+  }, [navigate]);
+
+  if (!authChecked) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
   if (!teacher) {
     navigate("/teacher/login");
     return null;
   }
 
   const handleLogout = () => {
-    sessionStorage.removeItem("teacher-auth");
+    clearSession("teacher");
     navigate("/");
   };
 

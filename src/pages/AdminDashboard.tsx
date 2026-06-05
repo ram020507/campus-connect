@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSupabaseData, StudentAccount, TeacherAccount, getTeacherSubjects } from "@/hooks/useSupabaseData";
 import { Button } from "@/components/ui/button";
@@ -14,15 +14,26 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { verifySession, clearSession } from "@/lib/authGuard";
 
 type Tab = "content" | "students" | "teachers";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  if (typeof window !== "undefined" && sessionStorage.getItem("admin-auth") !== "true") {
-    navigate("/admin/login");
-    return null;
-  }
+  const [authChecked, setAuthChecked] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    verifySession("admin").then((ok) => {
+      if (cancelled) return;
+      if (!ok) {
+        clearSession("admin");
+        navigate("/admin/login");
+      } else {
+        setAuthChecked(true);
+      }
+    });
+    return () => { cancelled = true; };
+  }, [navigate]);
   const store = useSupabaseData();
   const [tab, setTab] = useState<Tab>("content");
 
@@ -58,7 +69,7 @@ const AdminDashboard = () => {
   const [editingTeacher, setEditingTeacher] = useState<string | null>(null);
   const [editTeacherData, setEditTeacherData] = useState<Partial<Omit<TeacherAccount, "id">>>({});
 
-  const handleLogout = () => { sessionStorage.removeItem("admin-auth"); navigate("/"); };
+  const handleLogout = () => { clearSession("admin"); navigate("/"); };
 
   const formatDob = (val: string) => {
     let v = val.replace(/\D/g, "");
@@ -125,7 +136,7 @@ const AdminDashboard = () => {
     await store.addSubject(collegeId, yearId, deptId, name.trim(), semester);
   };
 
-  if (store.loading) {
+  if (!authChecked || store.loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
