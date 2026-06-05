@@ -27,7 +27,7 @@ export interface BoardSession {
   teacherStaffId: string;
   teacherName: string;
   subjectName: string;
-  mode: "whiteboard" | "compiler";
+  mode: "whiteboard";
   doubtText: string | null;
   questionImageUrl: string | null;
   canvasData: Stroke[];
