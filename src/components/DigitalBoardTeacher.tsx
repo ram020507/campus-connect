@@ -135,24 +135,13 @@ const DigitalBoardTeacher = ({ teacher }: DigitalBoardTeacherProps) => {
             </div>
           )}
 
-          {board.activeSession.mode === "whiteboard" ? (
-            <div className="border rounded-lg overflow-hidden" style={{ height: "60vh" }}>
-              <DigitalWhiteboard
-                ref={whiteboardRef}
-                sessionId={board.activeSession.id}
-                userId={`teacher-${teacher.staffId}`}
-              />
-            </div>
-          ) : (
-            <div style={{ height: "60vh" }}>
-              <CCompilerEditor
-                initialCode={board.activeSession.codeContent || undefined}
-                onCodeChange={(code) => {
-                  if (board.activeSession) board.updateCodeContent(board.activeSession.id, code);
-                }}
-              />
-            </div>
-          )}
+          <div className="border rounded-lg overflow-hidden" style={{ height: "60vh" }}>
+            <DigitalWhiteboard
+              ref={whiteboardRef}
+              sessionId={board.activeSession.id}
+              userId={`teacher-${teacher.staffId}`}
+            />
+          </div>
         </CardContent>
       </Card>
     );
