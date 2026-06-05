@@ -375,17 +375,6 @@ const DigitalBoardStudent = ({ student, subjects, onBack }: DigitalBoardStudentP
             disabled={isLocked}
           />
         </div>
-      ) : (
-        <div style={{ height: "calc(100vh - 240px)" }}>
-          <CCompilerEditor
-            initialCode={board.activeSession.codeContent || undefined}
-            onCodeChange={(code) => {
-              if (board.activeSession) board.updateCodeContent(board.activeSession.id, code);
-            }}
-            readOnly={isLocked}
-          />
-        </div>
-      )}
     </div>
   );
 };
