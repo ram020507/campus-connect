@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +10,6 @@ import {
   ArrowLeft, Phone, PhoneOff, Loader2, Monitor, Mic, MicOff, Upload, X, Image as ImageIcon,
 } from "lucide-react";
 import DigitalWhiteboard, { type WhiteboardRef } from "@/components/DigitalWhiteboard";
-import CCompilerEditor from "@/components/CCompilerEditor";
 import { useDigitalBoard } from "@/hooks/useDigitalBoard";
 import { useWebRTC } from "@/hooks/useWebRTC";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,7 +35,6 @@ const DigitalBoardStudent = ({ student, subjects, onBack }: DigitalBoardStudentP
   const { toast } = useToast();
   const [step, setStep] = useState<Step>("setup");
   const [selectedSubject, setSelectedSubject] = useState("");
-  const [mode, setMode] = useState<"whiteboard" | "compiler">("whiteboard");
   const [doubtInput, setDoubtInput] = useState("");
   const [callRequestId, setCallRequestId] = useState<string | null>(null);
   const [calling, setCalling] = useState(false);
@@ -167,7 +165,7 @@ const DigitalBoardStudent = ({ student, subjects, onBack }: DigitalBoardStudentP
         studentDepartment: student.department,
         studentYear: student.year,
         subjectName: selectedSubject,
-        mode,
+        mode: "whiteboard",
         doubtText: doubtInput || undefined,
         questionImageUrl: imageUrl || undefined,
       });
@@ -215,16 +213,6 @@ const DigitalBoardStudent = ({ student, subjects, onBack }: DigitalBoardStudentP
                 <SelectTrigger><SelectValue placeholder="Select subject" /></SelectTrigger>
                 <SelectContent>
                   {subjects.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-1 block">Mode</label>
-              <Select value={mode} onValueChange={(v) => setMode(v as "whiteboard" | "compiler")}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="whiteboard">Free Writing Board</SelectItem>
-                  <SelectItem value="compiler">C Compiler</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -378,26 +366,14 @@ const DigitalBoardStudent = ({ student, subjects, onBack }: DigitalBoardStudentP
         </div>
       )}
 
-      {board.activeSession.mode === "whiteboard" ? (
-        <div className="border rounded-lg overflow-hidden" style={{ height: "calc(100vh - 240px)" }}>
-          <DigitalWhiteboard
-            ref={whiteboardRef}
-            sessionId={board.activeSession.id}
-            userId={`student-${student.registrationNumber}`}
-            disabled={isLocked}
-          />
-        </div>
-      ) : (
-        <div style={{ height: "calc(100vh - 240px)" }}>
-          <CCompilerEditor
-            initialCode={board.activeSession.codeContent || undefined}
-            onCodeChange={(code) => {
-              if (board.activeSession) board.updateCodeContent(board.activeSession.id, code);
-            }}
-            readOnly={isLocked}
-          />
-        </div>
-      )}
+      <div className="border rounded-lg overflow-hidden" style={{ height: "calc(100vh - 240px)" }}>
+        <DigitalWhiteboard
+          ref={whiteboardRef}
+          sessionId={board.activeSession.id}
+          userId={`student-${student.registrationNumber}`}
+          disabled={isLocked}
+        />
+      </div>
     </div>
   );
 };

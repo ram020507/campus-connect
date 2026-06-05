@@ -10,7 +10,7 @@ export interface CallRequest {
   studentDepartment: string;
   studentYear: number;
   subjectName: string;
-  mode: "whiteboard" | "compiler";
+  mode: "whiteboard";
   doubtText: string | null;
   questionImageUrl: string | null;
   status: string;
@@ -27,11 +27,10 @@ export interface BoardSession {
   teacherStaffId: string;
   teacherName: string;
   subjectName: string;
-  mode: "whiteboard" | "compiler";
+  mode: "whiteboard";
   doubtText: string | null;
   questionImageUrl: string | null;
   canvasData: Stroke[];
-  codeContent: string;
   status: string;
   collegeName: string;
   department: string;
@@ -91,11 +90,10 @@ export function useDigitalBoard() {
         teacherStaffId: data.teacher_staff_id,
         teacherName: data.teacher_name,
         subjectName: data.subject_name,
-        mode: data.mode as "whiteboard" | "compiler",
+        mode: data.mode as "whiteboard",
         doubtText: data.doubt_text,
         questionImageUrl: (data as any).question_image_url || null,
         canvasData: (data.canvas_data as any) || [],
-        codeContent: data.code_content || "",
         status: data.status,
         collegeName: data.college_name,
         department: data.department,
@@ -116,7 +114,7 @@ export function useDigitalBoard() {
     studentDepartment: string;
     studentYear: number;
     subjectName: string;
-    mode: "whiteboard" | "compiler";
+    mode?: "whiteboard";
     doubtText?: string;
     questionImageUrl?: string;
   }) => {
@@ -273,13 +271,6 @@ export function useDigitalBoard() {
       .eq("id", sessionId);
   };
 
-  // Update code content
-  const updateCodeContent = async (sessionId: string, code: string) => {
-    await supabase
-      .from("digital_board_sessions")
-      .update({ code_content: code } as any)
-      .eq("id", sessionId);
-  };
 
   // End session
   const endSession = async (sessionId: string, teacherStaffId?: string) => {
@@ -331,7 +322,6 @@ export function useDigitalBoard() {
               doubtText: d.doubt_text,
               questionImageUrl: d.question_image_url || null,
               canvasData: d.canvas_data || [],
-              codeContent: d.code_content || "",
               status: d.status,
               collegeName: d.college_name,
               department: d.department,
@@ -364,7 +354,6 @@ export function useDigitalBoard() {
     setTeacherOffline,
     setTeacherBusy,
     updateCanvasData,
-    updateCodeContent,
     endSession,
     fetchSession,
     fetchCallRequests,

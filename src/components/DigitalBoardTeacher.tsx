@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import { getTeacherSubjects } from "@/hooks/useSupabaseData";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -6,7 +6,6 @@ import {
   Phone, PhoneOff, Loader2, Monitor, Check, Bell, Mic, MicOff, Lock, Unlock, Image as ImageIcon,
 } from "lucide-react";
 import DigitalWhiteboard, { type WhiteboardRef } from "@/components/DigitalWhiteboard";
-import CCompilerEditor from "@/components/CCompilerEditor";
 import { useDigitalBoard, type CallRequest } from "@/hooks/useDigitalBoard";
 import { useWebRTC } from "@/hooks/useWebRTC";
 import { supabase } from "@/integrations/supabase/client";
@@ -136,24 +135,13 @@ const DigitalBoardTeacher = ({ teacher }: DigitalBoardTeacherProps) => {
             </div>
           )}
 
-          {board.activeSession.mode === "whiteboard" ? (
-            <div className="border rounded-lg overflow-hidden" style={{ height: "60vh" }}>
-              <DigitalWhiteboard
-                ref={whiteboardRef}
-                sessionId={board.activeSession.id}
-                userId={`teacher-${teacher.staffId}`}
-              />
-            </div>
-          ) : (
-            <div style={{ height: "60vh" }}>
-              <CCompilerEditor
-                initialCode={board.activeSession.codeContent || undefined}
-                onCodeChange={(code) => {
-                  if (board.activeSession) board.updateCodeContent(board.activeSession.id, code);
-                }}
-              />
-            </div>
-          )}
+          <div className="border rounded-lg overflow-hidden" style={{ height: "60vh" }}>
+            <DigitalWhiteboard
+              ref={whiteboardRef}
+              sessionId={board.activeSession.id}
+              userId={`teacher-${teacher.staffId}`}
+            />
+          </div>
         </CardContent>
       </Card>
     );
@@ -198,7 +186,7 @@ const DigitalBoardTeacher = ({ teacher }: DigitalBoardTeacherProps) => {
                   <div className="flex-1">
                     <p className="font-medium text-sm">{req.studentName}</p>
                     <p className="text-xs text-muted-foreground">
-                      {req.studentDepartment} · Year {req.studentYear} · {req.mode === "whiteboard" ? "Writing Board" : "C Compiler"}
+                      {req.studentDepartment} · Year {req.studentYear} · Writing Board
                     </p>
                     {req.doubtText && (
                       <p className="text-xs mt-1 text-muted-foreground italic">"{req.doubtText}"</p>
