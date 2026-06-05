@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 
 import DigitalBoardStudent from "@/components/DigitalBoardStudent";
+import { verifySession, clearSession } from "@/lib/authGuard";
 
 type View = "dashboard" | "subjects" | "videos" | "video-player" | "doubts" | "digital-board" | "learning-feed" | "saved-doubts";
 type DoubtType = "text" | "image" | "text+image";
@@ -28,6 +29,21 @@ const StudentDashboard = () => {
       return JSON.parse(sessionStorage.getItem("student-auth") || "null");
     } catch { return null; }
   })();
+
+  const [authChecked, setAuthChecked] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    verifySession("student").then((ok) => {
+      if (cancelled) return;
+      if (!ok) {
+        clearSession("student");
+        navigate("/student/login");
+      } else {
+        setAuthChecked(true);
+      }
+    });
+    return () => { cancelled = true; };
+  }, [navigate]);
 
   useStudentNotifications(student?.registrationNumber);
 
