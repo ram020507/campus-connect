@@ -53,6 +53,7 @@ const TeacherDashboard = () => {
   const [editAnswerImages, setEditAnswerImages] = useState<string[]>([]);
   const editAnswerFileRef = useRef<HTMLInputElement | null>(null);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const [expandedSubjects, setExpandedSubjects] = useState<Record<string, boolean>>({});
 
   if (!teacher) {
     navigate("/teacher/login");
