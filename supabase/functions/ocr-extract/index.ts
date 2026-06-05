@@ -28,11 +28,54 @@ function isAllowedImageUrl(raw: string): boolean {
   return url.pathname.startsWith("/storage/v1/object/");
 }
 
+function b64urlDecode(input: string): Uint8Array {
+  const pad = input.length % 4 === 0 ? "" : "=".repeat(4 - (input.length % 4));
+  const b64 = input.replace(/-/g, "+").replace(/_/g, "/") + pad;
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes;
+}
+function b64urlEncode(bytes: Uint8Array): string {
+  let bin = "";
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+async function verifyToken(token: string, expectedRole: string): Promise<boolean> {
+  const parts = token.split(".");
+  if (parts.length !== 2) return false;
+  const [payloadB64, sigB64] = parts;
+  const secret = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!secret) return false;
+  const key = await crypto.subtle.importKey(
+    "raw", new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" }, false, ["sign"],
+  );
+  const expected = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payloadB64));
+  const expectedB64 = b64urlEncode(new Uint8Array(expected));
+  if (expectedB64.length !== sigB64.length) return false;
+  let diff = 0;
+  for (let i = 0; i < expectedB64.length; i++) diff |= expectedB64.charCodeAt(i) ^ sigB64.charCodeAt(i);
+  if (diff !== 0) return false;
+  try {
+    const payload = JSON.parse(new TextDecoder().decode(b64urlDecode(payloadB64)));
+    if (typeof payload.exp !== "number" || payload.exp < Math.floor(Date.now() / 1000)) return false;
+    if (payload.role !== expectedRole) return false;
+    return true;
+  } catch { return false; }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { imageUrl } = await req.json();
+    const { imageUrl, token, role } = await req.json();
+    if (typeof token !== "string" || typeof role !== "string" || !(await verifyToken(token, role))) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     if (!imageUrl || typeof imageUrl !== "string" || imageUrl.length > 2048) {
       return new Response(JSON.stringify({ error: "imageUrl is required" }), {
         status: 400,
