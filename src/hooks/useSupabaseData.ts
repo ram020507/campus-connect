@@ -674,8 +674,14 @@ export function useSupabaseData() {
 
   const extractOcrText = async (imageUrl: string): Promise<string> => {
     try {
+      const studentTok = sessionStorage.getItem("student-token");
+      const teacherTok = sessionStorage.getItem("teacher-token");
+      const adminTok = sessionStorage.getItem("admin-token");
+      const token = studentTok || teacherTok || adminTok;
+      const role = studentTok ? "student" : teacherTok ? "teacher" : adminTok ? "admin" : "";
+      if (!token) { console.error("OCR error: not authenticated"); return ""; }
       const { data, error } = await supabase.functions.invoke("ocr-extract", {
-        body: { imageUrl },
+        body: { imageUrl, token, role },
       });
       if (error) { console.error("OCR error:", error); return ""; }
       return data?.text || "";
