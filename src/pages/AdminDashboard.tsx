@@ -19,6 +19,10 @@ type Tab = "content" | "students" | "teachers";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  if (typeof window !== "undefined" && sessionStorage.getItem("admin-auth") !== "true") {
+    navigate("/admin/login");
+    return null;
+  }
   const store = useSupabaseData();
   const [tab, setTab] = useState<Tab>("content");
 
