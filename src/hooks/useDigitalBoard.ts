@@ -116,7 +116,7 @@ export function useDigitalBoard() {
     studentDepartment: string;
     studentYear: number;
     subjectName: string;
-    mode: "whiteboard" | "compiler";
+    mode?: "whiteboard";
     doubtText?: string;
     questionImageUrl?: string;
   }) => {
