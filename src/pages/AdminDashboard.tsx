@@ -122,7 +122,7 @@ const AdminDashboard = () => {
     await store.addSubject(collegeId, yearId, deptId, name.trim(), semester);
   };
 
-  if (!authChecked || store.loading) {
+  if (store.loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
