@@ -189,7 +189,7 @@ export function useSupabaseData() {
           id: s.id,
           registrationNumber: s.registration_number,
           name: s.name,
-          dob: s.dob,
+          dob: "",
           email: s.email || "",
           collegeName: s.college_name,
           department: s.department,
@@ -202,7 +202,7 @@ export function useSupabaseData() {
           id: t.id,
           staffId: t.staff_id,
           name: t.name,
-          dob: t.dob,
+          dob: "",
           email: t.email || "",
           collegeName: t.college_name,
           subjectName: t.subject_name,
@@ -461,7 +461,7 @@ export function useSupabaseData() {
 
     if (updates.registrationNumber !== undefined) mapped.registration_number = updates.registrationNumber;
     if (updates.name !== undefined) mapped.name = updates.name;
-    if (updates.dob !== undefined) mapped.dob = updates.dob;
+    if (updates.dob !== undefined && updates.dob !== "") mapped.dob = updates.dob;
     if (updates.email !== undefined) mapped.email = updates.email || null;
     if (updates.collegeName !== undefined) mapped.college_name = updates.collegeName;
     if (updates.department !== undefined) mapped.department = updates.department;
@@ -509,7 +509,7 @@ export function useSupabaseData() {
 
     if (updates.staffId !== undefined) mapped.staff_id = updates.staffId;
     if (updates.name !== undefined) mapped.name = updates.name;
-    if (updates.dob !== undefined) mapped.dob = updates.dob;
+    if (updates.dob !== undefined && updates.dob !== "") mapped.dob = updates.dob;
     if (updates.email !== undefined) mapped.email = updates.email || null;
     if (updates.collegeName !== undefined) mapped.college_name = updates.collegeName;
     if (updates.subjectName !== undefined) mapped.subject_name = updates.subjectName;
