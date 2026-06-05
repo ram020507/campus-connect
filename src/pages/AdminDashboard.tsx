@@ -69,7 +69,7 @@ const AdminDashboard = () => {
   const [editingTeacher, setEditingTeacher] = useState<string | null>(null);
   const [editTeacherData, setEditTeacherData] = useState<Partial<Omit<TeacherAccount, "id">>>({});
 
-  const handleLogout = () => { sessionStorage.removeItem("admin-auth"); navigate("/"); };
+  const handleLogout = () => { clearSession("admin"); navigate("/"); };
 
   const formatDob = (val: string) => {
     let v = val.replace(/\D/g, "");
@@ -136,7 +136,7 @@ const AdminDashboard = () => {
     await store.addSubject(collegeId, yearId, deptId, name.trim(), semester);
   };
 
-  if (store.loading) {
+  if (!authChecked || store.loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
