@@ -34,13 +34,6 @@ const AdminDashboard = () => {
     });
     return () => { cancelled = true; };
   }, [navigate]);
-  if (!authChecked) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
   const store = useSupabaseData();
   const [tab, setTab] = useState<Tab>("content");
 
