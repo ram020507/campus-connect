@@ -35,7 +35,6 @@ const DigitalBoardStudent = ({ student, subjects, onBack }: DigitalBoardStudentP
   const { toast } = useToast();
   const [step, setStep] = useState<Step>("setup");
   const [selectedSubject, setSelectedSubject] = useState("");
-  const [mode, setMode] = useState<"whiteboard" | "compiler">("whiteboard");
   const [doubtInput, setDoubtInput] = useState("");
   const [callRequestId, setCallRequestId] = useState<string | null>(null);
   const [calling, setCalling] = useState(false);
