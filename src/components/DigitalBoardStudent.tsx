@@ -165,7 +165,7 @@ const DigitalBoardStudent = ({ student, subjects, onBack }: DigitalBoardStudentP
         studentDepartment: student.department,
         studentYear: student.year,
         subjectName: selectedSubject,
-        mode,
+        mode: "whiteboard",
         doubtText: doubtInput || undefined,
         questionImageUrl: imageUrl || undefined,
       });
