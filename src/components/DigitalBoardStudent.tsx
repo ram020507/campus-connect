@@ -217,16 +217,6 @@ const DigitalBoardStudent = ({ student, subjects, onBack }: DigitalBoardStudentP
               </Select>
             </div>
             <div>
-              <label className="text-sm font-medium mb-1 block">Mode</label>
-              <Select value={mode} onValueChange={(v) => setMode(v as "whiteboard" | "compiler")}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="whiteboard">Free Writing Board</SelectItem>
-                  <SelectItem value="compiler">C Compiler</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
               <label className="text-sm font-medium mb-1 block">Your Doubt (optional)</label>
               <Textarea
                 placeholder="Describe your doubt..."
