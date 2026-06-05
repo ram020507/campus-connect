@@ -11,6 +11,7 @@ import StudentDashboard from "./pages/StudentDashboard";
 import TeacherLogin from "./pages/TeacherLogin";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import NotFound from "./pages/NotFound";
+import AuthGate from "./components/AuthGate";
 
 const queryClient = new QueryClient();
 
