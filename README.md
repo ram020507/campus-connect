@@ -1,73 +1,230 @@
-# Welcome to your Lovable project
+Campus Connect
 
-## Project info
+Overview
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+Campus Connect is a centralized learning platform designed for college students and teachers.
 
-## How can I edit this code?
+Many students miss classes due to internships, workshops, sports events, symposiums, medical leave, and other academic activities. During examinations, students often struggle to find the correct study materials and solutions for doubts.
 
-There are several ways of editing your application.
+Campus Connect solves this problem by providing a single platform for lecture videos, study materials, doubt clarification, and shared knowledge.
 
-**Use Lovable**
+---
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+Main Objectives
 
-Changes made via Lovable will be committed automatically to this repo.
+- Provide subject-wise lecture videos and notes.
+- Help students learn from previously solved doubts.
+- Reduce repeated doubts.
+- Enable efficient doubt clarification.
+- Support learning anytime and anywhere.
+- Improve academic performance and understanding.
 
-**Use your preferred IDE**
+---
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+Student Panel Features
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+1. Video Lecture Module
 
-Follow these steps:
+Students can:
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+- Select Semester
+- Select Subject
+- Watch Lecture Videos
+- Access Subject-wise Notes
+- Search Videos by Topic
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+---
 
-# Step 3: Install the necessary dependencies.
-npm i
+2. Doubt System
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+Students can ask doubts using:
 
-**Edit a file directly in GitHub**
+Text Doubt
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+- Enter doubt using text only.
 
-**Use GitHub Codespaces**
+Image Doubt
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+- Upload a single image containing the question.
 
-## What technologies are used for this project?
+Text + 2 Image Doubt
 
-This project is built with:
+1st Image – Question Image
 
-- Vite
-- TypeScript
+Contains only the main question.
+
+2nd Image – Full Problem Image
+
+Contains:
+
+- Full derivation
+- Rough work
+- Equations
+- Complete problem statement
+
+Text Input
+
+Contains:
+
+- Actual doubt description
+- Step not understood
+- Explanation required
+
+---
+
+Previous Doubt Matching
+
+The system compares new doubts with previously solved doubts.
+
+Comparison Rules:
+
+- Same College
+- Same Department
+- Same Year
+- Same Subject
+
+If a match is found:
+
+- Show Previous Question
+- Show Previous Answer
+- Show Previous Images
+
+without sending the doubt to teachers again.
+
+---
+
+3. Shared Knowledge
+
+Store and reuse solved doubts.
+
+Features:
+
+- Search by keywords
+- Subject-wise filtering
+- Recent solved doubts feed
+- Save Doubt option
+- Saved Doubts folder
+
+---
+
+Teacher Panel Features
+
+Doubt Management
+
+Teachers can:
+
+- Receive doubts
+- View uploaded images
+- Answer using text
+- Upload answer images
+
+---
+
+Teacher Availability
+
+Teachers can set:
+
+- IN Status
+- OUT Status
+
+---
+
+Admin Panel Features
+
+Content Management
+
+Manage:
+
+- Colleges
+- Years
+- Departments
+- Subjects
+- Videos
+- Notes
+
+Features:
+
+- Add
+- Edit
+- Delete
+
+---
+
+Student Management
+
+Manage:
+
+- Student Accounts
+- Registration Number
+- Date of Birth
+- Department Assignment
+
+Features:
+
+- Create
+- Edit
+- Delete
+
+---
+
+Teacher Management
+
+Manage:
+
+- Teacher Accounts
+- Staff ID
+- Assigned Subjects
+
+Features:
+
+- Create
+- Edit
+- Delete
+- Multi-Subject Assignment
+
+---
+
+Technologies Used
+
+- HTML
+- CSS
+- JavaScript
 - React
-- shadcn-ui
-- Tailwind CSS
+- Node.js
+- Supabase
+- GitHub
 
-## How can I deploy this project?
+---
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+Future Enhancements
 
-## Can I connect a custom domain to my Lovable project?
+Digital Board
 
-Yes, you can!
+The Digital Board feature will be implemented after the core platform is tested and validated in a real college environment.
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+Planned Features:
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+- Live student-teacher doubt sessions
+- Question image sharing during sessions
+- Free Writing Board
+- Teacher availability management
+- Session recording
+- Multi-user support
+- Whiteboard export
+
+---
+
+Other Future Enhancements
+
+- Mobile Application
+- ERP Integration
+- Notification System
+- Advanced Analytics Dashboard
+- AI-Based Doubt Matching
+- Semantic Search
+
+---
+
+Goal
+
+Campus Connect aims to create a smart learning ecosystem that helps students access learning resources, solve doubts efficiently, and learn from previously solved questions while reducing repeated doubts and improving academic performance.
