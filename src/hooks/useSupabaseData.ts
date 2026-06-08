@@ -556,7 +556,7 @@ export function useSupabaseData() {
     } as any).select("id").single();
     if (!error && data) {
       // Fire-and-forget email notification
-      supabase.functions.invoke("notify-doubt", { body: { type: "new_doubt", doubtId: data.id } }).catch(console.error);
+      invokeNotify({ type: "new_doubt", doubtId: data.id });
       await fetchAll();
     }
   };
