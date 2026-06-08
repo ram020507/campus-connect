@@ -203,7 +203,7 @@ export function useSupabaseData() {
           staffId: t.staff_id,
           name: t.name,
           dob: "",
-          email: t.email || "",
+          email: "",
           collegeName: t.college_name,
           subjectName: t.subject_name,
         }))
