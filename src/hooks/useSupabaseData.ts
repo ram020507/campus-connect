@@ -1,6 +1,24 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
+function getSessionAuth(): { token: string; role: "student" | "teacher" | "admin" } | null {
+  const s = sessionStorage.getItem("student-token");
+  if (s) return { token: s, role: "student" };
+  const t = sessionStorage.getItem("teacher-token");
+  if (t) return { token: t, role: "teacher" };
+  const a = sessionStorage.getItem("admin-token");
+  if (a) return { token: a, role: "admin" };
+  return null;
+}
+
+function invokeNotify(body: Record<string, unknown>) {
+  const auth = getSessionAuth();
+  if (!auth) return;
+  supabase.functions
+    .invoke("notify-doubt", { body: { ...body, token: auth.token, role: auth.role } })
+    .catch(console.error);
+}
+
 // Types matching the nested structure the UI expects
 export interface VideoLecture {
   id: string;
