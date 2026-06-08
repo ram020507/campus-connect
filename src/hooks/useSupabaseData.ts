@@ -581,7 +581,7 @@ export function useSupabaseData() {
       status: "solved",
     } as any).eq("id", doubtId);
     // Fire-and-forget email notification
-    supabase.functions.invoke("notify-doubt", { body: { type: "doubt_answered", doubtId } }).catch(console.error);
+    invokeNotify({ type: "doubt_answered", doubtId });
     await fetchAll();
   };
 
