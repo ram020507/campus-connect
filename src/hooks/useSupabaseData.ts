@@ -1,6 +1,24 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
+function getSessionAuth(): { token: string; role: "student" | "teacher" | "admin" } | null {
+  const s = sessionStorage.getItem("student-token");
+  if (s) return { token: s, role: "student" };
+  const t = sessionStorage.getItem("teacher-token");
+  if (t) return { token: t, role: "teacher" };
+  const a = sessionStorage.getItem("admin-token");
+  if (a) return { token: a, role: "admin" };
+  return null;
+}
+
+function invokeNotify(body: Record<string, unknown>) {
+  const auth = getSessionAuth();
+  if (!auth) return;
+  supabase.functions
+    .invoke("notify-doubt", { body: { ...body, token: auth.token, role: auth.role } })
+    .catch(console.error);
+}
+
 // Types matching the nested structure the UI expects
 export interface VideoLecture {
   id: string;
@@ -126,8 +144,8 @@ export function useSupabaseData() {
           supabase.from("subjects").select("*"),
           supabase.from("videos").select("*"),
           supabase.from("video_files").select("*"),
-          supabase.from("students").select("id, registration_number, name, email, college_name, department, year"),
-          supabase.from("teachers").select("id, staff_id, name, email, college_name, subject_name"),
+          supabase.from("students").select("id, registration_number, name, college_name, department, year"),
+          supabase.from("teachers").select("id, staff_id, name, college_name, subject_name"),
           supabase.from("doubts").select("*"),
           supabase.from("saved_doubts").select("*"),
           supabase.from("doubt_helpful").select("*"),
@@ -190,7 +208,7 @@ export function useSupabaseData() {
           registrationNumber: s.registration_number,
           name: s.name,
           dob: "",
-          email: s.email || "",
+          email: "",
           collegeName: s.college_name,
           department: s.department,
           year: s.year,
@@ -203,7 +221,7 @@ export function useSupabaseData() {
           staffId: t.staff_id,
           name: t.name,
           dob: "",
-          email: t.email || "",
+          email: "",
           collegeName: t.college_name,
           subjectName: t.subject_name,
         }))
@@ -538,7 +556,7 @@ export function useSupabaseData() {
     } as any).select("id").single();
     if (!error && data) {
       // Fire-and-forget email notification
-      supabase.functions.invoke("notify-doubt", { body: { type: "new_doubt", doubtId: data.id } }).catch(console.error);
+      invokeNotify({ type: "new_doubt", doubtId: data.id });
       await fetchAll();
     }
   };
@@ -563,7 +581,7 @@ export function useSupabaseData() {
       status: "solved",
     } as any).eq("id", doubtId);
     // Fire-and-forget email notification
-    supabase.functions.invoke("notify-doubt", { body: { type: "doubt_answered", doubtId } }).catch(console.error);
+    invokeNotify({ type: "doubt_answered", doubtId });
     await fetchAll();
   };
 
@@ -604,7 +622,7 @@ export function useSupabaseData() {
     mapped.answer_image_urls = [];
     await (supabase.from("doubts").update as any)(mapped).eq("id", doubtId);
     // Resend notification
-    supabase.functions.invoke("notify-doubt", { body: { type: "new_doubt", doubtId } }).catch(console.error);
+    invokeNotify({ type: "new_doubt", doubtId });
     await fetchAll();
   };
 
