@@ -190,7 +190,7 @@ export function useSupabaseData() {
           registrationNumber: s.registration_number,
           name: s.name,
           dob: "",
-          email: s.email || "",
+          email: "",
           collegeName: s.college_name,
           department: s.department,
           year: s.year,
