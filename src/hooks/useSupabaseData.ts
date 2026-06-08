@@ -622,7 +622,7 @@ export function useSupabaseData() {
     mapped.answer_image_urls = [];
     await (supabase.from("doubts").update as any)(mapped).eq("id", doubtId);
     // Resend notification
-    supabase.functions.invoke("notify-doubt", { body: { type: "new_doubt", doubtId } }).catch(console.error);
+    invokeNotify({ type: "new_doubt", doubtId });
     await fetchAll();
   };
 
