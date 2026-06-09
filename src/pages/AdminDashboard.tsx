@@ -515,9 +515,7 @@ const AdminDashboard = () => {
                       value={tFilterSubject}
                       onValueChange={(v) => {
                         setTFilterSubject(v);
-                        if (v !== "all" && !teacherSelectedSubjects.includes(v)) {
-                          setTeacherSelectedSubjects((prev) => [...prev, v]);
-                        }
+                        setTeacherSelectedSubjects(v === "all" ? [] : [v]);
                       }}
                       disabled={!tCollege}
                     >
