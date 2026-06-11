@@ -7,7 +7,6 @@ When a student submits a doubt, it is automatically sent to all teachers assigne
 
 If a similar doubt already exists, students can instantly view the previous solution without waiting for a new response. The platform aims to reduce repeated doubts, improve learning accessibility, and provide a structured educational experience for students.
 
-The platform aims to reduce repeated doubts, improve learning accessibility, and provide a structured educational experience for students.
 
 ## Features
 
