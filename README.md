@@ -1,230 +1,100 @@
-Campus Connect
+## Campus Connect
 
-Overview
+## Overview
 
 Campus Connect is a centralized learning platform designed for college students and teachers.
+Many students miss classes due to internships, workshops, sports events, symposiums, medical leave, placements, and other academic activities. Campus Connect helps students access learning resources, study materials, and doubt clarification through a single platform.
+The platform aims to reduce repeated doubts, improve learning accessibility, and provide a structured educational experience for students.
 
-Many students miss classes due to internships, workshops, sports events, symposiums, medical leave, and other academic activities. During examinations, students often struggle to find the correct study materials and solutions for doubts.
 
-Campus Connect solves this problem by providing a single platform for lecture videos, study materials, doubt clarification, and shared knowledge.
 
----
+## Features
 
-Main Objectives
+## Student Panel
 
-- Provide subject-wise lecture videos and notes.
-- Help students learn from previously solved doubts.
-- Reduce repeated doubts.
-- Enable efficient doubt clarification.
-- Support learning anytime and anywhere.
-- Improve academic performance and understanding.
+- Subject-wise Lecture Videos
+- Study Materials
+- Doubt System
+- Previous Doubt Matching
+- Learning feed Section
+- Saved Doubts Feature
+- Semester-wise Content Organization
 
----
+### Teacher Panel
 
-Student Panel Features
+- Receive Student Doubts
+- Answer Doubts Using Text
+- Upload Answer Images
+- Manage Subject-wise Doubts
 
-1. Video Lecture Module
+## Admin Panel
 
-Students can:
+- College Management
+- Content Management
+- Student Management
+- Teacher Management
 
-- Select Semester
-- Select Subject
-- Watch Lecture Videos
-- Access Subject-wise Notes
-- Search Videos by Topic
+## Technologies Used
 
----
-
-2. Doubt System
-
-Students can ask doubts using:
-
-Text Doubt
-
-- Enter doubt using text only.
-
-Image Doubt
-
-- Upload a single image containing the question.
-
-Text + 2 Image Doubt
-
-1st Image – Question Image
-
-Contains only the main question.
-
-2nd Image – Full Problem Image
-
-Contains:
-
-- Full derivation
-- Rough work
-- Equations
-- Complete problem statement
-
-Text Input
-
-Contains:
-
-- Actual doubt description
-- Step not understood
-- Explanation required
-
----
-
-Previous Doubt Matching
-
-The system compares new doubts with previously solved doubts.
-
-Comparison Rules:
-
-- Same College
-- Same Department
-- Same Year
-- Same Subject
-
-If a match is found:
-
-- Show Previous Question
-- Show Previous Answer
-- Show Previous Images
-
-without sending the doubt to teachers again.
-
----
-
-3. Shared Knowledge
-
-Store and reuse solved doubts.
-
-Features:
-
-- Search by keywords
-- Subject-wise filtering
-- Recent solved doubts feed
-- Save Doubt option
-- Saved Doubts folder
-
----
-
-Teacher Panel Features
-
-Doubt Management
-
-Teachers can:
-
-- Receive doubts
-- View uploaded images
-- Answer using text
-- Upload answer images
-
----
-
-Teacher Availability
-
-Teachers can set:
-
-- IN Status
-- OUT Status
-
----
-
-Admin Panel Features
-
-Content Management
-
-Manage:
-
-- Colleges
-- Years
-- Departments
-- Subjects
-- Videos
-- Notes
-
-Features:
-
-- Add
-- Edit
-- Delete
-
----
-
-Student Management
-
-Manage:
-
-- Student Accounts
-- Registration Number
-- Date of Birth
-- Department Assignment
-
-Features:
-
-- Create
-- Edit
-- Delete
-
----
-
-Teacher Management
-
-Manage:
-
-- Teacher Accounts
-- Staff ID
-- Assigned Subjects
-
-Features:
-
-- Create
-- Edit
-- Delete
-- Multi-Subject Assignment
-
----
-
-Technologies Used
-
-- HTML
-- CSS
-- JavaScript
 - React
-- Node.js
+- TypeScript
+- Vite
+- Tailwind CSS
 - Supabase
+- Node.js
 - GitHub
 
 ---
 
-Future Enhancements
+## Installation
 
-Digital Board
+# Clone the Repository
 
-The Digital Board feature will be implemented after the core platform is tested and validated in a real college environment.
+### Install Dependencies
 
-Planned Features:
+<img width="789" height="359" alt="Screenshot 2026-06-11 190533" src="https://github.com/user-attachments/assets/b63a3573-5d88-4276-aaa6-47d95ebee29a" />
 
-- Live student-teacher doubt sessions
-- Question image sharing during sessions
-- Free Writing Board
-- Teacher availability management
-- Session recording
-- Multi-user support
-- Whiteboard export
 
----
+ # Run the Development Server
 
-Other Future Enhancements
+# Installation Output
 
-- Mobile Application
-- ERP Integration
-- Notification System
-- Advanced Analytics Dashboard
-- AI-Based Doubt Matching
-- Semantic Search
+<img width="1919" height="1057" alt="Screenshot 2026-06-11 190814" src="https://github.com/user-attachments/assets/a6434b5e-51a1-4f7b-973a-875d06cf558f" />
 
----
 
-Goal
+## Open in Browser
 
-Campus Connect aims to create a smart learning ecosystem that helps students access learning resources, solve doubts efficiently, and learn from previously solved questions while reducing repeated doubts and improving academic performance.
+After running the project, Vite will generate a local URL.
+
+Example:
+
+```text
+http://localhost:8081/
+```
+
+Open the generated URL in your browser.
+
+## Project Structure
+
+```text
+camp-connect/
+│
+├── public/
+├── src/
+├── supabase/
+├── package.json
+├── vite.config.ts
+└── README.md
+```
+## Future Enhancements
+
+* Digital Board
+* Mobile Application
+* ERP Integration
+* Notification System
+
+
+
+## Goal
+
+Campus Connect aims to create a centralized learning ecosystem where students can access lecture materials, clarify doubts, and learn from previously solved questions while improving overall academic performance.
