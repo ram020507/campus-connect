@@ -47,12 +47,11 @@ The platform aims to reduce repeated doubts, improve learning accessibility, and
 ## Installation
 
 Run the following commands:
-```
+
 git clone https://github.com/ram020507/camp-conect.git
 cd camp-conect
 npm install
 npm run dev
-```
 
 ## Installation Output
 
