@@ -3,10 +3,9 @@
 ## Overview
 
 Campus Connect is a centralized learning platform designed for college students and teachers.
-Many students miss classes due to internships, workshops, sports events, symposiums, medical leave, placements, and other academic activities. Campus Connect helps students access learning resources, study materials, and doubt clarification through a single platform.
+Many students miss classes due to internships, workshops, sports events, symposiums, medical leave, placements, and other academic activities. Campus Connect helps students access learning resources, study materials, and doubt clarification through a single platform. and study materials uploaded by the students' own college teachers.
+When a student submits a doubt, it is automatically sent to all teachers assigned to that subject. Any available teacher can answer the doubt, and the solution is stored for future reference. If a similar doubt already exists, students can instantly view the previous solution without waiting for a new response. 
 The platform aims to reduce repeated doubts, improve learning accessibility, and provide a structured educational experience for students.
-
-
 
 ## Features
 
@@ -20,7 +19,7 @@ The platform aims to reduce repeated doubts, improve learning accessibility, and
 - Saved Doubts Feature
 - Semester-wise Content Organization
 
-### Teacher Panel
+## Teacher Panel
 
 - Receive Student Doubts
 - Answer Doubts Using Text
@@ -45,22 +44,19 @@ The platform aims to reduce repeated doubts, improve learning accessibility, and
 - GitHub
 
 ---
-
 ## Installation
 
-# Clone the Repository
+Run the following commands:
+```
+git clone https://github.com/ram020507/camp-conect.git
+cd camp-conect
+npm install
+npm run dev
+```
 
-### Install Dependencies
+## Installation Output
 
-<img width="789" height="359" alt="Screenshot 2026-06-11 190533" src="https://github.com/user-attachments/assets/b63a3573-5d88-4276-aaa6-47d95ebee29a" />
-
-
- # Run the Development Server
-
-# Installation Output
-
-<img width="1919" height="1057" alt="Screenshot 2026-06-11 190814" src="https://github.com/user-attachments/assets/a6434b5e-51a1-4f7b-973a-875d06cf558f" />
-
+<img width="1919" height="1057" alt="Installation Output" src="https://github.com/user-attachments/assets/a6434b5e-51a1-4f7b-973a-875d06cf558f" />
 
 ## Open in Browser
 
@@ -68,9 +64,7 @@ After running the project, Vite will generate a local URL.
 
 Example:
 
-
 http://localhost:8081/
-```
 
 Open the generated URL in your browser.
 
@@ -85,8 +79,11 @@ camp-connect/
 ├── package.json
 ├── vite.config.ts
 └── README.md
-```
+
 ## Future Enhancements
+
+This features will be implemented after validating the core platform in a real college environment.
+
 
 * Digital Board
 * Mobile Application
@@ -94,7 +91,6 @@ camp-connect/
 * Notification System
 
 
-
 ## Goal
 
-Campus Connect aims to create a centralized learning ecosystem where students can access lecture materials, clarify doubts, and learn from previously solved questions while improving overall academic performance.
+The goal of Campus Connect is to integrate with existing college ERP platforms and provide a centralized learning environment where students can access lecture videos, study materials, and doubt clarification from their own college teachers.
