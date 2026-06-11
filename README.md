@@ -68,7 +68,7 @@ After running the project, Vite will generate a local URL.
 
 Example:
 
-```text
+
 http://localhost:8081/
 ```
 
@@ -76,7 +76,7 @@ Open the generated URL in your browser.
 
 ## Project Structure
 
-```text
+
 camp-connect/
 │
 ├── public/
