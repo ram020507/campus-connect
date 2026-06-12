@@ -1,12 +1,18 @@
 ## Campus Connect
+
+### Overview
+
 ## Overview
 
-
-Campus Connect is a centralized learning platform for college students and teachers. It provides subject-wise lecture videos, study materials, and a doubt clarification system in a single platform.
+Campus Connect is a centralized learning platform for college students and teachers. It provides subject-wise lecture videos, study materials, and a doubt clarification system on a single platform.
 
 Students can access learning content uploaded by their own college teachers, helping them continue learning even when they miss classes due to internships, workshops, sports events, placements, medical leave, or other academic activities.
 
+### Doubt System
+
 When a student submits a doubt, it is sent to all teachers assigned to that subject. Any available teacher can claim and answer the doubt, and the request is automatically removed from other teachers to avoid duplicate responses.
+
+### Learning Feed
 
 Solved doubts are shared with students of the same department and year through the Learning Feed and are stored for future reference. If a similar doubt already exists, students can instantly view the previous solution without waiting for a new response.
 
