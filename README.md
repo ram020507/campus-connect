@@ -14,7 +14,7 @@ Campus Connect helps reduce repeated doubts, improve collaboration between stude
 
 ## Features
 
-## Student Panel
+### Student Panel
 
 - Subject-wise Lecture Videos
 - Study Materials
@@ -24,14 +24,14 @@ Campus Connect helps reduce repeated doubts, improve collaboration between stude
 - Saved Doubts Feature
 - Semester-wise Content Organization
 
-## Teacher Panel
+### Teacher Panel
 
 - Receive Student Doubts
 - Answer Doubts Using Text
 - Upload Answer Images
 - Manage Subject-wise Doubts
 
-## Admin Panel
+### Admin Panel
 
 - College Management
 - Content Management
@@ -89,15 +89,15 @@ camp-connect/
 ```
 
 ## Demo Credentials
-## Admin
 
-Username: ram
-Password: ram020507
+### Admin
+
+- Username: ram
+- Password: ram020507
 
 ## Future Enhancements
 
-This features will be implemented after validating the core platform in a real college environment.
-
+The following features will be implemented after validating the core platform in a real college environment:
 
 * Digital Board
 * Mobile Application
