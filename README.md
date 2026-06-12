@@ -91,7 +91,7 @@ This features will be implemented after validating the core platform in a real c
 * Digital Board
 * Mobile Application
 * ERP Integration
-* Notification System
+
 
 
 ## Goal
