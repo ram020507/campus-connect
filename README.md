@@ -83,6 +83,13 @@ camp-connect/
 ├── vite.config.ts
 └── README.md
 ```
+
+## Demo Credentials
+## Admin
+
+Username: ram
+Password: ram020507
+
 ## Future Enhancements
 
 This features will be implemented after validating the core platform in a real college environment.
