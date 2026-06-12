@@ -1,12 +1,16 @@
 ## Campus Connect
-
 ## Overview
-Campus Connect is a centralized learning platform designed for college students and teachers. Many students miss classes due to internships, workshops, sports events, symposiums, medical leave, placements, and other academic activities. Campus Connect helps students access learning resources, study materials, and doubt clarification through a single platform. Students can access subject-wise lecture videos and study materials uploaded by their own college teachers.
 
-When a student submits a doubt, it is automatically sent to all teachers assigned to that subject. Any available teacher can claim the doubt. Once a teacher claims it, the doubt is automatically removed from the remaining teachers of the same subject to avoid duplicate responses. After the teacher answers the doubt, the solution is shared with students belonging to the same department and year through the Learning Feed section. The solved doubt is also stored for future reference.
 
-If a similar doubt already exists, students can instantly view the previous solution without waiting for a new response. The platform aims to reduce repeated doubts, improve learning accessibility, and provide a structured educational experience for students.
+Campus Connect is a centralized learning platform for college students and teachers. It provides subject-wise lecture videos, study materials, and a doubt clarification system in a single platform.
 
+Students can access learning content uploaded by their own college teachers, helping them continue learning even when they miss classes due to internships, workshops, sports events, placements, medical leave, or other academic activities.
+
+When a student submits a doubt, it is sent to all teachers assigned to that subject. Any available teacher can claim and answer the doubt, and the request is automatically removed from other teachers to avoid duplicate responses.
+
+Solved doubts are shared with students of the same department and year through the Learning Feed and are stored for future reference. If a similar doubt already exists, students can instantly view the previous solution without waiting for a new response.
+
+Campus Connect helps reduce repeated doubts, improve collaboration between students and teachers, provide easy access to learning resources, and support self-learning. The long-term goal is to integrate Campus Connect with existing college ERP platforms to create a complete academic learning ecosystem.
 
 ## Features
 
