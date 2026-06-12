@@ -2,8 +2,6 @@
 
 ### Overview
 
-## Overview
-
 Campus Connect is a centralized learning platform for college students and teachers. It provides subject-wise lecture videos, study materials, and a doubt clarification system on a single platform.
 
 Students can access learning content uploaded by their own college teachers, helping them continue learning even when they miss classes due to internships, workshops, sports events, placements, medical leave, or other academic activities.
