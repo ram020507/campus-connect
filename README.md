@@ -103,10 +103,10 @@ camp-connect/
 
 The following features will be implemented after validating the core platform in a real college environment:
 
-Digital Board
-Semantic Doubt Matching
-Mobile Application
-ERP Integration
+- Digital Board
+- Semantic Doubt Matching
+- Mobile Application
+- ERP Integration
 
 ## Goal
 
