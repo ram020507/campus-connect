@@ -318,6 +318,73 @@ export type Database = {
         }
         Relationships: []
       }
+      exam_prep_files: {
+        Row: {
+          file_name: string
+          file_type: string
+          file_url: string
+          id: string
+          subject_id: string
+          uploaded_at: string
+        }
+        Insert: {
+          file_name: string
+          file_type: string
+          file_url: string
+          id?: string
+          subject_id: string
+          uploaded_at?: string
+        }
+        Update: {
+          file_name?: string
+          file_type?: string
+          file_url?: string
+          id?: string
+          subject_id?: string
+          uploaded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_prep_files_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exam_prep_videos: {
+        Row: {
+          added_at: string
+          id: string
+          subject_id: string
+          title: string
+          url: string
+        }
+        Insert: {
+          added_at?: string
+          id?: string
+          subject_id: string
+          title: string
+          url: string
+        }
+        Update: {
+          added_at?: string
+          id?: string
+          subject_id?: string
+          title?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_prep_videos_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       saved_doubts: {
         Row: {
           created_at: string
@@ -382,6 +449,41 @@ export type Database = {
           year?: number
         }
         Relationships: []
+      }
+      subject_notes: {
+        Row: {
+          file_name: string
+          file_type: string
+          file_url: string
+          id: string
+          subject_id: string
+          uploaded_at: string
+        }
+        Insert: {
+          file_name: string
+          file_type: string
+          file_url: string
+          id?: string
+          subject_id: string
+          uploaded_at?: string
+        }
+        Update: {
+          file_name?: string
+          file_type?: string
+          file_url?: string
+          id?: string
+          subject_id?: string
+          uploaded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subject_notes_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       subjects: {
         Row: {
