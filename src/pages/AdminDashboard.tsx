@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { verifySession, clearSession } from "@/lib/authGuard";
 
-type Tab = "content" | "students" | "teachers";
+type Tab = "content" | "exam" | "students" | "teachers";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
