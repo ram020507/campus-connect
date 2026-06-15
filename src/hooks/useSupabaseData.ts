@@ -113,6 +113,32 @@ export interface SavedDoubt {
   createdAt: string;
 }
 
+export interface SubjectNote {
+  id: string;
+  subjectId: string;
+  fileName: string;
+  fileUrl: string;
+  fileType: string;
+  uploadedAt: string;
+}
+
+export interface ExamPrepVideo {
+  id: string;
+  subjectId: string;
+  title: string;
+  url: string;
+  addedAt: string;
+}
+
+export interface ExamPrepFile {
+  id: string;
+  subjectId: string;
+  fileName: string;
+  fileUrl: string;
+  fileType: string;
+  uploadedAt: string;
+}
+
 /** Get array of subject names from comma-separated string */
 export function getTeacherSubjects(teacher: TeacherAccount): string[] {
   return teacher.subjectName.split(",").map((s) => s.trim()).filter(Boolean);
@@ -132,11 +158,14 @@ export function useSupabaseData() {
   const [doubts, setDoubts] = useState<Doubt[]>([]);
   const [savedDoubts, setSavedDoubts] = useState<SavedDoubt[]>([]);
   const [helpfulByMe, setHelpfulByMe] = useState<string[]>([]);
+  const [subjectNotes, setSubjectNotes] = useState<SubjectNote[]>([]);
+  const [examPrepVideos, setExamPrepVideos] = useState<ExamPrepVideo[]>([]);
+  const [examPrepFiles, setExamPrepFiles] = useState<ExamPrepFile[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchAll = useCallback(async () => {
     try {
-      const [collegesRes, yearsRes, deptsRes, subjectsRes, videosRes, videoFilesRes, studentsRes, teachersRes, doubtsRes, savedRes, helpfulRes] =
+      const [collegesRes, yearsRes, deptsRes, subjectsRes, videosRes, videoFilesRes, studentsRes, teachersRes, doubtsRes, savedRes, helpfulRes, subjectNotesRes, examPrepVideosRes, examPrepFilesRes] =
         await Promise.all([
           supabase.from("colleges").select("*"),
           supabase.from("years").select("*"),
@@ -149,6 +178,9 @@ export function useSupabaseData() {
           supabase.from("doubts").select("*"),
           supabase.from("saved_doubts").select("*"),
           supabase.from("doubt_helpful").select("*"),
+          (supabase as any).from("subject_notes").select("*"),
+          (supabase as any).from("exam_prep_videos").select("*"),
+          (supabase as any).from("exam_prep_files").select("*"),
         ]);
 
       const videoFilesData = (videoFilesRes.data || []).map((f: any) => ({
@@ -263,6 +295,36 @@ export function useSupabaseData() {
 
       setHelpfulByMe(
         (helpfulRes.data || []).map((h: any) => `${h.student_reg_no}:${h.doubt_id}`)
+      );
+
+      setSubjectNotes(
+        ((subjectNotesRes as any)?.data || []).map((n: any) => ({
+          id: n.id,
+          subjectId: n.subject_id,
+          fileName: n.file_name,
+          fileUrl: n.file_url,
+          fileType: n.file_type,
+          uploadedAt: n.uploaded_at,
+        }))
+      );
+      setExamPrepVideos(
+        ((examPrepVideosRes as any)?.data || []).map((v: any) => ({
+          id: v.id,
+          subjectId: v.subject_id,
+          title: v.title,
+          url: v.url,
+          addedAt: v.added_at,
+        }))
+      );
+      setExamPrepFiles(
+        ((examPrepFilesRes as any)?.data || []).map((f: any) => ({
+          id: f.id,
+          subjectId: f.subject_id,
+          fileName: f.file_name,
+          fileUrl: f.file_url,
+          fileType: f.file_type,
+          uploadedAt: f.uploaded_at,
+        }))
       );
     } catch (err) {
       console.error("Error fetching data:", err);
@@ -403,6 +465,58 @@ export function useSupabaseData() {
 
   const removeVideoFile = async (fileId: string) => {
     await supabase.from("video_files").delete().eq("id", fileId);
+    await fetchAll();
+  };
+
+  // ===== Subject Notes (complete subject notes, not tied to a video) =====
+  const uploadSubjectNote = async (subjectId: string, file: File) => {
+    const ext = file.name.split(".").pop();
+    const path = `subject-notes/${subjectId}/${Date.now()}-${file.name}`;
+    const { error: upErr } = await supabase.storage.from("video-files").upload(path, file);
+    if (upErr) { console.error("Upload error:", upErr); return; }
+    const { data: urlData } = supabase.storage.from("video-files").getPublicUrl(path);
+    await (supabase as any).from("subject_notes").insert({
+      subject_id: subjectId,
+      file_name: file.name,
+      file_url: urlData.publicUrl,
+      file_type: ext || "unknown",
+    });
+    await fetchAll();
+  };
+
+  const removeSubjectNote = async (noteId: string) => {
+    await (supabase as any).from("subject_notes").delete().eq("id", noteId);
+    await fetchAll();
+  };
+
+  // ===== Exam Prep =====
+  const addExamPrepVideo = async (subjectId: string, title: string, url: string) => {
+    await (supabase as any).from("exam_prep_videos").insert({ subject_id: subjectId, title, url });
+    await fetchAll();
+  };
+
+  const removeExamPrepVideo = async (id: string) => {
+    await (supabase as any).from("exam_prep_videos").delete().eq("id", id);
+    await fetchAll();
+  };
+
+  const uploadExamPrepFile = async (subjectId: string, file: File) => {
+    const ext = file.name.split(".").pop();
+    const path = `exam-prep/${subjectId}/${Date.now()}-${file.name}`;
+    const { error: upErr } = await supabase.storage.from("video-files").upload(path, file);
+    if (upErr) { console.error("Upload error:", upErr); return; }
+    const { data: urlData } = supabase.storage.from("video-files").getPublicUrl(path);
+    await (supabase as any).from("exam_prep_files").insert({
+      subject_id: subjectId,
+      file_name: file.name,
+      file_url: urlData.publicUrl,
+      file_type: ext || "unknown",
+    });
+    await fetchAll();
+  };
+
+  const removeExamPrepFile = async (id: string) => {
+    await (supabase as any).from("exam_prep_files").delete().eq("id", id);
     await fetchAll();
   };
 
@@ -716,6 +830,9 @@ export function useSupabaseData() {
 
   return {
     colleges, students, teachers, doubts, savedDoubts, helpfulByMe, loading,
+    subjectNotes, examPrepVideos, examPrepFiles,
+    uploadSubjectNote, removeSubjectNote,
+    addExamPrepVideo, removeExamPrepVideo, uploadExamPrepFile, removeExamPrepFile,
     addCollege, removeCollege, updateCollege,
     addYear, removeYear, updateYear,
     addDepartment, removeDepartment, updateDepartment,

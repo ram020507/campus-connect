@@ -7,8 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  BookOpen, Video, LogOut, MessageCircle, ArrowLeft, Send, CheckCircle2, Play, Loader2, RefreshCw, ImagePlus, X, Download, FileText, Search, FolderOpen, ChevronDown, ChevronRight, Pencil, Trash2, Monitor, ThumbsUp, Bookmark, BookmarkCheck, Shuffle, ChevronUp, Type, Image, FileImage, Eye
+  BookOpen, Video, LogOut, MessageCircle, ArrowLeft, Send, CheckCircle2, Play, Loader2, RefreshCw, ImagePlus, X, Download, FileText, Search, FolderOpen, ChevronDown, ChevronRight, Pencil, Trash2, Monitor, ThumbsUp, Bookmark, BookmarkCheck, Shuffle, ChevronUp, Type, Image, FileImage, Eye, BookMarked
 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -16,7 +17,7 @@ import {
 import DigitalBoardStudent from "@/components/DigitalBoardStudent";
 import { verifySession, clearSession } from "@/lib/authGuard";
 
-type View = "dashboard" | "subjects" | "videos" | "video-player" | "doubts" | "digital-board" | "learning-feed" | "saved-doubts";
+type View = "dashboard" | "subjects" | "videos" | "video-player" | "doubts" | "digital-board" | "learning-feed" | "saved-doubts" | "exam-subjects" | "exam-content";
 type DoubtType = "text" | "image" | "text+image";
 
 const StudentDashboard = () => {
@@ -344,9 +345,89 @@ const StudentDashboard = () => {
                   <p className="font-semibold font-display text-sm">Learning Feed</p>
                 </CardContent>
               </Card>
+              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setView("exam-subjects")}>
+                <CardContent className="p-4 text-center">
+                  <BookMarked className="h-7 w-7 mx-auto mb-2 text-primary" />
+                  <p className="font-semibold font-display text-sm">Exam Preparation</p>
+                </CardContent>
+              </Card>
             </div>
           </div>
         )}
+
+        {view === "exam-subjects" && (
+          <div className="space-y-4 animate-fade-in">
+            <Button variant="ghost" size="sm" onClick={() => setView("dashboard")}>
+              <ArrowLeft className="h-4 w-4 mr-1" /> Back
+            </Button>
+            <h2 className="font-display font-semibold text-lg flex items-center gap-2">
+              <BookMarked className="h-5 w-5 text-primary" /> Exam Preparation
+            </h2>
+            {(dept?.subjects || []).length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">No subjects found.</p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {(dept?.subjects || []).map((s) => (
+                  <Card key={s.id} className="cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => { setSelectedSubjectId(s.id); setView("exam-content"); }}>
+                    <CardContent className="p-5">
+                      <BookMarked className="h-6 w-6 text-primary mb-2" />
+                      <p className="font-semibold font-display">{s.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {store.examPrepVideos.filter((v) => v.subjectId === s.id).length} videos ·{" "}
+                        {store.examPrepFiles.filter((f) => f.subjectId === s.id).length} files
+                      </p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {view === "exam-content" && currentSubject && (() => {
+          const evs = store.examPrepVideos.filter((v) => v.subjectId === currentSubject.id);
+          const efs = store.examPrepFiles.filter((f) => f.subjectId === currentSubject.id);
+          return (
+            <div className="space-y-4 animate-fade-in">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="sm" onClick={() => { setView("exam-subjects"); setSelectedSubjectId(""); }}>
+                  <ArrowLeft className="h-4 w-4 mr-1" /> Back
+                </Button>
+                <h2 className="font-display font-semibold text-lg">{currentSubject.name} — Exam Prep</h2>
+              </div>
+              <Tabs defaultValue="videos">
+                <TabsList className="grid grid-cols-2 w-full max-w-sm">
+                  <TabsTrigger value="videos"><Video className="h-4 w-4 mr-1" /> Videos</TabsTrigger>
+                  <TabsTrigger value="files"><FileText className="h-4 w-4 mr-1" /> Files</TabsTrigger>
+                </TabsList>
+                <TabsContent value="videos" className="space-y-3 mt-4">
+                  {evs.length === 0 ? <p className="text-center text-muted-foreground py-8">No videos yet.</p> : evs.map((v) => (
+                    <Card key={v.id} className="cursor-pointer hover:shadow-md transition-shadow"
+                      onClick={() => { setSelectedVideoUrl(v.url); setSelectedVideoTitle(v.title); setSelectedVideoId(""); setView("video-player"); }}>
+                      <CardContent className="p-4 flex items-center gap-3">
+                        <Video className="h-5 w-5 text-primary" />
+                        <p className="flex-1 font-medium text-sm">{v.title}</p>
+                        <Play className="h-5 w-5 text-primary" />
+                      </CardContent>
+                    </Card>
+                  ))}
+                </TabsContent>
+                <TabsContent value="files" className="space-y-2 mt-4">
+                  {efs.length === 0 ? <p className="text-center text-muted-foreground py-8">No files yet.</p> : efs.map((f) => (
+                    <Card key={f.id}>
+                      <CardContent className="p-3 flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-primary shrink-0" />
+                        <a href={f.fileUrl} target="_blank" rel="noopener noreferrer" className="text-sm flex-1 truncate text-primary hover:underline">{f.fileName}</a>
+                        <a href={f.fileUrl} download className="text-muted-foreground hover:text-primary"><Download className="h-4 w-4" /></a>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </TabsContent>
+              </Tabs>
+            </div>
+          );
+        })()}
 
         {view === "subjects" && (
           <div className="space-y-4 animate-fade-in">
@@ -389,27 +470,50 @@ const StudentDashboard = () => {
               </Button>
               <h2 className="font-display font-semibold text-lg">{currentSubject.name}</h2>
             </div>
-            {currentSubject.videos.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">No videos uploaded yet.</p>
-            ) : (
-              currentSubject.videos.map((v, i) => (
-                <Card key={v.id} className="cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => { setSelectedVideoUrl(v.url); setSelectedVideoTitle(v.title); setSelectedVideoId(v.id); setView("video-player"); }}>
-                  <CardContent className="p-4 flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-bold">
-                      {i + 1}
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-sm">{v.title}</p>
-                      {v.files.length > 0 && (
-                        <p className="text-xs text-muted-foreground">{v.files.length} file(s) attached</p>
-                      )}
-                    </div>
-                    <Play className="h-5 w-5 text-primary" />
-                  </CardContent>
-                </Card>
-              ))
-            )}
+            <Tabs defaultValue="videos">
+              <TabsList className="grid grid-cols-2 w-full max-w-sm">
+                <TabsTrigger value="videos"><Video className="h-4 w-4 mr-1" /> Videos</TabsTrigger>
+                <TabsTrigger value="notes"><FileText className="h-4 w-4 mr-1" /> Notes</TabsTrigger>
+              </TabsList>
+              <TabsContent value="videos" className="space-y-3 mt-4">
+                {currentSubject.videos.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">No videos uploaded yet.</p>
+                ) : currentSubject.videos.map((v, i) => (
+                  <Card key={v.id} className="cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => { setSelectedVideoUrl(v.url); setSelectedVideoTitle(v.title); setSelectedVideoId(v.id); setView("video-player"); }}>
+                    <CardContent className="p-4 flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-bold">
+                        {i + 1}
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-sm">{v.title}</p>
+                        {v.files.length > 0 && (
+                          <p className="text-xs text-muted-foreground">{v.files.length} file(s) attached</p>
+                        )}
+                      </div>
+                      <Play className="h-5 w-5 text-primary" />
+                    </CardContent>
+                  </Card>
+                ))}
+              </TabsContent>
+              <TabsContent value="notes" className="space-y-2 mt-4">
+                {(() => {
+                  const notes = store.subjectNotes.filter((n) => n.subjectId === currentSubject.id);
+                  if (notes.length === 0) return <p className="text-center text-muted-foreground py-8">No subject notes uploaded yet.</p>;
+                  return notes.map((f) => (
+                    <Card key={f.id}>
+                      <CardContent className="p-3 flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-primary shrink-0" />
+                        <a href={f.fileUrl} target="_blank" rel="noopener noreferrer" className="text-sm flex-1 truncate text-primary hover:underline">{f.fileName}</a>
+                        <a href={f.fileUrl} download className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary">
+                          <Download className="h-4 w-4" />
+                        </a>
+                      </CardContent>
+                    </Card>
+                  ));
+                })()}
+              </TabsContent>
+            </Tabs>
           </div>
         )}
 
@@ -688,12 +792,19 @@ const StudentDashboard = () => {
                           <div key={d.id} className={`border rounded-lg p-3 ${d.answer ? "border-success/30" : ""}`}>
                             <div className="flex items-center gap-2 mb-1">
                               {d.answer ? (
-                                <span className="text-xs text-success flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Answered</span>
+                                <span className="text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full bg-green-500/15 text-green-600 border border-green-500/30 flex items-center gap-1">
+                                  <CheckCircle2 className="h-3 w-3" /> Answered
+                                </span>
+                              ) : d.claimedBy ? (
+                                <span className="text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-600 border border-blue-500/30">
+                                  🔒 Claimed
+                                </span>
                               ) : (
-                                <span className="text-xs text-accent">Pending</span>
+                                <span className="text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full bg-orange-500/15 text-orange-600 border border-orange-500/30">
+                                  ● Pending
+                                </span>
                               )}
                               <span className="text-xs text-muted-foreground ml-auto">{new Date(d.createdAt).toLocaleDateString()}</span>
-                              {/* Only show edit/delete if not claimed */}
                               {!d.claimedBy && (
                                 <>
                                   <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => startEditDoubt(d)}>
@@ -703,9 +814,6 @@ const StudentDashboard = () => {
                                     <Trash2 className="h-3 w-3" />
                                   </Button>
                                 </>
-                              )}
-                              {d.claimedBy && !d.answer && (
-                                <span className="text-xs text-yellow-600 flex items-center gap-1">🔒 Claimed</span>
                               )}
                             </div>
                             {editingDoubtId === d.id ? (
