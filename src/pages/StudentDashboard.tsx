@@ -792,12 +792,19 @@ const StudentDashboard = () => {
                           <div key={d.id} className={`border rounded-lg p-3 ${d.answer ? "border-success/30" : ""}`}>
                             <div className="flex items-center gap-2 mb-1">
                               {d.answer ? (
-                                <span className="text-xs text-success flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Answered</span>
+                                <span className="text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full bg-green-500/15 text-green-600 border border-green-500/30 flex items-center gap-1">
+                                  <CheckCircle2 className="h-3 w-3" /> Answered
+                                </span>
+                              ) : d.claimedBy ? (
+                                <span className="text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-600 border border-blue-500/30">
+                                  🔒 Claimed
+                                </span>
                               ) : (
-                                <span className="text-xs text-accent">Pending</span>
+                                <span className="text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full bg-orange-500/15 text-orange-600 border border-orange-500/30">
+                                  ● Pending
+                                </span>
                               )}
                               <span className="text-xs text-muted-foreground ml-auto">{new Date(d.createdAt).toLocaleDateString()}</span>
-                              {/* Only show edit/delete if not claimed */}
                               {!d.claimedBy && (
                                 <>
                                   <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => startEditDoubt(d)}>
@@ -807,9 +814,6 @@ const StudentDashboard = () => {
                                     <Trash2 className="h-3 w-3" />
                                   </Button>
                                 </>
-                              )}
-                              {d.claimedBy && !d.answer && (
-                                <span className="text-xs text-yellow-600 flex items-center gap-1">🔒 Claimed</span>
                               )}
                             </div>
                             {editingDoubtId === d.id ? (
