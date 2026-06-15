@@ -830,6 +830,9 @@ export function useSupabaseData() {
 
   return {
     colleges, students, teachers, doubts, savedDoubts, helpfulByMe, loading,
+    subjectNotes, examPrepVideos, examPrepFiles,
+    uploadSubjectNote, removeSubjectNote,
+    addExamPrepVideo, removeExamPrepVideo, uploadExamPrepFile, removeExamPrepFile,
     addCollege, removeCollege, updateCollege,
     addYear, removeYear, updateYear,
     addDepartment, removeDepartment, updateDepartment,
