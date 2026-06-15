@@ -173,16 +173,14 @@ export function useSupabaseData() {
           supabase.from("subjects").select("*"),
           supabase.from("videos").select("*"),
           supabase.from("video_files").select("*"),
-          supabase.from("years").select("*"),
-          supabase.from("departments").select("*"),
-          supabase.from("subjects").select("*"),
-          supabase.from("videos").select("*"),
-          supabase.from("video_files").select("*"),
           supabase.from("students").select("id, registration_number, name, college_name, department, year"),
           supabase.from("teachers").select("id, staff_id, name, college_name, subject_name"),
           supabase.from("doubts").select("*"),
           supabase.from("saved_doubts").select("*"),
           supabase.from("doubt_helpful").select("*"),
+          (supabase as any).from("subject_notes").select("*"),
+          (supabase as any).from("exam_prep_videos").select("*"),
+          (supabase as any).from("exam_prep_files").select("*"),
         ]);
 
       const videoFilesData = (videoFilesRes.data || []).map((f: any) => ({
