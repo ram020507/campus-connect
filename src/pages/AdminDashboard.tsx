@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Building2, Plus, Trash2, LogOut, Users, GraduationCap,
-  FolderOpen, Video, ArrowLeft, Loader2, RefreshCw, Pencil, X, Check, Upload, FileText
+  FolderOpen, Video, ArrowLeft, Loader2, RefreshCw, Pencil, X, Check, Upload, FileText, BookMarked
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
