@@ -390,27 +390,50 @@ const StudentDashboard = () => {
               </Button>
               <h2 className="font-display font-semibold text-lg">{currentSubject.name}</h2>
             </div>
-            {currentSubject.videos.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">No videos uploaded yet.</p>
-            ) : (
-              currentSubject.videos.map((v, i) => (
-                <Card key={v.id} className="cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => { setSelectedVideoUrl(v.url); setSelectedVideoTitle(v.title); setSelectedVideoId(v.id); setView("video-player"); }}>
-                  <CardContent className="p-4 flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-bold">
-                      {i + 1}
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-sm">{v.title}</p>
-                      {v.files.length > 0 && (
-                        <p className="text-xs text-muted-foreground">{v.files.length} file(s) attached</p>
-                      )}
-                    </div>
-                    <Play className="h-5 w-5 text-primary" />
-                  </CardContent>
-                </Card>
-              ))
-            )}
+            <Tabs defaultValue="videos">
+              <TabsList className="grid grid-cols-2 w-full max-w-sm">
+                <TabsTrigger value="videos"><Video className="h-4 w-4 mr-1" /> Videos</TabsTrigger>
+                <TabsTrigger value="notes"><FileText className="h-4 w-4 mr-1" /> Notes</TabsTrigger>
+              </TabsList>
+              <TabsContent value="videos" className="space-y-3 mt-4">
+                {currentSubject.videos.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">No videos uploaded yet.</p>
+                ) : currentSubject.videos.map((v, i) => (
+                  <Card key={v.id} className="cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => { setSelectedVideoUrl(v.url); setSelectedVideoTitle(v.title); setSelectedVideoId(v.id); setView("video-player"); }}>
+                    <CardContent className="p-4 flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-bold">
+                        {i + 1}
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-sm">{v.title}</p>
+                        {v.files.length > 0 && (
+                          <p className="text-xs text-muted-foreground">{v.files.length} file(s) attached</p>
+                        )}
+                      </div>
+                      <Play className="h-5 w-5 text-primary" />
+                    </CardContent>
+                  </Card>
+                ))}
+              </TabsContent>
+              <TabsContent value="notes" className="space-y-2 mt-4">
+                {(() => {
+                  const notes = store.subjectNotes.filter((n) => n.subjectId === currentSubject.id);
+                  if (notes.length === 0) return <p className="text-center text-muted-foreground py-8">No subject notes uploaded yet.</p>;
+                  return notes.map((f) => (
+                    <Card key={f.id}>
+                      <CardContent className="p-3 flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-primary shrink-0" />
+                        <a href={f.fileUrl} target="_blank" rel="noopener noreferrer" className="text-sm flex-1 truncate text-primary hover:underline">{f.fileName}</a>
+                        <a href={f.fileUrl} download className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary">
+                          <Download className="h-4 w-4" />
+                        </a>
+                      </CardContent>
+                    </Card>
+                  ));
+                })()}
+              </TabsContent>
+            </Tabs>
           </div>
         )}
 
