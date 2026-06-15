@@ -167,6 +167,7 @@ const AdminDashboard = () => {
       <div className="border-b bg-card px-2 sm:px-4 flex gap-1 overflow-x-auto sticky top-[57px] z-10">
         {([
           { key: "content", label: "Content Management", icon: FolderOpen },
+          { key: "exam", label: "Exam Preparation", icon: BookMarked },
           { key: "students", label: "Student Accounts", icon: Users },
           { key: "teachers", label: "Teacher Management", icon: GraduationCap },
         ] as { key: Tab; label: string; icon: typeof FolderOpen }[]).map((t) => (
