@@ -113,6 +113,32 @@ export interface SavedDoubt {
   createdAt: string;
 }
 
+export interface SubjectNote {
+  id: string;
+  subjectId: string;
+  fileName: string;
+  fileUrl: string;
+  fileType: string;
+  uploadedAt: string;
+}
+
+export interface ExamPrepVideo {
+  id: string;
+  subjectId: string;
+  title: string;
+  url: string;
+  addedAt: string;
+}
+
+export interface ExamPrepFile {
+  id: string;
+  subjectId: string;
+  fileName: string;
+  fileUrl: string;
+  fileType: string;
+  uploadedAt: string;
+}
+
 /** Get array of subject names from comma-separated string */
 export function getTeacherSubjects(teacher: TeacherAccount): string[] {
   return teacher.subjectName.split(",").map((s) => s.trim()).filter(Boolean);
