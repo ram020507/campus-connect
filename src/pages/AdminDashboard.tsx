@@ -32,6 +32,18 @@ const AdminDashboard = () => {
   const [newVideoUrl, setNewVideoUrl] = useState("");
   const [uploading, setUploading] = useState<Record<string, boolean>>({});
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const subjectNoteInputRef = useRef<HTMLInputElement | null>(null);
+  const [uploadingSubjectNote, setUploadingSubjectNote] = useState(false);
+
+  // ===== EXAM PREP tab state =====
+  const [eCollegeId, setECollegeId] = useState("");
+  const [eYearId, setEYearId] = useState("");
+  const [eDeptId, setEDeptId] = useState("");
+  const [eSubjectId, setESubjectId] = useState("");
+  const [eVideoTitle, setEVideoTitle] = useState("");
+  const [eVideoUrl, setEVideoUrl] = useState("");
+  const [uploadingExamFile, setUploadingExamFile] = useState(false);
+  const examFileInputRef = useRef<HTMLInputElement | null>(null);
 
   // ===== STUDENTS tab filters & form =====
   const [sCollegeId, setSCollegeId] = useState("");
