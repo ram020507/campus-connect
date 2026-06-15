@@ -468,6 +468,58 @@ export function useSupabaseData() {
     await fetchAll();
   };
 
+  // ===== Subject Notes (complete subject notes, not tied to a video) =====
+  const uploadSubjectNote = async (subjectId: string, file: File) => {
+    const ext = file.name.split(".").pop();
+    const path = `subject-notes/${subjectId}/${Date.now()}-${file.name}`;
+    const { error: upErr } = await supabase.storage.from("video-files").upload(path, file);
+    if (upErr) { console.error("Upload error:", upErr); return; }
+    const { data: urlData } = supabase.storage.from("video-files").getPublicUrl(path);
+    await (supabase as any).from("subject_notes").insert({
+      subject_id: subjectId,
+      file_name: file.name,
+      file_url: urlData.publicUrl,
+      file_type: ext || "unknown",
+    });
+    await fetchAll();
+  };
+
+  const removeSubjectNote = async (noteId: string) => {
+    await (supabase as any).from("subject_notes").delete().eq("id", noteId);
+    await fetchAll();
+  };
+
+  // ===== Exam Prep =====
+  const addExamPrepVideo = async (subjectId: string, title: string, url: string) => {
+    await (supabase as any).from("exam_prep_videos").insert({ subject_id: subjectId, title, url });
+    await fetchAll();
+  };
+
+  const removeExamPrepVideo = async (id: string) => {
+    await (supabase as any).from("exam_prep_videos").delete().eq("id", id);
+    await fetchAll();
+  };
+
+  const uploadExamPrepFile = async (subjectId: string, file: File) => {
+    const ext = file.name.split(".").pop();
+    const path = `exam-prep/${subjectId}/${Date.now()}-${file.name}`;
+    const { error: upErr } = await supabase.storage.from("video-files").upload(path, file);
+    if (upErr) { console.error("Upload error:", upErr); return; }
+    const { data: urlData } = supabase.storage.from("video-files").getPublicUrl(path);
+    await (supabase as any).from("exam_prep_files").insert({
+      subject_id: subjectId,
+      file_name: file.name,
+      file_url: urlData.publicUrl,
+      file_type: ext || "unknown",
+    });
+    await fetchAll();
+  };
+
+  const removeExamPrepFile = async (id: string) => {
+    await (supabase as any).from("exam_prep_files").delete().eq("id", id);
+    await fetchAll();
+  };
+
   const uploadDoubtImage = async (file: File): Promise<string | null> => {
     const path = `${Date.now()}-${file.name}`;
     const { error } = await supabase.storage.from("doubt-images").upload(path, file);
