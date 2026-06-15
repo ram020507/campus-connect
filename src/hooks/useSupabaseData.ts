@@ -296,6 +296,36 @@ export function useSupabaseData() {
       setHelpfulByMe(
         (helpfulRes.data || []).map((h: any) => `${h.student_reg_no}:${h.doubt_id}`)
       );
+
+      setSubjectNotes(
+        ((subjectNotesRes as any)?.data || []).map((n: any) => ({
+          id: n.id,
+          subjectId: n.subject_id,
+          fileName: n.file_name,
+          fileUrl: n.file_url,
+          fileType: n.file_type,
+          uploadedAt: n.uploaded_at,
+        }))
+      );
+      setExamPrepVideos(
+        ((examPrepVideosRes as any)?.data || []).map((v: any) => ({
+          id: v.id,
+          subjectId: v.subject_id,
+          title: v.title,
+          url: v.url,
+          addedAt: v.added_at,
+        }))
+      );
+      setExamPrepFiles(
+        ((examPrepFilesRes as any)?.data || []).map((f: any) => ({
+          id: f.id,
+          subjectId: f.subject_id,
+          fileName: f.file_name,
+          fileUrl: f.file_url,
+          fileType: f.file_type,
+          uploadedAt: f.uploaded_at,
+        }))
+      );
     } catch (err) {
       console.error("Error fetching data:", err);
     } finally {
