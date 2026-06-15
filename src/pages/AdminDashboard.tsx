@@ -368,6 +368,52 @@ const AdminDashboard = () => {
                   ))}
                   {cSubject.videos.length === 0 && <p className="text-center text-muted-foreground py-6">No videos yet.</p>}
                 </div>
+
+                {/* Complete Subject Notes */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg font-display flex items-center gap-2">
+                      <BookMarked className="h-5 w-5 text-primary" /> Complete Subject Notes
+                    </CardTitle>
+                    <p className="text-xs text-muted-foreground">Upload full subject notes (PDF / DOCX / PPT) — not tied to any single video.</p>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <input type="file" accept=".pdf,.ppt,.pptx,.doc,.docx" className="hidden"
+                        ref={subjectNoteInputRef}
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file || !cSubject) return;
+                          setUploadingSubjectNote(true);
+                          await store.uploadSubjectNote(cSubject.id, file);
+                          setUploadingSubjectNote(false);
+                          if (subjectNoteInputRef.current) subjectNoteInputRef.current.value = "";
+                        }} />
+                      <Button onClick={() => subjectNoteInputRef.current?.click()} disabled={uploadingSubjectNote}>
+                        {uploadingSubjectNote ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Upload className="h-4 w-4 mr-1" />}
+                        Add Notes
+                      </Button>
+                      <span className="text-xs text-muted-foreground">PDF, DOCX, PPT</span>
+                    </div>
+                    {(() => {
+                      const notes = store.subjectNotes.filter((n) => n.subjectId === cSubject.id);
+                      if (notes.length === 0) return <p className="text-xs text-muted-foreground">No subject notes uploaded yet.</p>;
+                      return (
+                        <div className="space-y-1">
+                          {notes.map((f) => (
+                            <div key={f.id} className="flex items-center gap-2 text-sm bg-muted/40 rounded px-2 py-1">
+                              <FileText className="h-3 w-3 text-muted-foreground" />
+                              <a href={f.fileUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline flex-1 truncate">{f.fileName}</a>
+                              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => store.removeSubjectNote(f.id)}>
+                                <Trash2 className="h-3 w-3 text-destructive" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
+                  </CardContent>
+                </Card>
               </>
             ) : (
               <Card>
@@ -378,6 +424,146 @@ const AdminDashboard = () => {
             )}
           </div>
         )}
+
+        {/* ============================ EXAM PREPARATION ============================ */}
+        {tab === "exam" && (() => {
+          const eCollege = store.colleges.find((c) => c.id === eCollegeId);
+          const eYear = eCollege?.years.find((y) => y.id === eYearId);
+          const eDept = eYear?.departments.find((d) => d.id === eDeptId);
+          const eSubject = eDept?.subjects.find((s) => s.id === eSubjectId);
+          const examVideos = eSubject ? store.examPrepVideos.filter((v) => v.subjectId === eSubject.id) : [];
+          const examFiles = eSubject ? store.examPrepFiles.filter((f) => f.subjectId === eSubject.id) : [];
+          return (
+            <div className="space-y-6 animate-fade-in">
+              <Card>
+                <CardHeader><CardTitle className="text-lg font-display flex items-center gap-2"><BookMarked className="h-5 w-5 text-primary" /> Exam Preparation — Select Location</CardTitle></CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground">College</label>
+                      <Select value={eCollegeId} onValueChange={(v) => { setECollegeId(v); setEYearId(""); setEDeptId(""); setESubjectId(""); }}>
+                        <SelectTrigger className="mt-1"><SelectValue placeholder="Select college" /></SelectTrigger>
+                        <SelectContent>
+                          {store.colleges.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground">Year</label>
+                      <Select value={eYearId} onValueChange={(v) => { setEYearId(v); setEDeptId(""); setESubjectId(""); }} disabled={!eCollege}>
+                        <SelectTrigger className="mt-1"><SelectValue placeholder="Select year" /></SelectTrigger>
+                        <SelectContent>
+                          {eCollege?.years.slice().sort((a, b) => a.yearNumber - b.yearNumber).map((y) => (
+                            <SelectItem key={y.id} value={y.id}>Year {y.yearNumber}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground">Department</label>
+                      <Select value={eDeptId} onValueChange={(v) => { setEDeptId(v); setESubjectId(""); }} disabled={!eYear}>
+                        <SelectTrigger className="mt-1"><SelectValue placeholder="Select dept" /></SelectTrigger>
+                        <SelectContent>
+                          {eYear?.departments.map((d) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground">Subject</label>
+                      <Select value={eSubjectId} onValueChange={setESubjectId} disabled={!eDept}>
+                        <SelectTrigger className="mt-1"><SelectValue placeholder="Select subject" /></SelectTrigger>
+                        <SelectContent>
+                          {eDept?.subjects.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {eSubject ? (
+                <>
+                  <Card>
+                    <CardHeader><CardTitle className="text-lg font-display">Add Revision Video</CardTitle></CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <Input placeholder="Video title" value={eVideoTitle} onChange={(e) => setEVideoTitle(e.target.value)} />
+                        <Input placeholder="https://..." value={eVideoUrl} onChange={(e) => setEVideoUrl(e.target.value)} />
+                      </div>
+                      <Button onClick={async () => {
+                        if (eVideoTitle.trim() && eVideoUrl.trim()) {
+                          await store.addExamPrepVideo(eSubject.id, eVideoTitle.trim(), eVideoUrl.trim());
+                          setEVideoTitle(""); setEVideoUrl("");
+                        }
+                      }}><Plus className="h-4 w-4 mr-1" /> Add Video</Button>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg font-display">Upload Materials (PDF / PPT)</CardTitle>
+                      <p className="text-xs text-muted-foreground">Important notes, question banks, previous year questions, etc.</p>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <input type="file" accept=".pdf,.ppt,.pptx,.doc,.docx" className="hidden"
+                          ref={examFileInputRef}
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            setUploadingExamFile(true);
+                            await store.uploadExamPrepFile(eSubject.id, file);
+                            setUploadingExamFile(false);
+                            if (examFileInputRef.current) examFileInputRef.current.value = "";
+                          }} />
+                        <Button onClick={() => examFileInputRef.current?.click()} disabled={uploadingExamFile}>
+                          {uploadingExamFile ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Upload className="h-4 w-4 mr-1" />}
+                          Upload File
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <div className="space-y-3">
+                    <h3 className="font-display font-semibold text-lg">Videos ({examVideos.length})</h3>
+                    {examVideos.map((v) => (
+                      <Card key={v.id}>
+                        <CardContent className="p-4 flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <Video className="h-5 w-5 text-primary shrink-0" />
+                            <div className="min-w-0">
+                              <p className="font-medium text-sm truncate">{v.title}</p>
+                              <a href={v.url} target="_blank" rel="noreferrer" className="text-xs text-muted-foreground truncate block hover:text-primary">{v.url}</a>
+                            </div>
+                          </div>
+                          <ConfirmDelete title="Delete Video?" desc="This removes the exam prep video."
+                            onConfirm={() => store.removeExamPrepVideo(v.id)} />
+                        </CardContent>
+                      </Card>
+                    ))}
+                    {examVideos.length === 0 && <p className="text-center text-muted-foreground py-4 text-sm">No videos yet.</p>}
+
+                    <h3 className="font-display font-semibold text-lg">Files ({examFiles.length})</h3>
+                    {examFiles.map((f) => (
+                      <Card key={f.id}>
+                        <CardContent className="p-3 flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-primary" />
+                          <a href={f.fileUrl} target="_blank" rel="noreferrer" className="text-sm flex-1 text-primary hover:underline truncate">{f.fileName}</a>
+                          <Button variant="ghost" size="icon" onClick={() => store.removeExamPrepFile(f.id)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
+                    {examFiles.length === 0 && <p className="text-center text-muted-foreground py-4 text-sm">No files yet.</p>}
+                  </div>
+                </>
+              ) : (
+                <Card><CardContent className="p-8 text-center text-muted-foreground">Select college, year, department, and subject to manage exam preparation content.</CardContent></Card>
+              )}
+            </div>
+          );
+        })()}
 
         {/* ============================ STUDENT ACCOUNTS ============================ */}
         {tab === "students" && (
