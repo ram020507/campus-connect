@@ -158,13 +158,21 @@ export function useSupabaseData() {
   const [doubts, setDoubts] = useState<Doubt[]>([]);
   const [savedDoubts, setSavedDoubts] = useState<SavedDoubt[]>([]);
   const [helpfulByMe, setHelpfulByMe] = useState<string[]>([]);
+  const [subjectNotes, setSubjectNotes] = useState<SubjectNote[]>([]);
+  const [examPrepVideos, setExamPrepVideos] = useState<ExamPrepVideo[]>([]);
+  const [examPrepFiles, setExamPrepFiles] = useState<ExamPrepFile[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchAll = useCallback(async () => {
     try {
-      const [collegesRes, yearsRes, deptsRes, subjectsRes, videosRes, videoFilesRes, studentsRes, teachersRes, doubtsRes, savedRes, helpfulRes] =
+      const [collegesRes, yearsRes, deptsRes, subjectsRes, videosRes, videoFilesRes, studentsRes, teachersRes, doubtsRes, savedRes, helpfulRes, subjectNotesRes, examPrepVideosRes, examPrepFilesRes] =
         await Promise.all([
           supabase.from("colleges").select("*"),
+          supabase.from("years").select("*"),
+          supabase.from("departments").select("*"),
+          supabase.from("subjects").select("*"),
+          supabase.from("videos").select("*"),
+          supabase.from("video_files").select("*"),
           supabase.from("years").select("*"),
           supabase.from("departments").select("*"),
           supabase.from("subjects").select("*"),
