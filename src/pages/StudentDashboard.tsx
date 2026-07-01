@@ -224,7 +224,7 @@ const StudentDashboard = () => {
       studentDepartment: student!.department,
       studentCollege: student!.collegeName,
       subjectName: doubtSubject.trim(),
-      question: doubtType === "image" ? (ocrText || "(Image doubt)") : doubtText.trim(),
+      question: doubtText.trim(),
       questionImageUrl: imageUrl,
       questionImageUrl2: imageUrl2,
       ocrText: ocrText || undefined,
