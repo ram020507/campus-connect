@@ -144,20 +144,6 @@ const DigitalBoardStudent = ({ student, subjects, onBack }: DigitalBoardStudentP
         return;
       }
 
-      // Upload image if present
-      let imageUrl: string | null = null;
-      if (imageFile) {
-        setUploadingImage(true);
-        const ext = imageFile.name.split(".").pop();
-        const path = `board-questions/${Date.now()}-${student.registrationNumber}.${ext}`;
-        const { error } = await supabase.storage.from("doubt-images").upload(path, imageFile);
-        if (!error) {
-          const { data: urlData } = supabase.storage.from("doubt-images").getPublicUrl(path);
-          imageUrl = urlData.publicUrl;
-        }
-        setUploadingImage(false);
-      }
-
       const req = await board.createCallRequest({
         studentRegNo: student.registrationNumber,
         studentName: student.name,
@@ -167,7 +153,6 @@ const DigitalBoardStudent = ({ student, subjects, onBack }: DigitalBoardStudentP
         subjectName: selectedSubject,
         mode: "whiteboard",
         doubtText: doubtInput || undefined,
-        questionImageUrl: imageUrl || undefined,
       });
       setCallRequestId(req.id);
       setStep("calling");
