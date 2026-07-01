@@ -16,12 +16,14 @@ import {
 } from "@/components/ui/alert-dialog";
 import { verifySession, clearSession } from "@/lib/authGuard";
 
-type Tab = "content" | "exam" | "students" | "teachers";
+type Tab = "" | "content" | "exam" | "students" | "teachers";
+type Group = "content" | "accounts" | null;
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const store = useSupabaseData();
-  const [tab, setTab] = useState<Tab>("content");
+  const [tab, setTab] = useState<Tab>("");
+  const [expandedGroup, setExpandedGroup] = useState<Group>("content");
 
   // ===== CONTENT tab filters =====
   const [cCollegeId, setCCollegeId] = useState("");
