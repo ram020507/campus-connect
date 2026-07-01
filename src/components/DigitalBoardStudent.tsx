@@ -79,23 +79,6 @@ const DigitalBoardStudent = ({ student, subjects, onBack }: DigitalBoardStudentP
     }
   }, [board.activeSession?.status]);
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const allowed = ["image/jpeg", "image/png", "image/jpg"];
-    if (!allowed.includes(file.type)) {
-      toast({ title: "Invalid format", description: "Only JPG, PNG, JPEG allowed", variant: "destructive" });
-      return;
-    }
-    setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
-  };
-
-  const removeImage = () => {
-    setImageFile(null);
-    setImagePreview(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
 
   // Duplicate detection
   const checkDuplicate = async (): Promise<boolean> => {
