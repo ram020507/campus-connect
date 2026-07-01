@@ -212,12 +212,12 @@ const TeacherDashboard = () => {
           <div className="space-y-3">
             <h2 className="font-display font-semibold text-lg flex items-center gap-2">
               <Clock className="h-5 w-5 text-accent" />
-              Unclaimed Doubts
+              Claim & Solve
             </h2>
             {unclaimedDoubts.length === 0 ? (
               <Card>
                 <CardContent className="p-6 text-center text-muted-foreground">
-                  No unclaimed doubts. Great job!
+                  No pending doubts. Great job!
                 </CardContent>
               </Card>
             ) : (
