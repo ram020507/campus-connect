@@ -364,7 +364,7 @@ const TeacherDashboard = () => {
           <div className="space-y-3">
             <h2 className="font-display font-semibold text-lg flex items-center gap-2">
               <CheckCircle2 className="h-5 w-5 text-success" />
-              All Solved Doubts
+              All Solutions
             </h2>
             {allSolvedDoubts.length === 0 ? (
               <Card>
