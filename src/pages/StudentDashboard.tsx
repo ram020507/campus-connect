@@ -737,7 +737,6 @@ const StudentDashboard = () => {
                     disabled={
                       !doubtSubject.trim() ||
                       (doubtType === "text" && !doubtText.trim()) ||
-                      (doubtType === "image" && !doubtImage) ||
                       (doubtType === "text+image" && (!doubtText.trim() || !doubtImage || !doubtImage2)) ||
                       sending || ocrProcessing || checkingDuplicates
                     }
