@@ -573,12 +573,11 @@ const StudentDashboard = () => {
                 <div className="flex gap-2">
                   {([
                     { key: "text" as DoubtType, label: "Text", icon: <Type className="h-4 w-4" /> },
-                    { key: "image" as DoubtType, label: "Image", icon: <Image className="h-4 w-4" /> },
-                    { key: "text+image" as DoubtType, label: "Text + Image", icon: <FileImage className="h-4 w-4" /> },
+                    { key: "text+image" as DoubtType, label: "Text + 2 Images", icon: <FileImage className="h-4 w-4" /> },
                   ]).map((opt) => (
                     <button
                       key={opt.key}
-                      onClick={() => { setDoubtType(opt.key); clearImage(); setDoubtText(""); setOcrText(""); }}
+                      onClick={() => { setDoubtType(opt.key); clearImage(); clearImage2(); setDoubtText(""); setOcrText(""); }}
                       className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg border-2 text-sm font-medium transition-all ${
                         doubtType === opt.key
                           ? "border-primary bg-primary/10 text-primary shadow-sm"
@@ -590,23 +589,21 @@ const StudentDashboard = () => {
                   ))}
                 </div>
 
-                {/* Dynamic Input: Text */}
-                {(doubtType === "text" || doubtType === "text+image") && (
-                  <Textarea
-                    placeholder="Type your doubt clearly…"
-                    value={doubtText}
-                    onChange={(e) => setDoubtText(e.target.value)}
-                    rows={4}
-                    className="text-base"
-                  />
-                )}
+                {/* Dynamic Input: Text (always shown) */}
+                <Textarea
+                  placeholder={doubtType === "text+image"
+                    ? "Type your exact doubt — which step is unclear, what explanation you need…"
+                    : "Type your doubt clearly…"}
+                  value={doubtText}
+                  onChange={(e) => setDoubtText(e.target.value)}
+                  rows={4}
+                  className="text-base"
+                />
 
-                {/* Dynamic Input: Image */}
-                {(doubtType === "image" || doubtType === "text+image") && (
+                {/* Dynamic Input: 1st Image (only for text+image) */}
+                {doubtType === "text+image" && (
                   <div className="space-y-2">
-                    {doubtType === "text+image" && (
-                      <p className="text-xs font-medium text-muted-foreground">1st Image · Question Image (used for OCR matching)</p>
-                    )}
+                    <p className="text-xs font-medium text-muted-foreground">1st Image · Question Image (used for OCR matching)</p>
                     <input type="file" accept="image/*" ref={fileInputRef} className="hidden" onChange={handleImageSelect} />
                     {doubtImagePreview ? (
                       <div className="space-y-2">
@@ -628,7 +625,7 @@ const StudentDashboard = () => {
                         className="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:border-primary/50 hover:bg-accent/5 transition-all"
                       >
                         <ImagePlus className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                        <p className="text-sm text-muted-foreground">Click or drag & drop to upload image</p>
+                        <p className="text-sm text-muted-foreground">Click or drag & drop the question image</p>
                       </div>
                     )}
                   </div>
