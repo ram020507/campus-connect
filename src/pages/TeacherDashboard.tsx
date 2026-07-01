@@ -267,12 +267,12 @@ const TeacherDashboard = () => {
           <div className="space-y-3">
             <h2 className="font-display font-semibold text-lg flex items-center gap-2">
               <Lock className="h-5 w-5 text-primary" />
-              Claimed Doubts
+              My Solutions
             </h2>
             {claimedDoubts.length === 0 ? (
               <Card>
                 <CardContent className="p-6 text-center text-muted-foreground">
-                  No claimed doubts. Claim a doubt from the Unclaimed section to start answering.
+                  No claimed doubts. Pick one from Claim & Solve to start answering.
                 </CardContent>
               </Card>
             ) : (
