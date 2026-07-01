@@ -7,7 +7,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  ArrowLeft, Phone, PhoneOff, Loader2, Monitor, Mic, MicOff, Upload, X, Image as ImageIcon,
+  ArrowLeft, Phone, PhoneOff, Loader2, Monitor, Mic, MicOff,
 } from "lucide-react";
 import DigitalWhiteboard, { type WhiteboardRef } from "@/components/DigitalWhiteboard";
 import { useDigitalBoard } from "@/hooks/useDigitalBoard";
