@@ -225,35 +225,7 @@ const DigitalBoardStudent = ({ student, subjects, onBack }: DigitalBoardStudentP
                 rows={3}
               />
             </div>
-            <div>
-              <label className="text-sm font-medium mb-1 block">Upload Image (optional)</label>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".jpg,.jpeg,.png"
-                className="hidden"
-                onChange={handleImageSelect}
-              />
-              {imagePreview ? (
-                <div className="relative inline-block">
-                  <img src={imagePreview} alt="Preview" className="max-h-40 rounded border" />
-                  <Button
-                    variant="destructive"
-                    size="icon"
-                    className="absolute -top-2 -right-2 h-6 w-6"
-                    onClick={removeImage}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                </div>
-              ) : (
-                <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
-                  <Upload className="h-4 w-4 mr-1" /> Upload Image
-                </Button>
-              )}
-            </div>
-            <Button className="w-full" onClick={handleCall} disabled={!selectedSubject || calling || uploadingImage}>
-
+            <Button className="w-full" onClick={handleCall} disabled={!selectedSubject || calling}>
               {calling ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Phone className="h-4 w-4 mr-1" />}
               Call Teacher
             </Button>
