@@ -169,15 +169,15 @@ const StudentDashboard = () => {
 
   const handleCheckAndSend = async () => {
     if (!doubtSubject.trim()) return;
-    const hasText = doubtType !== "image" && doubtText.trim();
-    const hasImage = doubtType !== "text" && doubtImage;
+    const hasText = doubtText.trim();
+    const hasImage = doubtType === "text+image" && doubtImage;
     if (!hasText && !hasImage) return;
 
     setCheckingDuplicates(true);
 
     // Run search with both typed text and OCR text
-    const typedSearch = doubtType !== "image" ? doubtText.trim() : "";
-    const ocrSearch = doubtType !== "text" ? ocrText.trim() : "";
+    const typedSearch = doubtText.trim();
+    const ocrSearch = doubtType === "text+image" ? ocrText.trim() : "";
 
     if ((typedSearch.length >= 3 || ocrSearch.length >= 3) && student) {
       const results = store.searchSimilarDoubts(typedSearch || ocrSearch, {
