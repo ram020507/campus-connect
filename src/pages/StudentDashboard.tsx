@@ -18,7 +18,7 @@ import DigitalBoardStudent from "@/components/DigitalBoardStudent";
 import { verifySession, clearSession } from "@/lib/authGuard";
 
 type View = "dashboard" | "subjects" | "videos" | "video-player" | "doubts" | "digital-board" | "learning-feed" | "saved-doubts" | "exam-subjects" | "exam-content";
-type DoubtType = "text" | "image" | "text+image";
+type DoubtType = "text" | "text+image";
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
@@ -169,15 +169,15 @@ const StudentDashboard = () => {
 
   const handleCheckAndSend = async () => {
     if (!doubtSubject.trim()) return;
-    const hasText = doubtType !== "image" && doubtText.trim();
-    const hasImage = doubtType !== "text" && doubtImage;
+    const hasText = doubtText.trim();
+    const hasImage = doubtType === "text+image" && doubtImage;
     if (!hasText && !hasImage) return;
 
     setCheckingDuplicates(true);
 
     // Run search with both typed text and OCR text
-    const typedSearch = doubtType !== "image" ? doubtText.trim() : "";
-    const ocrSearch = doubtType !== "text" ? ocrText.trim() : "";
+    const typedSearch = doubtText.trim();
+    const ocrSearch = doubtType === "text+image" ? ocrText.trim() : "";
 
     if ((typedSearch.length >= 3 || ocrSearch.length >= 3) && student) {
       const results = store.searchSimilarDoubts(typedSearch || ocrSearch, {
@@ -201,7 +201,7 @@ const StudentDashboard = () => {
     setSending(true);
     let imageUrl: string | undefined;
     let imageUrl2: string | undefined;
-    if (doubtType !== "text" && doubtImage) {
+    if (doubtType === "text+image" && doubtImage) {
       if (doubtImagePreview?.startsWith("http")) {
         imageUrl = doubtImagePreview;
       } else {
@@ -224,7 +224,7 @@ const StudentDashboard = () => {
       studentDepartment: student!.department,
       studentCollege: student!.collegeName,
       subjectName: doubtSubject.trim(),
-      question: doubtType === "image" ? (ocrText || "(Image doubt)") : doubtText.trim(),
+      question: doubtText.trim(),
       questionImageUrl: imageUrl,
       questionImageUrl2: imageUrl2,
       ocrText: ocrText || undefined,
@@ -573,12 +573,11 @@ const StudentDashboard = () => {
                 <div className="flex gap-2">
                   {([
                     { key: "text" as DoubtType, label: "Text", icon: <Type className="h-4 w-4" /> },
-                    { key: "image" as DoubtType, label: "Image", icon: <Image className="h-4 w-4" /> },
-                    { key: "text+image" as DoubtType, label: "Text + Image", icon: <FileImage className="h-4 w-4" /> },
+                    { key: "text+image" as DoubtType, label: "Text + 2 Images", icon: <FileImage className="h-4 w-4" /> },
                   ]).map((opt) => (
                     <button
                       key={opt.key}
-                      onClick={() => { setDoubtType(opt.key); clearImage(); setDoubtText(""); setOcrText(""); }}
+                      onClick={() => { setDoubtType(opt.key); clearImage(); clearImage2(); setDoubtText(""); setOcrText(""); }}
                       className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg border-2 text-sm font-medium transition-all ${
                         doubtType === opt.key
                           ? "border-primary bg-primary/10 text-primary shadow-sm"
@@ -590,23 +589,21 @@ const StudentDashboard = () => {
                   ))}
                 </div>
 
-                {/* Dynamic Input: Text */}
-                {(doubtType === "text" || doubtType === "text+image") && (
-                  <Textarea
-                    placeholder="Type your doubt clearly…"
-                    value={doubtText}
-                    onChange={(e) => setDoubtText(e.target.value)}
-                    rows={4}
-                    className="text-base"
-                  />
-                )}
+                {/* Dynamic Input: Text (always shown) */}
+                <Textarea
+                  placeholder={doubtType === "text+image"
+                    ? "Type your exact doubt — which step is unclear, what explanation you need…"
+                    : "Type your doubt clearly…"}
+                  value={doubtText}
+                  onChange={(e) => setDoubtText(e.target.value)}
+                  rows={4}
+                  className="text-base"
+                />
 
-                {/* Dynamic Input: Image */}
-                {(doubtType === "image" || doubtType === "text+image") && (
+                {/* Dynamic Input: 1st Image (only for text+image) */}
+                {doubtType === "text+image" && (
                   <div className="space-y-2">
-                    {doubtType === "text+image" && (
-                      <p className="text-xs font-medium text-muted-foreground">1st Image · Question Image (used for OCR matching)</p>
-                    )}
+                    <p className="text-xs font-medium text-muted-foreground">1st Image · Question Image (used for OCR matching)</p>
                     <input type="file" accept="image/*" ref={fileInputRef} className="hidden" onChange={handleImageSelect} />
                     {doubtImagePreview ? (
                       <div className="space-y-2">
@@ -628,7 +625,7 @@ const StudentDashboard = () => {
                         className="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:border-primary/50 hover:bg-accent/5 transition-all"
                       >
                         <ImagePlus className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                        <p className="text-sm text-muted-foreground">Click or drag & drop to upload image</p>
+                        <p className="text-sm text-muted-foreground">Click or drag & drop the question image</p>
                       </div>
                     )}
                   </div>
@@ -740,7 +737,6 @@ const StudentDashboard = () => {
                     disabled={
                       !doubtSubject.trim() ||
                       (doubtType === "text" && !doubtText.trim()) ||
-                      (doubtType === "image" && !doubtImage) ||
                       (doubtType === "text+image" && (!doubtText.trim() || !doubtImage || !doubtImage2)) ||
                       sending || ocrProcessing || checkingDuplicates
                     }

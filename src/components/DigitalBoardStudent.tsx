@@ -7,7 +7,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  ArrowLeft, Phone, PhoneOff, Loader2, Monitor, Mic, MicOff, Upload, X, Image as ImageIcon,
+  ArrowLeft, Phone, PhoneOff, Loader2, Monitor, Mic, MicOff,
 } from "lucide-react";
 import DigitalWhiteboard, { type WhiteboardRef } from "@/components/DigitalWhiteboard";
 import { useDigitalBoard } from "@/hooks/useDigitalBoard";
@@ -38,11 +38,7 @@ const DigitalBoardStudent = ({ student, subjects, onBack }: DigitalBoardStudentP
   const [doubtInput, setDoubtInput] = useState("");
   const [callRequestId, setCallRequestId] = useState<string | null>(null);
   const [calling, setCalling] = useState(false);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [uploadingImage, setUploadingImage] = useState(false);
   const [duplicateAnswer, setDuplicateAnswer] = useState<{ question: string; answer: string } | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
 
   // WebRTC voice
@@ -83,23 +79,6 @@ const DigitalBoardStudent = ({ student, subjects, onBack }: DigitalBoardStudentP
     }
   }, [board.activeSession?.status]);
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const allowed = ["image/jpeg", "image/png", "image/jpg"];
-    if (!allowed.includes(file.type)) {
-      toast({ title: "Invalid format", description: "Only JPG, PNG, JPEG allowed", variant: "destructive" });
-      return;
-    }
-    setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
-  };
-
-  const removeImage = () => {
-    setImageFile(null);
-    setImagePreview(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
 
   // Duplicate detection
   const checkDuplicate = async (): Promise<boolean> => {
@@ -144,20 +123,6 @@ const DigitalBoardStudent = ({ student, subjects, onBack }: DigitalBoardStudentP
         return;
       }
 
-      // Upload image if present
-      let imageUrl: string | null = null;
-      if (imageFile) {
-        setUploadingImage(true);
-        const ext = imageFile.name.split(".").pop();
-        const path = `board-questions/${Date.now()}-${student.registrationNumber}.${ext}`;
-        const { error } = await supabase.storage.from("doubt-images").upload(path, imageFile);
-        if (!error) {
-          const { data: urlData } = supabase.storage.from("doubt-images").getPublicUrl(path);
-          imageUrl = urlData.publicUrl;
-        }
-        setUploadingImage(false);
-      }
-
       const req = await board.createCallRequest({
         studentRegNo: student.registrationNumber,
         studentName: student.name,
@@ -167,7 +132,6 @@ const DigitalBoardStudent = ({ student, subjects, onBack }: DigitalBoardStudentP
         subjectName: selectedSubject,
         mode: "whiteboard",
         doubtText: doubtInput || undefined,
-        questionImageUrl: imageUrl || undefined,
       });
       setCallRequestId(req.id);
       setStep("calling");
@@ -225,35 +189,7 @@ const DigitalBoardStudent = ({ student, subjects, onBack }: DigitalBoardStudentP
                 rows={3}
               />
             </div>
-            <div>
-              <label className="text-sm font-medium mb-1 block">Upload Image (optional)</label>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".jpg,.jpeg,.png"
-                className="hidden"
-                onChange={handleImageSelect}
-              />
-              {imagePreview ? (
-                <div className="relative inline-block">
-                  <img src={imagePreview} alt="Preview" className="max-h-40 rounded border" />
-                  <Button
-                    variant="destructive"
-                    size="icon"
-                    className="absolute -top-2 -right-2 h-6 w-6"
-                    onClick={removeImage}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                </div>
-              ) : (
-                <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
-                  <Upload className="h-4 w-4 mr-1" /> Upload Image
-                </Button>
-              )}
-            </div>
-            <Button className="w-full" onClick={handleCall} disabled={!selectedSubject || calling || uploadingImage}>
-
+            <Button className="w-full" onClick={handleCall} disabled={!selectedSubject || calling}>
               {calling ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Phone className="h-4 w-4 mr-1" />}
               Call Teacher
             </Button>
