@@ -158,9 +158,9 @@ const TeacherDashboard = () => {
   }
 
   const sectionTabs: { key: Section; label: string; count: number; icon: React.ReactNode }[] = [
-    { key: "unclaimed", label: "Unclaimed", count: unclaimedDoubts.length, icon: <Clock className="h-4 w-4" /> },
-    { key: "claimed", label: "Claimed", count: claimedDoubts.length, icon: <Lock className="h-4 w-4" /> },
-    { key: "all", label: "All Doubts", count: allSolvedDoubts.length, icon: <Eye className="h-4 w-4" /> },
+    { key: "unclaimed", label: "Claim & Solve", count: unclaimedDoubts.length, icon: <Clock className="h-4 w-4" /> },
+    { key: "claimed", label: "My Solutions", count: claimedDoubts.length, icon: <Lock className="h-4 w-4" /> },
+    { key: "all", label: "All Solutions", count: allSolvedDoubts.length, icon: <Eye className="h-4 w-4" /> },
   ];
 
   return (
