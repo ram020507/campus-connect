@@ -158,9 +158,9 @@ const TeacherDashboard = () => {
   }
 
   const sectionTabs: { key: Section; label: string; count: number; icon: React.ReactNode }[] = [
-    { key: "unclaimed", label: "Unclaimed", count: unclaimedDoubts.length, icon: <Clock className="h-4 w-4" /> },
-    { key: "claimed", label: "Claimed", count: claimedDoubts.length, icon: <Lock className="h-4 w-4" /> },
-    { key: "all", label: "All Doubts", count: allSolvedDoubts.length, icon: <Eye className="h-4 w-4" /> },
+    { key: "unclaimed", label: "Claim & Solve", count: unclaimedDoubts.length, icon: <Clock className="h-4 w-4" /> },
+    { key: "claimed", label: "My Solutions", count: claimedDoubts.length, icon: <Lock className="h-4 w-4" /> },
+    { key: "all", label: "All Solutions", count: allSolvedDoubts.length, icon: <Eye className="h-4 w-4" /> },
   ];
 
   return (
@@ -212,12 +212,12 @@ const TeacherDashboard = () => {
           <div className="space-y-3">
             <h2 className="font-display font-semibold text-lg flex items-center gap-2">
               <Clock className="h-5 w-5 text-accent" />
-              Unclaimed Doubts
+              Claim & Solve
             </h2>
             {unclaimedDoubts.length === 0 ? (
               <Card>
                 <CardContent className="p-6 text-center text-muted-foreground">
-                  No unclaimed doubts. Great job!
+                  No pending doubts. Great job!
                 </CardContent>
               </Card>
             ) : (
@@ -252,8 +252,8 @@ const TeacherDashboard = () => {
                           </a>
                         </div>
                       )}
-                      <Button size="sm" variant="outline" onClick={() => handleClaim(d.id)}>
-                        Claim Doubt
+                      <Button size="sm" onClick={() => handleClaim(d.id)}>
+                        Claim & Solve
                       </Button>
                     </CardContent>
                   </Card>
@@ -267,12 +267,12 @@ const TeacherDashboard = () => {
           <div className="space-y-3">
             <h2 className="font-display font-semibold text-lg flex items-center gap-2">
               <Lock className="h-5 w-5 text-primary" />
-              Claimed Doubts
+              My Solutions
             </h2>
             {claimedDoubts.length === 0 ? (
               <Card>
                 <CardContent className="p-6 text-center text-muted-foreground">
-                  No claimed doubts. Claim a doubt from the Unclaimed section to start answering.
+                  No claimed doubts. Pick one from Claim & Solve to start answering.
                 </CardContent>
               </Card>
             ) : (
@@ -364,7 +364,7 @@ const TeacherDashboard = () => {
           <div className="space-y-3">
             <h2 className="font-display font-semibold text-lg flex items-center gap-2">
               <CheckCircle2 className="h-5 w-5 text-success" />
-              All Solved Doubts
+              All Solutions
             </h2>
             {allSolvedDoubts.length === 0 ? (
               <Card>
@@ -493,8 +493,7 @@ const TeacherDashboard = () => {
                                         <Button
                                           variant="outline"
                                           size="sm"
-                                          disabled={d.viewedByStudent}
-                                          title={d.viewedByStudent ? "Editing disabled after student has viewed the answer" : "Edit your answer"}
+                                          title="Edit your answer"
                                           onClick={() => {
                                             setEditingAnswerId(d.id);
                                             setEditAnswerText(d.answer || "");
@@ -505,7 +504,7 @@ const TeacherDashboard = () => {
                                             );
                                           }}
                                         >
-                                          <Pencil className="h-3 w-3 mr-1" /> Edit Answer
+                                          <Pencil className="h-3 w-3 mr-1" /> Edit Solution
                                           {d.viewedByStudent && <span className="ml-1 text-xs text-muted-foreground">(Viewed)</span>}
                                         </Button>
                                       </div>

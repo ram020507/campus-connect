@@ -16,12 +16,14 @@ import {
 } from "@/components/ui/alert-dialog";
 import { verifySession, clearSession } from "@/lib/authGuard";
 
-type Tab = "content" | "exam" | "students" | "teachers";
+type Tab = "" | "content" | "exam" | "students" | "teachers";
+type Group = "content" | "accounts" | null;
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const store = useSupabaseData();
-  const [tab, setTab] = useState<Tab>("content");
+  const [tab, setTab] = useState<Tab>("");
+  const [expandedGroup, setExpandedGroup] = useState<Group>("content");
 
   // ===== CONTENT tab filters =====
   const [cCollegeId, setCCollegeId] = useState("");
@@ -163,24 +165,66 @@ const AdminDashboard = () => {
         </div>
       </header>
 
-      {/* Tabs */}
-      <div className="border-b bg-card px-2 sm:px-4 flex gap-1 overflow-x-auto sticky top-[57px] z-10">
-        {([
-          { key: "content", label: "Content Management", icon: FolderOpen },
-          { key: "exam", label: "Exam Preparation", icon: BookMarked },
-          { key: "students", label: "Student Accounts", icon: Users },
-          { key: "teachers", label: "Teacher Management", icon: GraduationCap },
-        ] as { key: Tab; label: string; icon: typeof FolderOpen }[]).map((t) => (
-          <button key={t.key} onClick={() => setTab(t.key)}
-            className={`flex items-center gap-1.5 px-3 sm:px-4 py-2.5 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${
-              tab === t.key ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}>
-            <t.icon className="h-4 w-4" /> {t.label}
-          </button>
-        ))}
-      </div>
+      {/* Sidebar + main */}
+      <div className="flex">
+        <aside className="w-60 shrink-0 border-r bg-card min-h-[calc(100vh-57px)] sticky top-[57px] self-start">
+          <nav className="p-3 space-y-1 text-sm">
+            {/* Content Management group */}
+            <button
+              onClick={() => setExpandedGroup(expandedGroup === "content" ? null : "content")}
+              className="w-full flex items-center gap-2 px-3 py-2 rounded-md font-medium hover:bg-muted"
+            >
+              <FolderOpen className="h-4 w-4" />
+              <span className="flex-1 text-left">Content Management</span>
+              <span className={`transition-transform ${expandedGroup === "content" ? "rotate-90" : ""}`}>›</span>
+            </button>
+            {expandedGroup === "content" && (
+              <div className="ml-6 space-y-1">
+                <button onClick={() => setTab("content")}
+                  className={`w-full text-left px-3 py-1.5 rounded-md ${tab === "content" ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted text-muted-foreground"}`}>
+                  All Lectures
+                </button>
+                <button onClick={() => setTab("exam")}
+                  className={`w-full text-left px-3 py-1.5 rounded-md ${tab === "exam" ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted text-muted-foreground"}`}>
+                  Important Notes
+                </button>
+              </div>
+            )}
+            {/* Accounts Management group */}
+            <button
+              onClick={() => setExpandedGroup(expandedGroup === "accounts" ? null : "accounts")}
+              className="w-full flex items-center gap-2 px-3 py-2 rounded-md font-medium hover:bg-muted mt-2"
+            >
+              <Users className="h-4 w-4" />
+              <span className="flex-1 text-left">Accounts Management</span>
+              <span className={`transition-transform ${expandedGroup === "accounts" ? "rotate-90" : ""}`}>›</span>
+            </button>
+            {expandedGroup === "accounts" && (
+              <div className="ml-6 space-y-1">
+                <button onClick={() => setTab("students")}
+                  className={`w-full text-left px-3 py-1.5 rounded-md ${tab === "students" ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted text-muted-foreground"}`}>
+                  Student Accounts
+                </button>
+                <button onClick={() => setTab("teachers")}
+                  className={`w-full text-left px-3 py-1.5 rounded-md ${tab === "teachers" ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted text-muted-foreground"}`}>
+                  Teacher Accounts
+                </button>
+              </div>
+            )}
+          </nav>
+        </aside>
 
-      <div className="max-w-6xl mx-auto p-4 space-y-6">
+        <main className="flex-1 min-w-0">
+          <div className="max-w-6xl mx-auto p-4 space-y-6">
+
+            {tab === "" && (
+              <Card>
+                <CardContent className="p-12 text-center text-muted-foreground">
+                  Select an option from the sidebar to get started.
+                </CardContent>
+              </Card>
+            )}
+
 
         {/* ============================ CONTENT MANAGEMENT ============================ */}
         {tab === "content" && (
@@ -853,8 +897,11 @@ const AdminDashboard = () => {
             )}
           </div>
         )}
+          </div>
+        </main>
       </div>
     </div>
+
   );
 };
 

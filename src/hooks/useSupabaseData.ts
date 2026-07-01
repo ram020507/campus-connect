@@ -750,6 +750,8 @@ export function useSupabaseData() {
     if (updates.answer !== undefined) mapped.answer = updates.answer;
     if (updates.answerImageUrl !== undefined) mapped.answer_image_url = updates.answerImageUrl;
     if (updates.answerImageUrls !== undefined) mapped.answer_image_urls = updates.answerImageUrls;
+    // Bump answered_at so student panel can display "Last Updated"
+    mapped.answered_at = new Date().toISOString();
     await (supabase.from("doubts").update as any)(mapped).eq("id", doubtId);
     await fetchAll();
   };

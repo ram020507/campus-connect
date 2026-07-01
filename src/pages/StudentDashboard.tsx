@@ -872,6 +872,11 @@ const StudentDashboard = () => {
                               }}>
                                 <p className="text-xs text-muted-foreground mb-1">Answer by {d.answeredBy}:</p>
                                 <p>{d.answer}</p>
+                                {d.answeredAt && (
+                                  <p className="text-[10px] text-muted-foreground mt-1">
+                                    Last Updated: {new Date(d.answeredAt).toLocaleString()}
+                                  </p>
+                                )}
                                 {/* Show all answer images */}
                                 {(d.answerImageUrls && d.answerImageUrls.length > 0
                                   ? d.answerImageUrls
