@@ -252,8 +252,8 @@ const TeacherDashboard = () => {
                           </a>
                         </div>
                       )}
-                      <Button size="sm" variant="outline" onClick={() => handleClaim(d.id)}>
-                        Claim Doubt
+                      <Button size="sm" onClick={() => handleClaim(d.id)}>
+                        Claim & Solve
                       </Button>
                     </CardContent>
                   </Card>
