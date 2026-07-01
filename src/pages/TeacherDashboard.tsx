@@ -493,8 +493,7 @@ const TeacherDashboard = () => {
                                         <Button
                                           variant="outline"
                                           size="sm"
-                                          disabled={d.viewedByStudent}
-                                          title={d.viewedByStudent ? "Editing disabled after student has viewed the answer" : "Edit your answer"}
+                                          title="Edit your answer"
                                           onClick={() => {
                                             setEditingAnswerId(d.id);
                                             setEditAnswerText(d.answer || "");
@@ -505,7 +504,7 @@ const TeacherDashboard = () => {
                                             );
                                           }}
                                         >
-                                          <Pencil className="h-3 w-3 mr-1" /> Edit Answer
+                                          <Pencil className="h-3 w-3 mr-1" /> Edit Solution
                                           {d.viewedByStudent && <span className="ml-1 text-xs text-muted-foreground">(Viewed)</span>}
                                         </Button>
                                       </div>
