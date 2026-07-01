@@ -201,7 +201,7 @@ const StudentDashboard = () => {
     setSending(true);
     let imageUrl: string | undefined;
     let imageUrl2: string | undefined;
-    if (doubtType !== "text" && doubtImage) {
+    if (doubtType === "text+image" && doubtImage) {
       if (doubtImagePreview?.startsWith("http")) {
         imageUrl = doubtImagePreview;
       } else {
