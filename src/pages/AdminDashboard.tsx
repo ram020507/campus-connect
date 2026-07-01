@@ -897,8 +897,11 @@ const AdminDashboard = () => {
             )}
           </div>
         )}
+          </div>
+        </main>
       </div>
     </div>
+
   );
 };
 
