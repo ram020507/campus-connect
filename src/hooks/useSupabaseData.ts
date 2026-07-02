@@ -346,6 +346,21 @@ export function useSupabaseData() {
           uploadedAt: f.uploaded_at,
         }))
       );
+      setFollowups(
+        ((followupsRes as any)?.data || []).map((f: any) => ({
+          id: f.id,
+          doubtId: f.doubt_id,
+          authorRole: f.author_role as "student" | "teacher",
+          authorName: f.author_name,
+          text: f.text || "",
+          imageUrls: Array.isArray(f.image_urls) ? f.image_urls : [],
+          createdAt: f.created_at,
+        }))
+      );
+      setSeenDoubtIds(
+        ((seenRes as any)?.data || []).map((s: any) => `${s.student_reg_no}:${s.doubt_id}`)
+      );
+
     } catch (err) {
       console.error("Error fetching data:", err);
     } finally {
