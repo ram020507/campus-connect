@@ -90,10 +90,20 @@ const StudentDashboard = () => {
   const currentSubject = dept?.subjects.find((s) => s.id === selectedSubjectId);
   const currentVideo = currentSubject?.videos.find((v) => v.id === selectedVideoId);
 
-  // Feed: randomized doubts from all subjects for this year/dept (excluding own)
+  // Feed: unseen solved doubts (status !== clarification_requested), shuffled, from same year/dept peers
   const feedDoubts = useMemo(() => {
+    const seenSet = new Set(
+      store.seenDoubtIds
+        .filter((k) => k.startsWith(`${student.registrationNumber}:`))
+        .map((k) => k.split(":")[1])
+    );
     const all = store.doubts.filter(
-      (d) => d.answer && d.studentYear === student.year && d.studentDepartment === student.department && d.studentRegNo !== student.registrationNumber
+      (d) => d.answer
+        && d.status !== "clarification_requested"
+        && d.studentYear === student.year
+        && d.studentDepartment === student.department
+        && d.studentRegNo !== student.registrationNumber
+        && !seenSet.has(d.id)
         && (feedSubjectFilter === "all" || d.subjectName === feedSubjectFilter)
     );
     const shuffled = [...all];
@@ -102,7 +112,8 @@ const StudentDashboard = () => {
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
     return shuffled;
-  }, [store.doubts.length, student.year, student.department, feedSubjectFilter]);
+  }, [store.doubts, store.seenDoubtIds, student.year, student.department, student.registrationNumber, feedSubjectFilter]);
+
 
   const feedSubjectOptions = useMemo(() => {
     const all = store.doubts.filter(
