@@ -89,6 +89,7 @@ const StudentDashboard = () => {
 
   useEffect(() => { setFeedCurrentIndex(0); }, [feedSubjectFilter]);
 
+
   if (!student) {
     navigate("/student/login");
     return null;
