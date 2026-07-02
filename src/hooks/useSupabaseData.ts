@@ -173,7 +173,10 @@ export function useSupabaseData() {
   const [subjectNotes, setSubjectNotes] = useState<SubjectNote[]>([]);
   const [examPrepVideos, setExamPrepVideos] = useState<ExamPrepVideo[]>([]);
   const [examPrepFiles, setExamPrepFiles] = useState<ExamPrepFile[]>([]);
+  const [followups, setFollowups] = useState<DoubtFollowup[]>([]);
+  const [seenDoubtIds, setSeenDoubtIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+
 
   const fetchAll = useCallback(async () => {
     try {
