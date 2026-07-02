@@ -214,6 +214,44 @@ export type Database = {
         }
         Relationships: []
       }
+      doubt_followups: {
+        Row: {
+          author_name: string
+          author_role: string
+          created_at: string
+          doubt_id: string
+          id: string
+          image_urls: Json
+          text: string | null
+        }
+        Insert: {
+          author_name: string
+          author_role: string
+          created_at?: string
+          doubt_id: string
+          id?: string
+          image_urls?: Json
+          text?: string | null
+        }
+        Update: {
+          author_name?: string
+          author_role?: string
+          created_at?: string
+          doubt_id?: string
+          id?: string
+          image_urls?: Json
+          text?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doubt_followups_doubt_id_fkey"
+            columns: ["doubt_id"]
+            isOneToOne: false
+            referencedRelation: "doubts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       doubt_helpful: {
         Row: {
           created_at: string
@@ -236,6 +274,35 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "doubt_helpful_doubt_id_fkey"
+            columns: ["doubt_id"]
+            isOneToOne: false
+            referencedRelation: "doubts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      doubt_seen: {
+        Row: {
+          doubt_id: string
+          id: string
+          seen_at: string
+          student_reg_no: string
+        }
+        Insert: {
+          doubt_id: string
+          id?: string
+          seen_at?: string
+          student_reg_no: string
+        }
+        Update: {
+          doubt_id?: string
+          id?: string
+          seen_at?: string
+          student_reg_no?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doubt_seen_doubt_id_fkey"
             columns: ["doubt_id"]
             isOneToOne: false
             referencedRelation: "doubts"
