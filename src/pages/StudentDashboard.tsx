@@ -322,10 +322,10 @@ const StudentDashboard = () => {
         {view === "dashboard" && (
           <div className="space-y-6 animate-fade-in">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setView("subjects")}>
+              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setView("learning-resources")}>
                 <CardContent className="p-4 text-center">
-                  <Video className="h-7 w-7 mx-auto mb-2 text-primary" />
-                  <p className="font-semibold font-display text-sm">Video Lectures</p>
+                  <BookOpen className="h-7 w-7 mx-auto mb-2 text-primary" />
+                  <p className="font-semibold font-display text-sm">Learning Resources</p>
                 </CardContent>
               </Card>
               <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setView("doubts")}>
@@ -334,27 +334,49 @@ const StudentDashboard = () => {
                   <p className="font-semibold font-display text-sm">Ask a Doubt</p>
                 </CardContent>
               </Card>
-              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setView("digital-board")}>
-                <CardContent className="p-4 text-center">
-                  <Monitor className="h-7 w-7 mx-auto mb-2 text-primary" />
-                  <p className="font-semibold font-display text-sm">Digital Board</p>
-                </CardContent>
-              </Card>
               <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => { setFeedCurrentIndex(0); setView("learning-feed"); }}>
                 <CardContent className="p-4 text-center">
                   <Shuffle className="h-7 w-7 mx-auto mb-2 text-accent" />
                   <p className="font-semibold font-display text-sm">Learning Feed</p>
                 </CardContent>
               </Card>
-              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setView("exam-subjects")}>
+              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setView("digital-board")}>
                 <CardContent className="p-4 text-center">
-                  <BookMarked className="h-7 w-7 mx-auto mb-2 text-primary" />
-                  <p className="font-semibold font-display text-sm">Exam Preparation</p>
+                  <Monitor className="h-7 w-7 mx-auto mb-2 text-primary" />
+                  <p className="font-semibold font-display text-sm">Digital Board</p>
                 </CardContent>
               </Card>
             </div>
           </div>
         )}
+
+        {view === "learning-resources" && (
+          <div className="space-y-4 animate-fade-in">
+            <Button variant="ghost" size="sm" onClick={() => setView("dashboard")}>
+              <ArrowLeft className="h-4 w-4 mr-1" /> Back
+            </Button>
+            <h2 className="font-display font-semibold text-lg flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-primary" /> Learning Resources
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setView("subjects")}>
+                <CardContent className="p-6 text-center">
+                  <Video className="h-8 w-8 mx-auto mb-2 text-primary" />
+                  <p className="font-semibold font-display">All Lectures</p>
+                  <p className="text-xs text-muted-foreground mt-1">Lecture videos & subject notes</p>
+                </CardContent>
+              </Card>
+              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setView("exam-subjects")}>
+                <CardContent className="p-6 text-center">
+                  <BookMarked className="h-8 w-8 mx-auto mb-2 text-accent" />
+                  <p className="font-semibold font-display">Important Notes</p>
+                  <p className="text-xs text-muted-foreground mt-1">Revision videos, PDFs & PPTs</p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        )}
+
 
         {view === "exam-subjects" && (
           <div className="space-y-4 animate-fade-in">
