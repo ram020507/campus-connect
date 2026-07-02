@@ -180,7 +180,7 @@ export function useSupabaseData() {
 
   const fetchAll = useCallback(async () => {
     try {
-      const [collegesRes, yearsRes, deptsRes, subjectsRes, videosRes, videoFilesRes, studentsRes, teachersRes, doubtsRes, savedRes, helpfulRes, subjectNotesRes, examPrepVideosRes, examPrepFilesRes] =
+      const [collegesRes, yearsRes, deptsRes, subjectsRes, videosRes, videoFilesRes, studentsRes, teachersRes, doubtsRes, savedRes, helpfulRes, subjectNotesRes, examPrepVideosRes, examPrepFilesRes, followupsRes, seenRes] =
         await Promise.all([
           supabase.from("colleges").select("*"),
           supabase.from("years").select("*"),
@@ -196,7 +196,10 @@ export function useSupabaseData() {
           (supabase as any).from("subject_notes").select("*"),
           (supabase as any).from("exam_prep_videos").select("*"),
           (supabase as any).from("exam_prep_files").select("*"),
+          (supabase as any).from("doubt_followups").select("*").order("created_at", { ascending: true }),
+          (supabase as any).from("doubt_seen").select("*"),
         ]);
+
 
       const videoFilesData = (videoFilesRes.data || []).map((f: any) => ({
         id: f.id,
