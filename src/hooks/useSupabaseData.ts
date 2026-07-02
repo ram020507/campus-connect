@@ -104,7 +104,19 @@ export interface Doubt {
   ocrText?: string;
   helpfulCount: number;
   viewedByStudent: boolean;
+  status?: string;
 }
+
+export interface DoubtFollowup {
+  id: string;
+  doubtId: string;
+  authorRole: "student" | "teacher";
+  authorName: string;
+  text: string;
+  imageUrls: string[];
+  createdAt: string;
+}
+
 
 export interface SavedDoubt {
   id: string;
@@ -161,11 +173,14 @@ export function useSupabaseData() {
   const [subjectNotes, setSubjectNotes] = useState<SubjectNote[]>([]);
   const [examPrepVideos, setExamPrepVideos] = useState<ExamPrepVideo[]>([]);
   const [examPrepFiles, setExamPrepFiles] = useState<ExamPrepFile[]>([]);
+  const [followups, setFollowups] = useState<DoubtFollowup[]>([]);
+  const [seenDoubtIds, setSeenDoubtIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+
 
   const fetchAll = useCallback(async () => {
     try {
-      const [collegesRes, yearsRes, deptsRes, subjectsRes, videosRes, videoFilesRes, studentsRes, teachersRes, doubtsRes, savedRes, helpfulRes, subjectNotesRes, examPrepVideosRes, examPrepFilesRes] =
+      const [collegesRes, yearsRes, deptsRes, subjectsRes, videosRes, videoFilesRes, studentsRes, teachersRes, doubtsRes, savedRes, helpfulRes, subjectNotesRes, examPrepVideosRes, examPrepFilesRes, followupsRes, seenRes] =
         await Promise.all([
           supabase.from("colleges").select("*"),
           supabase.from("years").select("*"),
@@ -181,7 +196,10 @@ export function useSupabaseData() {
           (supabase as any).from("subject_notes").select("*"),
           (supabase as any).from("exam_prep_videos").select("*"),
           (supabase as any).from("exam_prep_files").select("*"),
+          (supabase as any).from("doubt_followups").select("*").order("created_at", { ascending: true }),
+          (supabase as any).from("doubt_seen").select("*"),
         ]);
+
 
       const videoFilesData = (videoFilesRes.data || []).map((f: any) => ({
         id: f.id,
@@ -281,6 +299,8 @@ export function useSupabaseData() {
           ocrText: (d as any).ocr_text || undefined,
           helpfulCount: (d as any).helpful_count || 0,
           viewedByStudent: (d as any).viewed_by_student || false,
+          status: (d as any).status || undefined,
+
         }))
       );
 
@@ -326,6 +346,21 @@ export function useSupabaseData() {
           uploadedAt: f.uploaded_at,
         }))
       );
+      setFollowups(
+        ((followupsRes as any)?.data || []).map((f: any) => ({
+          id: f.id,
+          doubtId: f.doubt_id,
+          authorRole: f.author_role as "student" | "teacher",
+          authorName: f.author_name,
+          text: f.text || "",
+          imageUrls: Array.isArray(f.image_urls) ? f.image_urls : [],
+          createdAt: f.created_at,
+        }))
+      );
+      setSeenDoubtIds(
+        ((seenRes as any)?.data || []).map((s: any) => `${s.student_reg_no}:${s.doubt_id}`)
+      );
+
     } catch (err) {
       console.error("Error fetching data:", err);
     } finally {
@@ -830,9 +865,57 @@ export function useSupabaseData() {
     await fetchAll();
   };
 
+  // ===== Follow-up thread =====
+  const addFollowup = async (params: {
+    doubtId: string;
+    authorRole: "student" | "teacher";
+    authorName: string;
+    text: string;
+    imageUrls?: string[];
+  }) => {
+    await (supabase as any).from("doubt_followups").insert({
+      doubt_id: params.doubtId,
+      author_role: params.authorRole,
+      author_name: params.authorName,
+      text: params.text || "",
+      image_urls: params.imageUrls || [],
+    });
+    // Update doubt status: student => clarification_requested, teacher => solved
+    const nextStatus = params.authorRole === "student" ? "clarification_requested" : "solved";
+    const patch: Record<string, any> = { status: nextStatus };
+    if (params.authorRole === "teacher") {
+      patch.answered_at = new Date().toISOString();
+    } else {
+      // Reopen for student — mark unviewed so student sees fresh reply later
+      patch.viewed_by_student = false;
+    }
+    await (supabase.from("doubts").update as any)(patch).eq("id", params.doubtId);
+    if (params.authorRole === "student") {
+      invokeNotify({ type: "new_doubt", doubtId: params.doubtId });
+    } else {
+      invokeNotify({ type: "doubt_answered", doubtId: params.doubtId });
+    }
+    await fetchAll();
+  };
+
+  const markDoubtSeen = async (studentRegNo: string, doubtId: string) => {
+    const key = `${studentRegNo}:${doubtId}`;
+    if (seenDoubtIds.includes(key)) return;
+    setSeenDoubtIds((prev) => [...prev, key]);
+    await (supabase as any).from("doubt_seen").insert({
+      student_reg_no: studentRegNo,
+      doubt_id: doubtId,
+    });
+  };
+
+  const markDoubtUnderstood = async (doubtId: string) => {
+    await (supabase.from("doubts").update as any)({ status: "understood", viewed_by_student: true }).eq("id", doubtId);
+    await fetchAll();
+  };
+
   return {
     colleges, students, teachers, doubts, savedDoubts, helpfulByMe, loading,
-    subjectNotes, examPrepVideos, examPrepFiles,
+    subjectNotes, examPrepVideos, examPrepFiles, followups, seenDoubtIds,
     uploadSubjectNote, removeSubjectNote,
     addExamPrepVideo, removeExamPrepVideo, uploadExamPrepFile, removeExamPrepFile,
     addCollege, removeCollege, updateCollege,
@@ -849,6 +932,8 @@ export function useSupabaseData() {
     updateDoubtQuestion, deleteDoubt, updateDoubtAnswer, deleteDoubtAnswer,
     saveDoubt, unsaveDoubt, toggleHelpful,
     markDoubtViewed,
+    addFollowup, markDoubtSeen, markDoubtUnderstood,
     refetch: fetchAll,
   };
 }
+

@@ -47,6 +47,9 @@ const TeacherDashboard = () => {
   const [replyImages, setReplyImages] = useState<Record<string, File[]>>({});
   const [replyImagePreviews, setReplyImagePreviews] = useState<Record<string, string[]>>({});
   const [sending, setSending] = useState<Record<string, boolean>>({});
+  const [followupReply, setFollowupReply] = useState<Record<string, { text: string; images: File[]; previews: string[] }>>({});
+  const [followupSending, setFollowupSending] = useState<Record<string, boolean>>({});
+
   const [claimAlert, setClaimAlert] = useState<{ show: boolean; teacherName: string }>({ show: false, teacherName: "" });
   const [editingAnswerId, setEditingAnswerId] = useState<string | null>(null);
   const [editAnswerText, setEditAnswerText] = useState("");
@@ -73,11 +76,11 @@ const TeacherDashboard = () => {
       !d.claimedBy
   );
 
-  // Section 2: Claimed by this teacher — claimed but not yet answered
+  // Section 2: Claimed by this teacher — claimed but not yet answered, OR pending clarification requests on doubts I answered
   const claimedDoubts = store.doubts.filter(
     (d) =>
-      d.claimedBy === teacher.staffId &&
-      !d.answer
+      (d.claimedBy === teacher.staffId && !d.answer) ||
+      (d.answeredBy === teacher.name && d.status === "clarification_requested")
   );
 
   // Section 3: All solved doubts from teacher's subjects
@@ -86,6 +89,7 @@ const TeacherDashboard = () => {
       teacherSubjects.some(s => s.toLowerCase() === d.subjectName.toLowerCase()) &&
       d.answer
   );
+
 
   const handleClaim = async (doubtId: string) => {
     await store.refetch();
@@ -307,51 +311,144 @@ const TeacherDashboard = () => {
                           </a>
                         </div>
                       )}
-                      <div className="space-y-2">
-                        <Textarea
-                          placeholder="Type your answer..."
-                          value={replyTexts[d.id] || ""}
-                          onChange={(e) => setReplyTexts((prev) => ({ ...prev, [d.id]: e.target.value }))}
-                          rows={3}
-                        />
-                        {/* Multiple image upload */}
-                        <input
-                          type="file"
-                          accept="image/*"
-                          multiple
-                          className="hidden"
-                          ref={(el) => { fileInputRefs.current[d.id] = el; }}
-                          onChange={(e) => handleReplyImageSelect(d.id, e)}
-                        />
-                        {(replyImagePreviews[d.id] || []).length > 0 ? (
-                          <div className="flex flex-wrap gap-2">
-                            {replyImagePreviews[d.id].map((preview, idx) => (
-                              <div key={idx} className="relative inline-block">
-                                <img src={preview} alt={`Reply attachment ${idx + 1}`} className="max-h-24 rounded border" />
-                                <button onClick={() => removeReplyImage(d.id, idx)} className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1">
-                                  <X className="h-3 w-3" />
-                                </button>
-                              </div>
-                            ))}
+                      {!d.answer ? (
+                        <div className="space-y-2">
+                          <Textarea
+                            placeholder="Type your answer..."
+                            value={replyTexts[d.id] || ""}
+                            onChange={(e) => setReplyTexts((prev) => ({ ...prev, [d.id]: e.target.value }))}
+                            rows={3}
+                          />
+                          {/* Multiple image upload */}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            className="hidden"
+                            ref={(el) => { fileInputRefs.current[d.id] = el; }}
+                            onChange={(e) => handleReplyImageSelect(d.id, e)}
+                          />
+                          {(replyImagePreviews[d.id] || []).length > 0 ? (
+                            <div className="flex flex-wrap gap-2">
+                              {replyImagePreviews[d.id].map((preview, idx) => (
+                                <div key={idx} className="relative inline-block">
+                                  <img src={preview} alt={`Reply attachment ${idx + 1}`} className="max-h-24 rounded border" />
+                                  <button onClick={() => removeReplyImage(d.id, idx)} className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1">
+                                    <X className="h-3 w-3" />
+                                  </button>
+                                </div>
+                              ))}
+                              <Button variant="outline" size="sm" onClick={() => fileInputRefs.current[d.id]?.click()}>
+                                <ImagePlus className="h-4 w-4 mr-1" /> Add More
+                              </Button>
+                            </div>
+                          ) : (
                             <Button variant="outline" size="sm" onClick={() => fileInputRefs.current[d.id]?.click()}>
-                              <ImagePlus className="h-4 w-4 mr-1" /> Add More
+                              <ImagePlus className="h-4 w-4 mr-1" /> Attach Photos
+                            </Button>
+                          )}
+                          <div>
+                            <Button
+                              size="sm"
+                              onClick={() => handleReply(d.id)}
+                              disabled={(!replyTexts[d.id]?.trim() && (!replyImages[d.id] || replyImages[d.id].length === 0)) || sending[d.id]}
+                            >
+                              {sending[d.id] ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Send className="h-4 w-4 mr-1" />} Submit Answer
                             </Button>
                           </div>
-                        ) : (
-                          <Button variant="outline" size="sm" onClick={() => fileInputRefs.current[d.id]?.click()}>
-                            <ImagePlus className="h-4 w-4 mr-1" /> Attach Photos
-                          </Button>
-                        )}
-                        <div>
-                          <Button
-                            size="sm"
-                            onClick={() => handleReply(d.id)}
-                            disabled={(!replyTexts[d.id]?.trim() && (!replyImages[d.id] || replyImages[d.id].length === 0)) || sending[d.id]}
-                          >
-                            {sending[d.id] ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Send className="h-4 w-4 mr-1" />} Submit Answer
-                          </Button>
                         </div>
-                      </div>
+                      ) : (
+                        <div className="space-y-3">
+                          <div className="p-3 rounded bg-success/10 text-sm">
+                            <p className="text-xs text-muted-foreground mb-1">Your Original Answer</p>
+                            <p className="whitespace-pre-wrap">{d.answer}</p>
+                            {(d.answerImageUrls && d.answerImageUrls.length > 0 ? d.answerImageUrls : d.answerImageUrl ? [d.answerImageUrl] : []).map((u, i) => (
+                              <img key={i} src={u} alt="answer" className="max-h-40 rounded border mt-2" />
+                            ))}
+                          </div>
+                          {(() => {
+                            const thread = store.followups.filter((f) => f.doubtId === d.id);
+                            return thread.length > 0 ? (
+                              <div className="space-y-2">
+                                <p className="text-xs font-semibold text-muted-foreground">Discussion</p>
+                                {thread.map((f) => (
+                                  <div key={f.id} className={`p-2 rounded text-xs ${f.authorRole === "teacher" ? "bg-primary/10" : "bg-accent/10"}`}>
+                                    <p className="font-semibold">{f.authorRole === "teacher" ? "👨‍🏫" : "🙋"} {f.authorName}</p>
+                                    {f.text && <p className="mt-1 whitespace-pre-wrap">{f.text}</p>}
+                                    {f.imageUrls.map((u, i) => (
+                                      <img key={i} src={u} alt="attachment" className="max-h-40 rounded border mt-2" />
+                                    ))}
+                                    <p className="text-[10px] text-muted-foreground mt-1">{new Date(f.createdAt).toLocaleString()}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : null;
+                          })()}
+                          <div className="space-y-2 border-t pt-2">
+                            <p className="text-xs font-semibold text-accent">💬 Student requested clarification — send additional explanation:</p>
+                            <Textarea
+                              placeholder="Additional explanation..."
+                              rows={3}
+                              value={followupReply[d.id]?.text || ""}
+                              onChange={(e) => setFollowupReply((p) => ({ ...p, [d.id]: { text: e.target.value, images: p[d.id]?.images || [], previews: p[d.id]?.previews || [] } }))}
+                            />
+                            <div className="flex flex-wrap gap-2">
+                              {(followupReply[d.id]?.previews || []).map((src, i) => (
+                                <div key={i} className="relative">
+                                  <img src={src} alt="preview" className="h-20 w-20 object-cover rounded border" />
+                                  <button type="button" onClick={() => setFollowupReply((p) => { const cur = p[d.id]; return { ...p, [d.id]: { ...cur, images: cur.images.filter((_, idx) => idx !== i), previews: cur.previews.filter((_, idx) => idx !== i) } }; })} className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5">
+                                    <X className="h-3 w-3" />
+                                  </button>
+                                </div>
+                              ))}
+                              <label className="cursor-pointer flex items-center justify-center h-20 w-20 border-2 border-dashed rounded text-xs text-muted-foreground hover:bg-muted/50">
+                                <ImagePlus className="h-4 w-4" />
+                                <input
+                                  type="file" accept="image/*" multiple className="hidden"
+                                  onChange={(e) => {
+                                    const files = Array.from(e.target.files || []);
+                                    if (files.length === 0) return;
+                                    const previews = files.map((f) => URL.createObjectURL(f));
+                                    setFollowupReply((p) => {
+                                      const cur = p[d.id] || { text: "", images: [], previews: [] };
+                                      return { ...p, [d.id]: { ...cur, images: [...cur.images, ...files], previews: [...cur.previews, ...previews] } };
+                                    });
+                                    e.target.value = "";
+                                  }}
+                                />
+                              </label>
+                            </div>
+                            <Button
+                              size="sm"
+                              disabled={followupSending[d.id] || !(followupReply[d.id]?.text?.trim())}
+                              onClick={async () => {
+                                setFollowupSending((p) => ({ ...p, [d.id]: true }));
+                                try {
+                                  const cur = followupReply[d.id];
+                                  const urls: string[] = [];
+                                  for (const f of cur.images) {
+                                    const url = await store.uploadDoubtImage(f);
+                                    if (url) urls.push(url);
+                                  }
+                                  await store.addFollowup({
+                                    doubtId: d.id,
+                                    authorRole: "teacher",
+                                    authorName: teacher.name,
+                                    text: cur.text,
+                                    imageUrls: urls,
+                                  });
+                                  setFollowupReply((p) => { const n = { ...p }; delete n[d.id]; return n; });
+                                } finally {
+                                  setFollowupSending((p) => ({ ...p, [d.id]: false }));
+                                }
+                              }}
+                            >
+                              {followupSending[d.id] ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Send className="h-4 w-4 mr-1" />} Send Explanation
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+
                     </CardContent>
                   </Card>
                 ))
