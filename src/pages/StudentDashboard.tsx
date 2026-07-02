@@ -17,8 +17,9 @@ import {
 import DigitalBoardStudent from "@/components/DigitalBoardStudent";
 import { verifySession, clearSession } from "@/lib/authGuard";
 
-type View = "dashboard" | "subjects" | "videos" | "video-player" | "doubts" | "digital-board" | "learning-feed" | "saved-doubts" | "exam-subjects" | "exam-content";
+type View = "dashboard" | "learning-resources" | "subjects" | "videos" | "video-player" | "doubts" | "digital-board" | "learning-feed" | "saved-doubts" | "exam-subjects" | "exam-content" | "feed-ask-doubt";
 type DoubtType = "text" | "text+image";
+
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
