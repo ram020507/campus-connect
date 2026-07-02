@@ -865,9 +865,57 @@ export function useSupabaseData() {
     await fetchAll();
   };
 
+  // ===== Follow-up thread =====
+  const addFollowup = async (params: {
+    doubtId: string;
+    authorRole: "student" | "teacher";
+    authorName: string;
+    text: string;
+    imageUrls?: string[];
+  }) => {
+    await (supabase as any).from("doubt_followups").insert({
+      doubt_id: params.doubtId,
+      author_role: params.authorRole,
+      author_name: params.authorName,
+      text: params.text || "",
+      image_urls: params.imageUrls || [],
+    });
+    // Update doubt status: student => clarification_requested, teacher => solved
+    const nextStatus = params.authorRole === "student" ? "clarification_requested" : "solved";
+    const patch: Record<string, any> = { status: nextStatus };
+    if (params.authorRole === "teacher") {
+      patch.answered_at = new Date().toISOString();
+    } else {
+      // Reopen for student — mark unviewed so student sees fresh reply later
+      patch.viewed_by_student = false;
+    }
+    await (supabase.from("doubts").update as any)(patch).eq("id", params.doubtId);
+    if (params.authorRole === "student") {
+      invokeNotify({ type: "new_doubt", doubtId: params.doubtId });
+    } else {
+      invokeNotify({ type: "doubt_answered", doubtId: params.doubtId });
+    }
+    await fetchAll();
+  };
+
+  const markDoubtSeen = async (studentRegNo: string, doubtId: string) => {
+    const key = `${studentRegNo}:${doubtId}`;
+    if (seenDoubtIds.includes(key)) return;
+    setSeenDoubtIds((prev) => [...prev, key]);
+    await (supabase as any).from("doubt_seen").insert({
+      student_reg_no: studentRegNo,
+      doubt_id: doubtId,
+    });
+  };
+
+  const markDoubtUnderstood = async (doubtId: string) => {
+    await (supabase.from("doubts").update as any)({ status: "understood", viewed_by_student: true }).eq("id", doubtId);
+    await fetchAll();
+  };
+
   return {
     colleges, students, teachers, doubts, savedDoubts, helpfulByMe, loading,
-    subjectNotes, examPrepVideos, examPrepFiles,
+    subjectNotes, examPrepVideos, examPrepFiles, followups, seenDoubtIds,
     uploadSubjectNote, removeSubjectNote,
     addExamPrepVideo, removeExamPrepVideo, uploadExamPrepFile, removeExamPrepFile,
     addCollege, removeCollege, updateCollege,
@@ -884,6 +932,8 @@ export function useSupabaseData() {
     updateDoubtQuestion, deleteDoubt, updateDoubtAnswer, deleteDoubtAnswer,
     saveDoubt, unsaveDoubt, toggleHelpful,
     markDoubtViewed,
+    addFollowup, markDoubtSeen, markDoubtUnderstood,
     refetch: fetchAll,
   };
 }
+
