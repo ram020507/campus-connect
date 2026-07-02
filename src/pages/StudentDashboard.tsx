@@ -1055,6 +1055,22 @@ const StudentDashboard = () => {
                             <div className="flex items-center gap-2">
                               <Button
                                 variant="outline" size="sm" className="gap-1"
+                                onClick={() => {
+                                  setFeedAskSource(d);
+                                  setFeedAskText("");
+                                  setFeedAskUseExisting(true);
+                                  setFeedAskImage1(null);
+                                  setFeedAskImage1Preview(null);
+                                  setFeedAskImage2(null);
+                                  setFeedAskImage2Preview(null);
+                                  setView("feed-ask-doubt");
+                                }}
+                              >
+                                <MessageCircle className="h-4 w-4" />
+                                <span className="text-xs font-medium">Ask a Doubt</span>
+                              </Button>
+                              <Button
+                                variant="outline" size="sm" className="gap-1"
                                 onClick={() => isSaved(d.id) ? store.unsaveDoubt(student.registrationNumber, d.id) : store.saveDoubt(student.registrationNumber, d.id)}
                               >
                                 {isSaved(d.id) ? <BookmarkCheck className="h-4 w-4 text-success" /> : <Bookmark className="h-4 w-4" />}
@@ -1062,6 +1078,7 @@ const StudentDashboard = () => {
                               </Button>
                             </div>
                           </div>
+
                         </div>
                       </CardContent>
                     </Card>
