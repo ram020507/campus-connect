@@ -104,7 +104,19 @@ export interface Doubt {
   ocrText?: string;
   helpfulCount: number;
   viewedByStudent: boolean;
+  status?: string;
 }
+
+export interface DoubtFollowup {
+  id: string;
+  doubtId: string;
+  authorRole: "student" | "teacher";
+  authorName: string;
+  text: string;
+  imageUrls: string[];
+  createdAt: string;
+}
+
 
 export interface SavedDoubt {
   id: string;
