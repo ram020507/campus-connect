@@ -299,6 +299,8 @@ export function useSupabaseData() {
           ocrText: (d as any).ocr_text || undefined,
           helpfulCount: (d as any).helpful_count || 0,
           viewedByStudent: (d as any).viewed_by_student || false,
+          status: (d as any).status || undefined,
+
         }))
       );
 
