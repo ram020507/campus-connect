@@ -73,11 +73,11 @@ const TeacherDashboard = () => {
       !d.claimedBy
   );
 
-  // Section 2: Claimed by this teacher — claimed but not yet answered
+  // Section 2: Claimed by this teacher — claimed but not yet answered, OR pending clarification requests on doubts I answered
   const claimedDoubts = store.doubts.filter(
     (d) =>
-      d.claimedBy === teacher.staffId &&
-      !d.answer
+      (d.claimedBy === teacher.staffId && !d.answer) ||
+      (d.answeredBy === teacher.name && d.status === "clarification_requested")
   );
 
   // Section 3: All solved doubts from teacher's subjects
@@ -86,6 +86,7 @@ const TeacherDashboard = () => {
       teacherSubjects.some(s => s.toLowerCase() === d.subjectName.toLowerCase()) &&
       d.answer
   );
+
 
   const handleClaim = async (doubtId: string) => {
     await store.refetch();
