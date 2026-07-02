@@ -126,6 +126,17 @@ const StudentDashboard = () => {
     return shuffled;
   }, [store.doubts, store.seenDoubtIds, student.year, student.department, student.registrationNumber, feedSubjectFilter]);
 
+  // Mark the currently-viewed feed doubt as seen for this student
+  useEffect(() => {
+    if (view !== "learning-feed") return;
+    const d = feedDoubts[feedCurrentIndex];
+    if (!d) return;
+    store.markDoubtSeen(student.registrationNumber, d.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view, feedCurrentIndex, feedDoubts]);
+
+
+
 
   const feedSubjectOptions = useMemo(() => {
     const all = store.doubts.filter(
