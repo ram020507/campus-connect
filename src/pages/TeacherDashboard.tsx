@@ -47,6 +47,9 @@ const TeacherDashboard = () => {
   const [replyImages, setReplyImages] = useState<Record<string, File[]>>({});
   const [replyImagePreviews, setReplyImagePreviews] = useState<Record<string, string[]>>({});
   const [sending, setSending] = useState<Record<string, boolean>>({});
+  const [followupReply, setFollowupReply] = useState<Record<string, { text: string; images: File[]; previews: string[] }>>({});
+  const [followupSending, setFollowupSending] = useState<Record<string, boolean>>({});
+
   const [claimAlert, setClaimAlert] = useState<{ show: boolean; teacherName: string }>({ show: false, teacherName: "" });
   const [editingAnswerId, setEditingAnswerId] = useState<string | null>(null);
   const [editAnswerText, setEditAnswerText] = useState("");
