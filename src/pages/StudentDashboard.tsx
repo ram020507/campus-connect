@@ -141,10 +141,10 @@ const StudentDashboard = () => {
 
   const feedSubjectOptions = useMemo(() => {
     const all = store.doubts.filter(
-      (d) => d.answer && d.studentYear === student.year && d.studentDepartment === student.department && d.studentRegNo !== student.registrationNumber
+      (d) => d.answer && d.studentCollege === student.collegeName && d.studentYear === student.year && d.studentDepartment === student.department && d.studentRegNo !== student.registrationNumber
     );
     return [...new Set(all.map((d) => d.subjectName))].sort();
-  }, [store.doubts.length, student.year, student.department]);
+  }, [store.doubts.length, student.year, student.department, student.collegeName]);
 
   // Saved doubts
   const mySavedDoubtIds = store.savedDoubts
