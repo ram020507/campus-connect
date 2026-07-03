@@ -448,6 +448,7 @@ const TeacherDashboard = () => {
                               {followupSending[d.id] ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Send className="h-4 w-4 mr-1" />} Send Explanation
                             </Button>
                           </div>
+                          )}
                         </div>
                       )}
 
