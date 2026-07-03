@@ -64,6 +64,7 @@ const AdminDashboard = () => {
   const [teacherStaffId, setTeacherStaffId] = useState("");
   const [teacherName, setTeacherName] = useState("");
   const [teacherDob, setTeacherDob] = useState("");
+  const [teacherDepartment, setTeacherDepartment] = useState("");
   // email field removed from admin panel
   const [teacherSelectedSubjects, setTeacherSelectedSubjects] = useState<string[]>([]);
   const [editingTeacher, setEditingTeacher] = useState<string | null>(null);
