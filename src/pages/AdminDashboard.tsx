@@ -859,6 +859,12 @@ const AdminDashboard = () => {
                                       onChange={(e) => setEditTeacherData((d) => ({ ...d, name: e.target.value }))} />
                                     <Input placeholder="DOB" value={editTeacherData.dob ?? ""} maxLength={10} inputMode="numeric"
                                       onChange={(e) => setEditTeacherData((d) => ({ ...d, dob: formatDob(e.target.value) }))} />
+                                    <Select value={editTeacherData.department ?? ""} onValueChange={(v) => setEditTeacherData((d) => ({ ...d, department: v }))}>
+                                      <SelectTrigger><SelectValue placeholder="Select Department" /></SelectTrigger>
+                                      <SelectContent>
+                                        {teacherCollegeDepartments.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                                      </SelectContent>
+                                    </Select>
                                   </div>
                                   <div>
                                     <p className="text-sm font-medium mb-2">Subjects</p>
