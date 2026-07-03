@@ -795,6 +795,14 @@ const AdminDashboard = () => {
                       <Input placeholder="Teacher Name" value={teacherName} onChange={(e) => setTeacherName(e.target.value)} />
                       <Input placeholder="DOB (DD-MM-YYYY)" value={teacherDob} maxLength={10} inputMode="numeric"
                         onChange={(e) => setTeacherDob(formatDob(e.target.value))} />
+                      <Select value={teacherDepartment} onValueChange={setTeacherDepartment}>
+                        <SelectTrigger><SelectValue placeholder="Select Department" /></SelectTrigger>
+                        <SelectContent>
+                          {teacherCollegeDepartments.length === 0
+                            ? <SelectItem value="__none" disabled>No departments</SelectItem>
+                            : teacherCollegeDepartments.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="mt-3">
                       <p className="text-sm font-medium mb-2">Assign Subjects</p>
@@ -814,13 +822,15 @@ const AdminDashboard = () => {
                     </div>
                     <p className="text-xs text-muted-foreground mt-2">College: {tCollege.name}</p>
                     <Button className="mt-3" onClick={() => {
-                      if (teacherStaffId && teacherName && teacherDob && teacherSelectedSubjects.length > 0) {
+                      if (teacherStaffId && teacherName && teacherDob && teacherDepartment && teacherSelectedSubjects.length > 0) {
                         store.addTeacher({
                           staffId: teacherStaffId, name: teacherName, dob: teacherDob,
                           email: "", collegeName: tCollege.name,
+                          department: teacherDepartment,
                           subjectName: teacherSelectedSubjects.join(","),
                         });
                         setTeacherStaffId(""); setTeacherName(""); setTeacherDob("");
+                        setTeacherDepartment("");
                         setTeacherSelectedSubjects([]);
                       }
                     }}><Plus className="h-4 w-4 mr-1" /> Create Account</Button>
