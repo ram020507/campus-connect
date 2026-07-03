@@ -267,13 +267,14 @@ export function useSupabaseData() {
       );
 
       setTeachers(
-        (teachersRes.data || []).map((t) => ({
+        (teachersRes.data || []).map((t: any) => ({
           id: t.id,
           staffId: t.staff_id,
           name: t.name,
           dob: "",
           email: "",
           collegeName: t.college_name,
+          department: t.department || "",
           subjectName: t.subject_name,
         }))
       );
