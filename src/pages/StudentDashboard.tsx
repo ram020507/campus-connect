@@ -517,49 +517,6 @@ const StudentDashboard = () => {
           );
         })()}
 
-        {view === "exam-content" && currentSubject && (() => {
-          const evs = store.examPrepVideos.filter((v) => v.subjectId === currentSubject.id);
-          const efs = store.examPrepFiles.filter((f) => f.subjectId === currentSubject.id);
-          return (
-            <div className="space-y-4 animate-fade-in">
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="sm" onClick={() => { setView("exam-subjects"); setSelectedSubjectId(""); }}>
-                  <ArrowLeft className="h-4 w-4 mr-1" /> Back
-                </Button>
-                <h2 className="font-display font-semibold text-lg">{currentSubject.name} — Exam Prep</h2>
-              </div>
-              <Tabs defaultValue="videos">
-                <TabsList className="grid grid-cols-2 w-full max-w-sm">
-                  <TabsTrigger value="videos"><Video className="h-4 w-4 mr-1" /> Videos</TabsTrigger>
-                  <TabsTrigger value="files"><FileText className="h-4 w-4 mr-1" /> Files</TabsTrigger>
-                </TabsList>
-                <TabsContent value="videos" className="space-y-3 mt-4">
-                  {evs.length === 0 ? <p className="text-center text-muted-foreground py-8">No videos yet.</p> : evs.map((v) => (
-                    <Card key={v.id} className="cursor-pointer hover:shadow-md transition-shadow"
-                      onClick={() => { setSelectedVideoUrl(v.url); setSelectedVideoTitle(v.title); setSelectedVideoId(""); setView("video-player"); }}>
-                      <CardContent className="p-4 flex items-center gap-3">
-                        <Video className="h-5 w-5 text-primary" />
-                        <p className="flex-1 font-medium text-sm">{v.title}</p>
-                        <Play className="h-5 w-5 text-primary" />
-                      </CardContent>
-                    </Card>
-                  ))}
-                </TabsContent>
-                <TabsContent value="files" className="space-y-2 mt-4">
-                  {efs.length === 0 ? <p className="text-center text-muted-foreground py-8">No files yet.</p> : efs.map((f) => (
-                    <Card key={f.id}>
-                      <CardContent className="p-3 flex items-center gap-2">
-                        <FileText className="h-4 w-4 text-primary shrink-0" />
-                        <a href={f.fileUrl} target="_blank" rel="noopener noreferrer" className="text-sm flex-1 truncate text-primary hover:underline">{f.fileName}</a>
-                        <a href={f.fileUrl} download className="text-muted-foreground hover:text-primary"><Download className="h-4 w-4" /></a>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </TabsContent>
-              </Tabs>
-            </div>
-          );
-        })()}
 
         {view === "subjects" && (
           <div className="space-y-4 animate-fade-in">
