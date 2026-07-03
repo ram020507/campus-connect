@@ -190,7 +190,7 @@ export function useSupabaseData() {
           supabase.from("videos").select("*"),
           supabase.from("video_files").select("*"),
           supabase.from("students").select("id, registration_number, name, college_name, department, year"),
-          supabase.from("teachers").select("id, staff_id, name, college_name, subject_name, department" as any),
+          supabase.from("teachers").select("*"),
           supabase.from("doubts").select("*"),
           supabase.from("saved_doubts").select("*"),
           supabase.from("doubt_helpful").select("*"),
