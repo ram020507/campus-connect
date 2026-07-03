@@ -76,18 +76,19 @@ const TeacherDashboard = () => {
       !d.claimedBy
   );
 
-  // Section 2: Claimed by this teacher — claimed but not yet answered, OR pending clarification requests on doubts I answered
+  // Section 2: My Solutions — anything I claimed but haven't answered yet, OR any doubt I've answered (including clarification requests)
   const claimedDoubts = store.doubts.filter(
     (d) =>
       (d.claimedBy === teacher.staffId && !d.answer) ||
-      (d.answeredBy === teacher.name && d.status === "clarification_requested")
+      d.answeredBy === teacher.name
   );
 
-  // Section 3: All solved doubts from teacher's subjects
+  // Section 3: All Solutions — solved doubts for teacher's subjects, answered by OTHER teachers only
   const allSolvedDoubts = store.doubts.filter(
     (d) =>
       teacherSubjects.some(s => s.toLowerCase() === d.subjectName.toLowerCase()) &&
-      d.answer
+      d.answer &&
+      d.answeredBy !== teacher.name
   );
 
 
