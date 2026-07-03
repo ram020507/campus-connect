@@ -630,6 +630,7 @@ export type Database = {
         Row: {
           college_name: string
           created_at: string
+          department: string | null
           dob: string
           email: string | null
           id: string
@@ -640,6 +641,7 @@ export type Database = {
         Insert: {
           college_name: string
           created_at?: string
+          department?: string | null
           dob: string
           email?: string | null
           id?: string
@@ -650,6 +652,7 @@ export type Database = {
         Update: {
           college_name?: string
           created_at?: string
+          department?: string | null
           dob?: string
           email?: string | null
           id?: string

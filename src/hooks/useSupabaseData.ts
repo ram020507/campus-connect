@@ -80,6 +80,7 @@ export interface TeacherAccount {
   dob: string;
   email: string;
   collegeName: string;
+  department: string;
   subjectName: string; // comma-separated for multi-subject
 }
 
@@ -189,7 +190,7 @@ export function useSupabaseData() {
           supabase.from("videos").select("*"),
           supabase.from("video_files").select("*"),
           supabase.from("students").select("id, registration_number, name, college_name, department, year"),
-          supabase.from("teachers").select("id, staff_id, name, college_name, subject_name"),
+          supabase.from("teachers").select("*"),
           supabase.from("doubts").select("*"),
           supabase.from("saved_doubts").select("*"),
           supabase.from("doubt_helpful").select("*"),
@@ -266,13 +267,14 @@ export function useSupabaseData() {
       );
 
       setTeachers(
-        (teachersRes.data || []).map((t) => ({
+        (teachersRes.data || []).map((t: any) => ({
           id: t.id,
           staffId: t.staff_id,
           name: t.name,
           dob: "",
           email: "",
           collegeName: t.college_name,
+          department: t.department || "",
           subjectName: t.subject_name,
         }))
       );
@@ -650,8 +652,9 @@ export function useSupabaseData() {
       dob: teacher.dob,
       email: teacher.email || null,
       college_name: teacher.collegeName,
+      department: teacher.department || null,
       subject_name: teacher.subjectName,
-    });
+    } as any);
     if (!error) await fetchAll();
   };
 
@@ -680,6 +683,7 @@ export function useSupabaseData() {
     if (updates.email !== undefined) mapped.email = updates.email || null;
     if (updates.collegeName !== undefined) mapped.college_name = updates.collegeName;
     if (updates.subjectName !== undefined) mapped.subject_name = updates.subjectName;
+    if (updates.department !== undefined) mapped.department = updates.department || null;
 
     await supabase.from("teachers").update(mapped as any).eq("id", id);
 

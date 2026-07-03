@@ -76,18 +76,19 @@ const TeacherDashboard = () => {
       !d.claimedBy
   );
 
-  // Section 2: Claimed by this teacher — claimed but not yet answered, OR pending clarification requests on doubts I answered
+  // Section 2: My Solutions — anything I claimed but haven't answered yet, OR any doubt I've answered (including clarification requests)
   const claimedDoubts = store.doubts.filter(
     (d) =>
       (d.claimedBy === teacher.staffId && !d.answer) ||
-      (d.answeredBy === teacher.name && d.status === "clarification_requested")
+      d.answeredBy === teacher.name
   );
 
-  // Section 3: All solved doubts from teacher's subjects
+  // Section 3: All Solutions — solved doubts for teacher's subjects, answered by OTHER teachers only
   const allSolvedDoubts = store.doubts.filter(
     (d) =>
       teacherSubjects.some(s => s.toLowerCase() === d.subjectName.toLowerCase()) &&
-      d.answer
+      d.answer &&
+      d.answeredBy !== teacher.name
   );
 
 
@@ -384,6 +385,7 @@ const TeacherDashboard = () => {
                               </div>
                             ) : null;
                           })()}
+                          {d.status === "clarification_requested" && (
                           <div className="space-y-2 border-t pt-2">
                             <p className="text-xs font-semibold text-accent">💬 Student requested clarification — send additional explanation:</p>
                             <Textarea
@@ -446,6 +448,7 @@ const TeacherDashboard = () => {
                               {followupSending[d.id] ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Send className="h-4 w-4 mr-1" />} Send Explanation
                             </Button>
                           </div>
+                          )}
                         </div>
                       )}
 

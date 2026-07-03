@@ -64,6 +64,7 @@ const AdminDashboard = () => {
   const [teacherStaffId, setTeacherStaffId] = useState("");
   const [teacherName, setTeacherName] = useState("");
   const [teacherDob, setTeacherDob] = useState("");
+  const [teacherDepartment, setTeacherDepartment] = useState("");
   // email field removed from admin panel
   const [teacherSelectedSubjects, setTeacherSelectedSubjects] = useState<string[]>([]);
   const [editingTeacher, setEditingTeacher] = useState<string | null>(null);
@@ -102,6 +103,15 @@ const AdminDashboard = () => {
     );
     return out.sort();
   }, [tCollege]);
+  const teacherCollegeDepartments = useMemo(() => {
+    if (!tCollege) return [] as string[];
+    const out: string[] = [];
+    tCollege.years.forEach((y) =>
+      y.departments.forEach((d) => { if (!out.includes(d.name)) out.push(d.name); })
+    );
+    return out.sort();
+  }, [tCollege]);
+
 
   const handleFileUpload = async (videoId: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -785,6 +795,14 @@ const AdminDashboard = () => {
                       <Input placeholder="Teacher Name" value={teacherName} onChange={(e) => setTeacherName(e.target.value)} />
                       <Input placeholder="DOB (DD-MM-YYYY)" value={teacherDob} maxLength={10} inputMode="numeric"
                         onChange={(e) => setTeacherDob(formatDob(e.target.value))} />
+                      <Select value={teacherDepartment} onValueChange={setTeacherDepartment}>
+                        <SelectTrigger><SelectValue placeholder="Select Department" /></SelectTrigger>
+                        <SelectContent>
+                          {teacherCollegeDepartments.length === 0
+                            ? <SelectItem value="__none" disabled>No departments</SelectItem>
+                            : teacherCollegeDepartments.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="mt-3">
                       <p className="text-sm font-medium mb-2">Assign Subjects</p>
@@ -804,13 +822,15 @@ const AdminDashboard = () => {
                     </div>
                     <p className="text-xs text-muted-foreground mt-2">College: {tCollege.name}</p>
                     <Button className="mt-3" onClick={() => {
-                      if (teacherStaffId && teacherName && teacherDob && teacherSelectedSubjects.length > 0) {
+                      if (teacherStaffId && teacherName && teacherDob && teacherDepartment && teacherSelectedSubjects.length > 0) {
                         store.addTeacher({
                           staffId: teacherStaffId, name: teacherName, dob: teacherDob,
                           email: "", collegeName: tCollege.name,
+                          department: teacherDepartment,
                           subjectName: teacherSelectedSubjects.join(","),
                         });
                         setTeacherStaffId(""); setTeacherName(""); setTeacherDob("");
+                        setTeacherDepartment("");
                         setTeacherSelectedSubjects([]);
                       }
                     }}><Plus className="h-4 w-4 mr-1" /> Create Account</Button>
@@ -839,6 +859,12 @@ const AdminDashboard = () => {
                                       onChange={(e) => setEditTeacherData((d) => ({ ...d, name: e.target.value }))} />
                                     <Input placeholder="DOB" value={editTeacherData.dob ?? ""} maxLength={10} inputMode="numeric"
                                       onChange={(e) => setEditTeacherData((d) => ({ ...d, dob: formatDob(e.target.value) }))} />
+                                    <Select value={editTeacherData.department ?? ""} onValueChange={(v) => setEditTeacherData((d) => ({ ...d, department: v }))}>
+                                      <SelectTrigger><SelectValue placeholder="Select Department" /></SelectTrigger>
+                                      <SelectContent>
+                                        {teacherCollegeDepartments.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                                      </SelectContent>
+                                    </Select>
                                   </div>
                                   <div>
                                     <p className="text-sm font-medium mb-2">Subjects</p>
@@ -870,12 +896,12 @@ const AdminDashboard = () => {
                                 <div className="flex items-center justify-between gap-2">
                                   <div className="text-sm min-w-0">
                                     <p className="font-medium truncate">{t.name} <span className="text-muted-foreground">#{t.staffId}</span></p>
-                                    <p className="text-xs text-muted-foreground truncate">Subjects: {getTeacherSubjects(t).join(", ") || "—"}</p>
+                                    <p className="text-xs text-muted-foreground truncate">Dept: {t.department || "—"} · Subjects: {getTeacherSubjects(t).join(", ") || "—"}</p>
                                   </div>
                                   <div className="flex items-center gap-1 shrink-0">
                                     <Button variant="ghost" size="icon" onClick={() => {
                                       setEditingTeacher(t.id);
-                                      setEditTeacherData({ staffId: t.staffId, name: t.name, dob: t.dob, email: "", collegeName: t.collegeName, subjectName: t.subjectName });
+                                      setEditTeacherData({ staffId: t.staffId, name: t.name, dob: t.dob, email: "", collegeName: t.collegeName, department: t.department, subjectName: t.subjectName });
                                     }}><Pencil className="h-4 w-4 text-primary" /></Button>
                                     <ConfirmDelete title={`Delete ${t.name}?`}
                                       desc="This removes the teacher account, their answers in the doubt system and learning feed, and any active digital board sessions."
