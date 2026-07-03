@@ -652,8 +652,9 @@ export function useSupabaseData() {
       dob: teacher.dob,
       email: teacher.email || null,
       college_name: teacher.collegeName,
+      department: teacher.department || null,
       subject_name: teacher.subjectName,
-    });
+    } as any);
     if (!error) await fetchAll();
   };
 
