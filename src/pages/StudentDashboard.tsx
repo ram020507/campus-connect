@@ -39,6 +39,9 @@ const StudentDashboard = () => {
     return searchParams.get("doubtId") ? "doubts" : "dashboard";
   });
   const [selectedSemester, setSelectedSemester] = useState<"odd" | "even">("odd");
+  const [examSemester, setExamSemester] = useState<"odd" | "even">("odd");
+  const [videoSearch, setVideoSearch] = useState("");
+  const [examSearch, setExamSearch] = useState("");
   const [selectedSubjectId, setSelectedSubjectId] = useState("");
   const [selectedVideoUrl, setSelectedVideoUrl] = useState("");
   const [selectedVideoTitle, setSelectedVideoTitle] = useState("");
