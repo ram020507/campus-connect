@@ -683,6 +683,7 @@ export function useSupabaseData() {
     if (updates.email !== undefined) mapped.email = updates.email || null;
     if (updates.collegeName !== undefined) mapped.college_name = updates.collegeName;
     if (updates.subjectName !== undefined) mapped.subject_name = updates.subjectName;
+    if (updates.department !== undefined) mapped.department = updates.department || null;
 
     await supabase.from("teachers").update(mapped as any).eq("id", id);
 
