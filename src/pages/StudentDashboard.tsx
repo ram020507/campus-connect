@@ -537,25 +537,41 @@ const StudentDashboard = () => {
                 <TabsTrigger value="notes"><FileText className="h-4 w-4 mr-1" /> Notes</TabsTrigger>
               </TabsList>
               <TabsContent value="videos" className="space-y-3 mt-4">
-                {currentSubject.videos.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">No videos uploaded yet.</p>
-                ) : currentSubject.videos.map((v, i) => (
-                  <Card key={v.id} className="cursor-pointer hover:shadow-md transition-shadow"
-                    onClick={() => { setSelectedVideoUrl(v.url); setSelectedVideoTitle(v.title); setSelectedVideoId(v.id); setView("video-player"); }}>
-                    <CardContent className="p-4 flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-bold">
-                        {i + 1}
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-medium text-sm">{v.title}</p>
-                        {v.files.length > 0 && (
-                          <p className="text-xs text-muted-foreground">{v.files.length} file(s) attached</p>
-                        )}
-                      </div>
-                      <Play className="h-5 w-5 text-primary" />
-                    </CardContent>
-                  </Card>
-                ))}
+                <div className="relative">
+                  <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    placeholder="Search videos by title..."
+                    value={videoSearch}
+                    onChange={(e) => setVideoSearch(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+                {(() => {
+                  const q = videoSearch.trim().toLowerCase();
+                  const filtered = q
+                    ? currentSubject.videos.filter((v) => v.title.toLowerCase().includes(q))
+                    : currentSubject.videos;
+                  if (filtered.length === 0) {
+                    return <p className="text-center text-muted-foreground py-8">{q ? "No matching videos." : "No videos uploaded yet."}</p>;
+                  }
+                  return filtered.map((v, i) => (
+                    <Card key={v.id} className="cursor-pointer hover:shadow-md transition-shadow"
+                      onClick={() => { setSelectedVideoUrl(v.url); setSelectedVideoTitle(v.title); setSelectedVideoId(v.id); setView("video-player"); }}>
+                      <CardContent className="p-4 flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-bold">
+                          {i + 1}
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-medium text-sm">{v.title}</p>
+                          {v.files.length > 0 && (
+                            <p className="text-xs text-muted-foreground">{v.files.length} file(s) attached</p>
+                          )}
+                        </div>
+                        <Play className="h-5 w-5 text-primary" />
+                      </CardContent>
+                    </Card>
+                  ));
+                })()}
               </TabsContent>
               <TabsContent value="notes" className="space-y-2 mt-4">
                 {(() => {
