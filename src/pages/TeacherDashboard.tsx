@@ -385,6 +385,7 @@ const TeacherDashboard = () => {
                               </div>
                             ) : null;
                           })()}
+                          {d.status === "clarification_requested" && (
                           <div className="space-y-2 border-t pt-2">
                             <p className="text-xs font-semibold text-accent">💬 Student requested clarification — send additional explanation:</p>
                             <Textarea
