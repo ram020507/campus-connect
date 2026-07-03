@@ -418,33 +418,104 @@ const StudentDashboard = () => {
 
         {view === "exam-subjects" && (
           <div className="space-y-4 animate-fade-in">
-            <Button variant="ghost" size="sm" onClick={() => setView("dashboard")}>
-              <ArrowLeft className="h-4 w-4 mr-1" /> Back
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" onClick={() => setView("learning-resources")}>
+                <ArrowLeft className="h-4 w-4 mr-1" /> Back
+              </Button>
+              <Select value={examSemester} onValueChange={(v) => setExamSemester(v as "odd" | "even")}>
+                <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="odd">Odd Semester</SelectItem>
+                  <SelectItem value="even">Even Semester</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <h2 className="font-display font-semibold text-lg flex items-center gap-2">
-              <BookMarked className="h-5 w-5 text-primary" /> Exam Preparation
+              <BookMarked className="h-5 w-5 text-primary" /> Important Notes
             </h2>
-            {(dept?.subjects || []).length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">No subjects found.</p>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {(dept?.subjects || []).map((s) => (
-                  <Card key={s.id} className="cursor-pointer hover:shadow-md transition-shadow"
-                    onClick={() => { setSelectedSubjectId(s.id); setView("exam-content"); }}>
-                    <CardContent className="p-5">
-                      <BookMarked className="h-6 w-6 text-primary mb-2" />
-                      <p className="font-semibold font-display">{s.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {store.examPrepVideos.filter((v) => v.subjectId === s.id).length} videos ·{" "}
-                        {store.examPrepFiles.filter((f) => f.subjectId === s.id).length} files
-                      </p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
+            {(() => {
+              const examSubjects = (dept?.subjects || []).filter((s) => s.semester === examSemester);
+              if (examSubjects.length === 0) {
+                return <p className="text-center text-muted-foreground py-8">No subjects found for this semester.</p>;
+              }
+              return (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {examSubjects.map((s) => (
+                    <Card key={s.id} className="cursor-pointer hover:shadow-md transition-shadow"
+                      onClick={() => { setSelectedSubjectId(s.id); setExamSearch(""); setView("exam-content"); }}>
+                      <CardContent className="p-5">
+                        <BookMarked className="h-6 w-6 text-primary mb-2" />
+                        <p className="font-semibold font-display">{s.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {store.examPrepVideos.filter((v) => v.subjectId === s.id).length} videos ·{" "}
+                          {store.examPrepFiles.filter((f) => f.subjectId === s.id).length} files
+                        </p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
         )}
+
+        {view === "exam-content" && currentSubject && (() => {
+          const q = examSearch.trim().toLowerCase();
+          const evs = store.examPrepVideos
+            .filter((v) => v.subjectId === currentSubject.id)
+            .filter((v) => !q || v.title.toLowerCase().includes(q));
+          const efs = store.examPrepFiles
+            .filter((f) => f.subjectId === currentSubject.id)
+            .filter((f) => !q || f.fileName.toLowerCase().includes(q));
+          return (
+            <div className="space-y-4 animate-fade-in">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="sm" onClick={() => { setView("exam-subjects"); setSelectedSubjectId(""); }}>
+                  <ArrowLeft className="h-4 w-4 mr-1" /> Back
+                </Button>
+                <h2 className="font-display font-semibold text-lg">{currentSubject.name} — Important Notes</h2>
+              </div>
+              <div className="relative">
+                <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Search important videos & notes by title..."
+                  value={examSearch}
+                  onChange={(e) => setExamSearch(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              <Tabs defaultValue="videos">
+                <TabsList className="grid grid-cols-2 w-full max-w-sm">
+                  <TabsTrigger value="videos"><Video className="h-4 w-4 mr-1" /> Videos</TabsTrigger>
+                  <TabsTrigger value="files"><FileText className="h-4 w-4 mr-1" /> Files</TabsTrigger>
+                </TabsList>
+                <TabsContent value="videos" className="space-y-3 mt-4">
+                  {evs.length === 0 ? <p className="text-center text-muted-foreground py-8">{q ? "No matching videos." : "No videos yet."}</p> : evs.map((v) => (
+                    <Card key={v.id} className="cursor-pointer hover:shadow-md transition-shadow"
+                      onClick={() => { setSelectedVideoUrl(v.url); setSelectedVideoTitle(v.title); setSelectedVideoId(""); setView("video-player"); }}>
+                      <CardContent className="p-4 flex items-center gap-3">
+                        <Video className="h-5 w-5 text-primary" />
+                        <p className="flex-1 font-medium text-sm">{v.title}</p>
+                        <Play className="h-5 w-5 text-primary" />
+                      </CardContent>
+                    </Card>
+                  ))}
+                </TabsContent>
+                <TabsContent value="files" className="space-y-2 mt-4">
+                  {efs.length === 0 ? <p className="text-center text-muted-foreground py-8">{q ? "No matching notes." : "No files yet."}</p> : efs.map((f) => (
+                    <Card key={f.id}>
+                      <CardContent className="p-3 flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-primary shrink-0" />
+                        <a href={f.fileUrl} target="_blank" rel="noopener noreferrer" className="text-sm flex-1 truncate text-primary hover:underline">{f.fileName}</a>
+                        <a href={f.fileUrl} download className="text-muted-foreground hover:text-primary"><Download className="h-4 w-4" /></a>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </TabsContent>
+              </Tabs>
+            </div>
+          );
+        })()}
 
         {view === "exam-content" && currentSubject && (() => {
           const evs = store.examPrepVideos.filter((v) => v.subjectId === currentSubject.id);
