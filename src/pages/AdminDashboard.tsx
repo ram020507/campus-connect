@@ -103,6 +103,15 @@ const AdminDashboard = () => {
     );
     return out.sort();
   }, [tCollege]);
+  const teacherCollegeDepartments = useMemo(() => {
+    if (!tCollege) return [] as string[];
+    const out: string[] = [];
+    tCollege.years.forEach((y) =>
+      y.departments.forEach((d) => { if (!out.includes(d.name)) out.push(d.name); })
+    );
+    return out.sort();
+  }, [tCollege]);
+
 
   const handleFileUpload = async (videoId: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
