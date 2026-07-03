@@ -80,6 +80,7 @@ export interface TeacherAccount {
   dob: string;
   email: string;
   collegeName: string;
+  department: string;
   subjectName: string; // comma-separated for multi-subject
 }
 
