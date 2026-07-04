@@ -359,13 +359,63 @@ const TeacherDashboard = () => {
                         </div>
                       ) : (
                         <div className="space-y-3">
+                          {editingAnswerId === d.id ? (
+                            <div className="space-y-2 p-3 rounded border bg-card">
+                              <Textarea value={editAnswerText} onChange={(e) => setEditAnswerText(e.target.value)} rows={3} />
+                              {editAnswerImages.length > 0 && (
+                                <div className="flex flex-wrap gap-2">
+                                  {editAnswerImages.map((url, idx) => (
+                                    <div key={idx} className="relative inline-block">
+                                      <img src={url} alt={`Answer ${idx + 1}`} className="max-h-24 rounded border" />
+                                      <button onClick={() => setEditAnswerImages((prev) => prev.filter((_, i) => i !== idx))} className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1">
+                                        <X className="h-3 w-3" />
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              <input type="file" accept="image/*" multiple className="hidden" ref={editAnswerFileRef} onChange={async (e) => {
+                                const files = Array.from(e.target.files || []);
+                                for (const file of files) {
+                                  const url = await store.uploadDoubtImage(file);
+                                  if (url) setEditAnswerImages((prev) => [...prev, url]);
+                                }
+                              }} />
+                              <Button variant="outline" size="sm" onClick={() => editAnswerFileRef.current?.click()}>
+                                <ImagePlus className="h-4 w-4 mr-1" /> Add Images
+                              </Button>
+                              <div className="flex gap-2">
+                                <Button size="sm" onClick={async () => {
+                                  await store.updateDoubtAnswer(d.id, { answer: editAnswerText, answerImageUrl: editAnswerImages[0] || null, answerImageUrls: editAnswerImages });
+                                  setEditingAnswerId(null);
+                                }}>Save</Button>
+                                <Button size="sm" variant="outline" onClick={() => setEditingAnswerId(null)}>Cancel</Button>
+                              </div>
+                            </div>
+                          ) : (
                           <div className="p-3 rounded bg-success/10 text-sm">
                             <p className="text-xs text-muted-foreground mb-1">Your Original Answer</p>
                             <p className="whitespace-pre-wrap">{d.answer}</p>
                             {(d.answerImageUrls && d.answerImageUrls.length > 0 ? d.answerImageUrls : d.answerImageUrl ? [d.answerImageUrl] : []).map((u, i) => (
                               <img key={i} src={u} alt="answer" className="max-h-40 rounded border mt-2" />
                             ))}
+                            <div className="mt-2">
+                              <Button
+                                variant="outline" size="sm"
+                                disabled={d.viewedByStudent}
+                                title={d.viewedByStudent ? "Student has viewed this — editing locked" : "Edit your solution"}
+                                onClick={() => {
+                                  setEditingAnswerId(d.id);
+                                  setEditAnswerText(d.answer || "");
+                                  setEditAnswerImages(d.answerImageUrls && d.answerImageUrls.length > 0 ? d.answerImageUrls : d.answerImageUrl ? [d.answerImageUrl] : []);
+                                }}
+                              >
+                                {d.viewedByStudent ? <Lock className="h-3 w-3 mr-1" /> : <Pencil className="h-3 w-3 mr-1" />}
+                                {d.viewedByStudent ? "Locked — student viewed" : "Edit Solution"}
+                              </Button>
+                            </div>
                           </div>
+                          )}
                           {(() => {
                             const thread = store.followups.filter((f) => f.doubtId === d.id);
                             return thread.length > 0 ? (
