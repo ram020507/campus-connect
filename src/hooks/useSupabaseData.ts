@@ -765,10 +765,11 @@ export function useSupabaseData() {
   };
 
   // Enhanced edit: resets claim so updated doubt goes back to all teachers
-  const updateDoubtQuestion = async (doubtId: string, updates: { question?: string; questionImageUrl?: string | null; subjectName?: string }) => {
+  const updateDoubtQuestion = async (doubtId: string, updates: { question?: string; questionImageUrl?: string | null; questionImageUrl2?: string | null; subjectName?: string }) => {
     const mapped: Record<string, any> = {};
     if (updates.question !== undefined) mapped.question = updates.question;
     if (updates.questionImageUrl !== undefined) mapped.question_image_url = updates.questionImageUrl;
+    if (updates.questionImageUrl2 !== undefined) mapped.question_image_url_2 = updates.questionImageUrl2;
     if (updates.subjectName !== undefined) mapped.subject_name = updates.subjectName;
     // Reset claim so it goes back to pending for teachers
     mapped.claimed_by = null;
