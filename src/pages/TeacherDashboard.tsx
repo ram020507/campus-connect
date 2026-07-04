@@ -273,23 +273,16 @@ const TeacherDashboard = () => {
           </div>
         )}
 
-        {/* Section 2: Claimed Doubts */}
-        {activeSection === "claimed" && (
+        {/* In Progress (still under Claim & Solve tab, until student confirms Understood) */}
+        {activeSection === "unclaimed" && inProgressDoubts.length > 0 && (
           <div className="space-y-3">
-            <h2 className="font-display font-semibold text-lg flex items-center gap-2">
+            <h2 className="font-display font-semibold text-lg flex items-center gap-2 mt-6">
               <Lock className="h-5 w-5 text-primary" />
-              My Solutions
+              In Progress
             </h2>
-            {claimedDoubts.length === 0 ? (
-              <Card>
-                <CardContent className="p-6 text-center text-muted-foreground">
-                  No claimed doubts. Pick one from Claim & Solve to start answering.
-                </CardContent>
-              </Card>
-            ) : (
-              claimedDoubts
-                .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
-                .map((d) => (
+            {inProgressDoubts
+              .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+              .map((d) => (
                   <Card key={d.id} className="border-primary/30 animate-fade-in">
                     <CardContent className="p-4">
                       <div className="flex items-center gap-2 mb-2">
