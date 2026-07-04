@@ -453,7 +453,82 @@ const TeacherDashboard = () => {
 
                     </CardContent>
                   </Card>
-                ))
+                ))}
+          </div>
+        )}
+
+        {/* Section 2: My Solutions — doubts I answered that student marked Understood */}
+        {activeSection === "claimed" && (
+          <div className="space-y-3">
+            <h2 className="font-display font-semibold text-lg flex items-center gap-2">
+              <Lock className="h-5 w-5 text-primary" /> My Solutions
+            </h2>
+            {claimedDoubts.length === 0 ? (
+              <Card><CardContent className="p-6 text-center text-muted-foreground">No completed solutions yet. Student must mark "Understood" for doubts to appear here.</CardContent></Card>
+            ) : (
+              (() => {
+                const grouped = claimedDoubts.reduce<Record<string, typeof claimedDoubts>>((acc, d) => {
+                  (acc[d.subjectName] = acc[d.subjectName] || []).push(d);
+                  return acc;
+                }, {});
+                const subjectNames = Object.keys(grouped).sort();
+                return subjectNames.map((subject) => {
+                  const isOpen = expandedSubjects[subject] ?? true;
+                  const items = grouped[subject].sort((a, b) => new Date(b.answeredAt!).getTime() - new Date(a.answeredAt!).getTime());
+                  return (
+                    <div key={subject} className="space-y-2">
+                      <button
+                        onClick={() => setExpandedSubjects((prev) => ({ ...prev, [subject]: !isOpen }))}
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-md bg-muted/50 hover:bg-muted text-left"
+                      >
+                        {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                        <FolderOpen className="h-4 w-4 text-primary" />
+                        <span className="font-medium text-sm">{subject}</span>
+                        <span className="ml-auto text-xs text-muted-foreground">{items.length}</span>
+                      </button>
+                      {isOpen && (
+                        <div className="space-y-3 pl-4 border-l-2 border-muted">
+                          {items.map((d) => (
+                            <Card key={d.id} className="border-success/30">
+                              <CardContent className="p-4">
+                                <p className="text-xs text-muted-foreground mb-1">From {d.studentName} · {d.studentDepartment} · Year {d.studentYear}</p>
+                                <p className="text-sm font-medium">{d.question}</p>
+                                {d.questionImageUrl && <img src={d.questionImageUrl} alt="Question" className="max-h-40 rounded border mt-2" />}
+                                {d.questionImageUrl2 && <img src={d.questionImageUrl2} alt="Full problem" className="max-h-40 rounded border mt-2" />}
+                                <div className="mt-2 p-3 rounded bg-success/10 text-sm">
+                                  <p className="text-xs text-muted-foreground mb-1">Your Answer</p>
+                                  <p className="whitespace-pre-wrap">{d.answer}</p>
+                                  {(d.answerImageUrls && d.answerImageUrls.length > 0 ? d.answerImageUrls : d.answerImageUrl ? [d.answerImageUrl] : []).map((u, i) => (
+                                    <img key={i} src={u} alt="answer" className="max-h-40 rounded border mt-2" />
+                                  ))}
+                                </div>
+                                {(() => {
+                                  const thread = store.followups.filter((f) => f.doubtId === d.id);
+                                  if (thread.length === 0) return null;
+                                  return (
+                                    <div className="mt-3 space-y-2 border-t pt-3">
+                                      <p className="text-xs font-semibold text-muted-foreground">Discussion History</p>
+                                      {thread.map((f) => (
+                                        <div key={f.id} className={`p-2 rounded text-xs ${f.authorRole === "teacher" ? "bg-primary/10" : "bg-accent/10"}`}>
+                                          <p className="font-semibold">{f.authorRole === "teacher" ? "👨‍🏫" : "🙋"} {f.authorName}</p>
+                                          {f.text && <p className="mt-1 whitespace-pre-wrap">{f.text}</p>}
+                                          {f.imageUrls.map((u, i) => <img key={i} src={u} alt="attachment" className="max-h-40 rounded border mt-2" />)}
+                                          <p className="text-[10px] text-muted-foreground mt-1">{new Date(f.createdAt).toLocaleString()}</p>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  );
+                                })()}
+                                <p className="text-[10px] text-muted-foreground mt-2">Solved {d.answeredAt ? new Date(d.answeredAt).toLocaleString() : ""}</p>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                });
+              })()
             )}
           </div>
         )}
