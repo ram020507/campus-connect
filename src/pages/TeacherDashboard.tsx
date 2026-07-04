@@ -68,7 +68,7 @@ const TeacherDashboard = () => {
     navigate("/");
   };
 
-  // Section 1: Unclaimed doubts — pending, no claimedBy, matching teacher's subjects
+  // Section 1: Claim & Solve — pending unclaimed matching teacher's subjects
   const unclaimedDoubts = store.doubts.filter(
     (d) =>
       teacherSubjects.some(s => s.toLowerCase() === d.subjectName.toLowerCase()) &&
@@ -76,18 +76,24 @@ const TeacherDashboard = () => {
       !d.claimedBy
   );
 
-  // Section 2: My Solutions — anything I claimed but haven't answered yet, OR any doubt I've answered (including clarification requests)
-  const claimedDoubts = store.doubts.filter(
+  // In-progress: claimed by me OR answered by me, but NOT yet marked understood by student
+  const inProgressDoubts = store.doubts.filter(
     (d) =>
-      (d.claimedBy === teacher.staffId && !d.answer) ||
-      d.answeredBy === teacher.name
+      ((d.claimedBy === teacher.staffId && !d.answer) || d.answeredBy === teacher.name) &&
+      d.status !== "understood"
   );
 
-  // Section 3: All Solutions — solved doubts for teacher's subjects, answered by OTHER teachers only
+  // Section 2: My Solutions — doubts I answered AND student marked understood
+  const claimedDoubts = store.doubts.filter(
+    (d) => d.answeredBy === teacher.name && d.status === "understood"
+  );
+
+  // Section 3: All Solutions — understood doubts answered by OTHER teachers for my subjects
   const allSolvedDoubts = store.doubts.filter(
     (d) =>
       teacherSubjects.some(s => s.toLowerCase() === d.subjectName.toLowerCase()) &&
       d.answer &&
+      d.status === "understood" &&
       d.answeredBy !== teacher.name
   );
 
