@@ -114,7 +114,7 @@ const StudentDashboard = () => {
     );
     const all = store.doubts.filter(
       (d) => d.answer
-        && d.status !== "clarification_requested"
+        && d.status === "understood"
         && d.studentCollege === student.collegeName
         && d.studentYear === student.year
         && d.studentDepartment === student.department
