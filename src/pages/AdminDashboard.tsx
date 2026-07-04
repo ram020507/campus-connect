@@ -112,6 +112,32 @@ const AdminDashboard = () => {
     return out.sort();
   }, [tCollege]);
 
+  // Subjects belonging to the selected department (across all years)
+  const teacherDeptSubjects = useMemo(() => {
+    if (!tCollege || !teacherDepartment) return [] as string[];
+    const out: string[] = [];
+    tCollege.years.forEach((y) =>
+      y.departments
+        .filter((d) => d.name === teacherDepartment)
+        .forEach((d) => d.subjects.forEach((s) => { if (!out.includes(s.name)) out.push(s.name); }))
+    );
+    return out.sort();
+  }, [tCollege, teacherDepartment]);
+
+  // Existing teachers in the same college who already handle any of the selected subjects
+  // but are NOT in the currently selected department. Used to offer "reuse" option.
+  const reusableTeachers = useMemo(() => {
+    if (!tCollege || teacherSelectedSubjects.length === 0 || !teacherDepartment) return [] as TeacherAccount[];
+    return store.teachers.filter((t) => {
+      if (t.collegeName !== tCollege.name) return false;
+      const tDepts = (t.department || "").split(",").map((s) => s.trim()).filter(Boolean);
+      if (tDepts.includes(teacherDepartment)) return false; // already in this dept
+      const tSubs = getTeacherSubjects(t);
+      return teacherSelectedSubjects.some((s) => tSubs.includes(s));
+    });
+  }, [tCollege, store.teachers, teacherSelectedSubjects, teacherDepartment]);
+
+
 
   const handleFileUpload = async (videoId: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
