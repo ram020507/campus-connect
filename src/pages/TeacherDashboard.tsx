@@ -225,13 +225,13 @@ const TeacherDashboard = () => {
               <Clock className="h-5 w-5 text-accent" />
               Claim & Solve
             </h2>
-            {unclaimedDoubts.length === 0 ? (
+            {unclaimedDoubts.length === 0 && inProgressDoubts.length === 0 ? (
               <Card>
                 <CardContent className="p-6 text-center text-muted-foreground">
                   No pending doubts. Great job!
                 </CardContent>
               </Card>
-            ) : (
+            ) : unclaimedDoubts.length === 0 ? null : (
               unclaimedDoubts
                 .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
                 .map((d) => (
