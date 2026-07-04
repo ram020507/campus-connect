@@ -68,7 +68,7 @@ const TeacherDashboard = () => {
     navigate("/");
   };
 
-  // Section 1: Unclaimed doubts — pending, no claimedBy, matching teacher's subjects
+  // Section 1: Claim & Solve — pending unclaimed matching teacher's subjects
   const unclaimedDoubts = store.doubts.filter(
     (d) =>
       teacherSubjects.some(s => s.toLowerCase() === d.subjectName.toLowerCase()) &&
@@ -76,18 +76,24 @@ const TeacherDashboard = () => {
       !d.claimedBy
   );
 
-  // Section 2: My Solutions — anything I claimed but haven't answered yet, OR any doubt I've answered (including clarification requests)
-  const claimedDoubts = store.doubts.filter(
+  // In-progress: claimed by me OR answered by me, but NOT yet marked understood by student
+  const inProgressDoubts = store.doubts.filter(
     (d) =>
-      (d.claimedBy === teacher.staffId && !d.answer) ||
-      d.answeredBy === teacher.name
+      ((d.claimedBy === teacher.staffId && !d.answer) || d.answeredBy === teacher.name) &&
+      d.status !== "understood"
   );
 
-  // Section 3: All Solutions — solved doubts for teacher's subjects, answered by OTHER teachers only
+  // Section 2: My Solutions — doubts I answered AND student marked understood
+  const claimedDoubts = store.doubts.filter(
+    (d) => d.answeredBy === teacher.name && d.status === "understood"
+  );
+
+  // Section 3: All Solutions — understood doubts answered by OTHER teachers for my subjects
   const allSolvedDoubts = store.doubts.filter(
     (d) =>
       teacherSubjects.some(s => s.toLowerCase() === d.subjectName.toLowerCase()) &&
       d.answer &&
+      d.status === "understood" &&
       d.answeredBy !== teacher.name
   );
 
@@ -163,7 +169,7 @@ const TeacherDashboard = () => {
   }
 
   const sectionTabs: { key: Section; label: string; count: number; icon: React.ReactNode }[] = [
-    { key: "unclaimed", label: "Claim & Solve", count: unclaimedDoubts.length, icon: <Clock className="h-4 w-4" /> },
+    { key: "unclaimed", label: "Claim & Solve", count: unclaimedDoubts.length + inProgressDoubts.length, icon: <Clock className="h-4 w-4" /> },
     { key: "claimed", label: "My Solutions", count: claimedDoubts.length, icon: <Lock className="h-4 w-4" /> },
     { key: "all", label: "All Solutions", count: allSolvedDoubts.length, icon: <Eye className="h-4 w-4" /> },
   ];
@@ -219,13 +225,13 @@ const TeacherDashboard = () => {
               <Clock className="h-5 w-5 text-accent" />
               Claim & Solve
             </h2>
-            {unclaimedDoubts.length === 0 ? (
+            {unclaimedDoubts.length === 0 && inProgressDoubts.length === 0 ? (
               <Card>
                 <CardContent className="p-6 text-center text-muted-foreground">
                   No pending doubts. Great job!
                 </CardContent>
               </Card>
-            ) : (
+            ) : unclaimedDoubts.length === 0 ? null : (
               unclaimedDoubts
                 .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
                 .map((d) => (
@@ -267,23 +273,16 @@ const TeacherDashboard = () => {
           </div>
         )}
 
-        {/* Section 2: Claimed Doubts */}
-        {activeSection === "claimed" && (
+        {/* In Progress (still under Claim & Solve tab, until student confirms Understood) */}
+        {activeSection === "unclaimed" && inProgressDoubts.length > 0 && (
           <div className="space-y-3">
-            <h2 className="font-display font-semibold text-lg flex items-center gap-2">
+            <h2 className="font-display font-semibold text-lg flex items-center gap-2 mt-6">
               <Lock className="h-5 w-5 text-primary" />
-              My Solutions
+              In Progress
             </h2>
-            {claimedDoubts.length === 0 ? (
-              <Card>
-                <CardContent className="p-6 text-center text-muted-foreground">
-                  No claimed doubts. Pick one from Claim & Solve to start answering.
-                </CardContent>
-              </Card>
-            ) : (
-              claimedDoubts
-                .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
-                .map((d) => (
+            {inProgressDoubts
+              .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+              .map((d) => (
                   <Card key={d.id} className="border-primary/30 animate-fade-in">
                     <CardContent className="p-4">
                       <div className="flex items-center gap-2 mb-2">
@@ -360,13 +359,63 @@ const TeacherDashboard = () => {
                         </div>
                       ) : (
                         <div className="space-y-3">
+                          {editingAnswerId === d.id ? (
+                            <div className="space-y-2 p-3 rounded border bg-card">
+                              <Textarea value={editAnswerText} onChange={(e) => setEditAnswerText(e.target.value)} rows={3} />
+                              {editAnswerImages.length > 0 && (
+                                <div className="flex flex-wrap gap-2">
+                                  {editAnswerImages.map((url, idx) => (
+                                    <div key={idx} className="relative inline-block">
+                                      <img src={url} alt={`Answer ${idx + 1}`} className="max-h-24 rounded border" />
+                                      <button onClick={() => setEditAnswerImages((prev) => prev.filter((_, i) => i !== idx))} className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1">
+                                        <X className="h-3 w-3" />
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              <input type="file" accept="image/*" multiple className="hidden" ref={editAnswerFileRef} onChange={async (e) => {
+                                const files = Array.from(e.target.files || []);
+                                for (const file of files) {
+                                  const url = await store.uploadDoubtImage(file);
+                                  if (url) setEditAnswerImages((prev) => [...prev, url]);
+                                }
+                              }} />
+                              <Button variant="outline" size="sm" onClick={() => editAnswerFileRef.current?.click()}>
+                                <ImagePlus className="h-4 w-4 mr-1" /> Add Images
+                              </Button>
+                              <div className="flex gap-2">
+                                <Button size="sm" onClick={async () => {
+                                  await store.updateDoubtAnswer(d.id, { answer: editAnswerText, answerImageUrl: editAnswerImages[0] || null, answerImageUrls: editAnswerImages });
+                                  setEditingAnswerId(null);
+                                }}>Save</Button>
+                                <Button size="sm" variant="outline" onClick={() => setEditingAnswerId(null)}>Cancel</Button>
+                              </div>
+                            </div>
+                          ) : (
                           <div className="p-3 rounded bg-success/10 text-sm">
                             <p className="text-xs text-muted-foreground mb-1">Your Original Answer</p>
                             <p className="whitespace-pre-wrap">{d.answer}</p>
                             {(d.answerImageUrls && d.answerImageUrls.length > 0 ? d.answerImageUrls : d.answerImageUrl ? [d.answerImageUrl] : []).map((u, i) => (
                               <img key={i} src={u} alt="answer" className="max-h-40 rounded border mt-2" />
                             ))}
+                            <div className="mt-2">
+                              <Button
+                                variant="outline" size="sm"
+                                disabled={d.viewedByStudent}
+                                title={d.viewedByStudent ? "Student has viewed this — editing locked" : "Edit your solution"}
+                                onClick={() => {
+                                  setEditingAnswerId(d.id);
+                                  setEditAnswerText(d.answer || "");
+                                  setEditAnswerImages(d.answerImageUrls && d.answerImageUrls.length > 0 ? d.answerImageUrls : d.answerImageUrl ? [d.answerImageUrl] : []);
+                                }}
+                              >
+                                {d.viewedByStudent ? <Lock className="h-3 w-3 mr-1" /> : <Pencil className="h-3 w-3 mr-1" />}
+                                {d.viewedByStudent ? "Locked — student viewed" : "Edit Solution"}
+                              </Button>
+                            </div>
                           </div>
+                          )}
                           {(() => {
                             const thread = store.followups.filter((f) => f.doubtId === d.id);
                             return thread.length > 0 ? (
@@ -454,7 +503,82 @@ const TeacherDashboard = () => {
 
                     </CardContent>
                   </Card>
-                ))
+                ))}
+          </div>
+        )}
+
+        {/* Section 2: My Solutions — doubts I answered that student marked Understood */}
+        {activeSection === "claimed" && (
+          <div className="space-y-3">
+            <h2 className="font-display font-semibold text-lg flex items-center gap-2">
+              <Lock className="h-5 w-5 text-primary" /> My Solutions
+            </h2>
+            {claimedDoubts.length === 0 ? (
+              <Card><CardContent className="p-6 text-center text-muted-foreground">No completed solutions yet. Student must mark "Understood" for doubts to appear here.</CardContent></Card>
+            ) : (
+              (() => {
+                const grouped = claimedDoubts.reduce<Record<string, typeof claimedDoubts>>((acc, d) => {
+                  (acc[d.subjectName] = acc[d.subjectName] || []).push(d);
+                  return acc;
+                }, {});
+                const subjectNames = Object.keys(grouped).sort();
+                return subjectNames.map((subject) => {
+                  const isOpen = expandedSubjects[subject] ?? true;
+                  const items = grouped[subject].sort((a, b) => new Date(b.answeredAt!).getTime() - new Date(a.answeredAt!).getTime());
+                  return (
+                    <div key={subject} className="space-y-2">
+                      <button
+                        onClick={() => setExpandedSubjects((prev) => ({ ...prev, [subject]: !isOpen }))}
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-md bg-muted/50 hover:bg-muted text-left"
+                      >
+                        {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                        <FolderOpen className="h-4 w-4 text-primary" />
+                        <span className="font-medium text-sm">{subject}</span>
+                        <span className="ml-auto text-xs text-muted-foreground">{items.length}</span>
+                      </button>
+                      {isOpen && (
+                        <div className="space-y-3 pl-4 border-l-2 border-muted">
+                          {items.map((d) => (
+                            <Card key={d.id} className="border-success/30">
+                              <CardContent className="p-4">
+                                <p className="text-xs text-muted-foreground mb-1">From {d.studentName} · {d.studentDepartment} · Year {d.studentYear}</p>
+                                <p className="text-sm font-medium">{d.question}</p>
+                                {d.questionImageUrl && <img src={d.questionImageUrl} alt="Question" className="max-h-40 rounded border mt-2" />}
+                                {d.questionImageUrl2 && <img src={d.questionImageUrl2} alt="Full problem" className="max-h-40 rounded border mt-2" />}
+                                <div className="mt-2 p-3 rounded bg-success/10 text-sm">
+                                  <p className="text-xs text-muted-foreground mb-1">Your Answer</p>
+                                  <p className="whitespace-pre-wrap">{d.answer}</p>
+                                  {(d.answerImageUrls && d.answerImageUrls.length > 0 ? d.answerImageUrls : d.answerImageUrl ? [d.answerImageUrl] : []).map((u, i) => (
+                                    <img key={i} src={u} alt="answer" className="max-h-40 rounded border mt-2" />
+                                  ))}
+                                </div>
+                                {(() => {
+                                  const thread = store.followups.filter((f) => f.doubtId === d.id);
+                                  if (thread.length === 0) return null;
+                                  return (
+                                    <div className="mt-3 space-y-2 border-t pt-3">
+                                      <p className="text-xs font-semibold text-muted-foreground">Discussion History</p>
+                                      {thread.map((f) => (
+                                        <div key={f.id} className={`p-2 rounded text-xs ${f.authorRole === "teacher" ? "bg-primary/10" : "bg-accent/10"}`}>
+                                          <p className="font-semibold">{f.authorRole === "teacher" ? "👨‍🏫" : "🙋"} {f.authorName}</p>
+                                          {f.text && <p className="mt-1 whitespace-pre-wrap">{f.text}</p>}
+                                          {f.imageUrls.map((u, i) => <img key={i} src={u} alt="attachment" className="max-h-40 rounded border mt-2" />)}
+                                          <p className="text-[10px] text-muted-foreground mt-1">{new Date(f.createdAt).toLocaleString()}</p>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  );
+                                })()}
+                                <p className="text-[10px] text-muted-foreground mt-2">Solved {d.answeredAt ? new Date(d.answeredAt).toLocaleString() : ""}</p>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                });
+              })()
             )}
           </div>
         )}
@@ -611,6 +735,23 @@ const TeacherDashboard = () => {
                                     )}
                                   </div>
                                 )}
+                                {(() => {
+                                  const thread = store.followups.filter((f) => f.doubtId === d.id);
+                                  if (thread.length === 0) return null;
+                                  return (
+                                    <div className="mt-3 space-y-2 border-t pt-3">
+                                      <p className="text-xs font-semibold text-muted-foreground">Discussion History</p>
+                                      {thread.map((f) => (
+                                        <div key={f.id} className={`p-2 rounded text-xs ${f.authorRole === "teacher" ? "bg-primary/10" : "bg-accent/10"}`}>
+                                          <p className="font-semibold">{f.authorRole === "teacher" ? "👨‍🏫" : "🙋"} {f.authorName}</p>
+                                          {f.text && <p className="mt-1 whitespace-pre-wrap">{f.text}</p>}
+                                          {f.imageUrls.map((u, i) => <img key={i} src={u} alt="attachment" className="max-h-40 rounded border mt-2" />)}
+                                          <p className="text-[10px] text-muted-foreground mt-1">{new Date(f.createdAt).toLocaleString()}</p>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  );
+                                })()}
                               </CardContent>
                             </Card>
                           ))}

@@ -112,6 +112,32 @@ const AdminDashboard = () => {
     return out.sort();
   }, [tCollege]);
 
+  // Subjects belonging to the selected department (across all years)
+  const teacherDeptSubjects = useMemo(() => {
+    if (!tCollege || !teacherDepartment) return [] as string[];
+    const out: string[] = [];
+    tCollege.years.forEach((y) =>
+      y.departments
+        .filter((d) => d.name === teacherDepartment)
+        .forEach((d) => d.subjects.forEach((s) => { if (!out.includes(s.name)) out.push(s.name); }))
+    );
+    return out.sort();
+  }, [tCollege, teacherDepartment]);
+
+  // Existing teachers in the same college who already handle any of the selected subjects
+  // but are NOT in the currently selected department. Used to offer "reuse" option.
+  const reusableTeachers = useMemo(() => {
+    if (!tCollege || teacherSelectedSubjects.length === 0 || !teacherDepartment) return [] as TeacherAccount[];
+    return store.teachers.filter((t) => {
+      if (t.collegeName !== tCollege.name) return false;
+      const tDepts = (t.department || "").split(",").map((s) => s.trim()).filter(Boolean);
+      if (tDepts.includes(teacherDepartment)) return false; // already in this dept
+      const tSubs = getTeacherSubjects(t);
+      return teacherSelectedSubjects.some((s) => tSubs.includes(s));
+    });
+  }, [tCollege, store.teachers, teacherSelectedSubjects, teacherDepartment]);
+
+
 
   const handleFileUpload = async (videoId: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -805,12 +831,14 @@ const AdminDashboard = () => {
                       </Select>
                     </div>
                     <div className="mt-3">
-                      <p className="text-sm font-medium mb-2">Assign Subjects</p>
-                      {teacherCollegeSubjects.length === 0 ? (
-                        <p className="text-xs text-muted-foreground">No subjects in this college. Add some in Content Management.</p>
+                      <p className="text-sm font-medium mb-2">Assign Subjects {teacherDepartment && <span className="text-xs text-muted-foreground">(for {teacherDepartment})</span>}</p>
+                      {!teacherDepartment ? (
+                        <p className="text-xs text-muted-foreground">Select a department first to see its subjects.</p>
+                      ) : teacherDeptSubjects.length === 0 ? (
+                        <p className="text-xs text-muted-foreground">No subjects in this department. Add some in Content Management.</p>
                       ) : (
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                          {teacherCollegeSubjects.map((subj) => (
+                          {teacherDeptSubjects.map((subj) => (
                             <label key={subj} className="flex items-center gap-2 cursor-pointer border rounded-md px-2 py-1.5 hover:bg-muted/40">
                               <Checkbox checked={teacherSelectedSubjects.includes(subj)}
                                 onCheckedChange={() => setTeacherSelectedSubjects((prev) => prev.includes(subj) ? prev.filter((s) => s !== subj) : [...prev, subj])} />
@@ -820,6 +848,38 @@ const AdminDashboard = () => {
                         </div>
                       )}
                     </div>
+
+                    {reusableTeachers.length > 0 && (
+                      <div className="mt-3 p-3 rounded-md border border-accent/30 bg-accent/5 space-y-2">
+                        <p className="text-sm font-medium text-accent-foreground">
+                          👥 Existing teachers already handle {teacherSelectedSubjects.length > 1 ? "some of these subjects" : `"${teacherSelectedSubjects[0]}"`} in another department.
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Choose an existing teacher to assign to <strong>{teacherDepartment}</strong>, or create a new one below.
+                        </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {reusableTeachers.map((t) => (
+                            <div key={t.id} className="flex items-center justify-between gap-2 p-2 rounded border bg-card">
+                              <div className="min-w-0">
+                                <p className="text-sm font-medium truncate">{t.name} <span className="text-muted-foreground">#{t.staffId}</span></p>
+                                <p className="text-xs text-muted-foreground truncate">Dept: {t.department || "—"} · Subjects: {getTeacherSubjects(t).join(", ")}</p>
+                              </div>
+                              <Button size="sm" variant="outline" onClick={async () => {
+                                const existingDepts = (t.department || "").split(",").map((s) => s.trim()).filter(Boolean);
+                                const nextDepts = [...new Set([...existingDepts, teacherDepartment])].join(",");
+                                const existingSubs = getTeacherSubjects(t);
+                                const nextSubs = [...new Set([...existingSubs, ...teacherSelectedSubjects])].join(",");
+                                await store.updateTeacher(t.id, { department: nextDepts, subjectName: nextSubs });
+                                setTeacherStaffId(""); setTeacherName(""); setTeacherDob("");
+                                setTeacherDepartment(""); setTeacherSelectedSubjects([]);
+                              }}>
+                                Use Existing
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     <p className="text-xs text-muted-foreground mt-2">College: {tCollege.name}</p>
                     <Button className="mt-3" onClick={() => {
                       if (teacherStaffId && teacherName && teacherDob && teacherDepartment && teacherSelectedSubjects.length > 0) {

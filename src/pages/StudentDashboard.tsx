@@ -63,6 +63,9 @@ const StudentDashboard = () => {
   const [editDoubtSubject, setEditDoubtSubject] = useState("");
   const [editDoubtImage, setEditDoubtImage] = useState<File | null>(null);
   const [editDoubtImagePreview, setEditDoubtImagePreview] = useState<string | null>(null);
+  const [editDoubtImage2Preview, setEditDoubtImage2Preview] = useState<string | null>(null);
+  const [editDoubtHasImages, setEditDoubtHasImages] = useState(false);
+  const editFileInput2Ref = useRef<HTMLInputElement>(null);
   const [savedSearch, setSavedSearch] = useState("");
   const [savedSubjectFilter, setSavedSubjectFilter] = useState("all");
   const [feedCurrentIndex, setFeedCurrentIndex] = useState(0);
@@ -114,7 +117,7 @@ const StudentDashboard = () => {
     );
     const all = store.doubts.filter(
       (d) => d.answer
-        && d.status !== "clarification_requested"
+        && d.status === "understood"
         && d.studentCollege === student.collegeName
         && d.studentYear === student.year
         && d.studentDepartment === student.department
@@ -144,7 +147,7 @@ const StudentDashboard = () => {
 
   const feedSubjectOptions = useMemo(() => {
     const all = store.doubts.filter(
-      (d) => d.answer && d.studentCollege === student.collegeName && d.studentYear === student.year && d.studentDepartment === student.department && d.studentRegNo !== student.registrationNumber
+      (d) => d.answer && d.status === "understood" && d.studentCollege === student.collegeName && d.studentYear === student.year && d.studentDepartment === student.department && d.studentRegNo !== student.registrationNumber
     );
     return [...new Set(all.map((d) => d.subjectName))].sort();
   }, [store.doubts.length, student.year, student.department, student.collegeName]);
@@ -224,6 +227,7 @@ const StudentDashboard = () => {
         studentYear: student.year,
         studentDepartment: student.department,
         ocrText: ocrSearch,
+        requireTwoImages: doubtType === "text+image",
       });
       if (results.length > 0) {
         setDuplicateResults(results);
@@ -288,21 +292,38 @@ const StudentDashboard = () => {
   };
 
   const handleSaveEdit = async (doubtId: string) => {
-    const updates: { question?: string; questionImageUrl?: string | null; subjectName?: string } = {};
+    const updates: { question?: string; questionImageUrl?: string | null; questionImageUrl2?: string | null; subjectName?: string } = {};
     updates.question = editDoubtText;
     if (editDoubtSubject) updates.subjectName = editDoubtSubject;
-    if (editDoubtImagePreview) updates.questionImageUrl = editDoubtImagePreview;
+    if (editDoubtHasImages) {
+      updates.questionImageUrl = editDoubtImagePreview;
+      updates.questionImageUrl2 = editDoubtImage2Preview;
+    }
     await store.updateDoubtQuestion(doubtId, updates);
     setEditingDoubtId(null);
     setEditDoubtImage(null);
     setEditDoubtImagePreview(null);
+    setEditDoubtImage2Preview(null);
+    setEditDoubtHasImages(false);
+  };
+
+  const handleEditImage2Select = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const url = await store.uploadDoubtImage(file);
+      if (url) setEditDoubtImage2Preview(url);
+      else setEditDoubtImage2Preview(URL.createObjectURL(file));
+    }
   };
 
   const startEditDoubt = (d: any) => {
     setEditingDoubtId(d.id);
     setEditDoubtText(d.question);
     setEditDoubtSubject(d.subjectName);
-    setEditDoubtImagePreview(d.questionImageUrl || null);
+    const hasImages = !!(d.questionImageUrl || d.questionImageUrl2);
+    setEditDoubtHasImages(hasImages);
+    setEditDoubtImagePreview(hasImages ? (d.questionImageUrl || null) : null);
+    setEditDoubtImage2Preview(hasImages ? (d.questionImageUrl2 || null) : null);
   };
 
   const getEmbedUrl = (url: string) => {
@@ -819,6 +840,25 @@ const StudentDashboard = () => {
                               </div>
                             ))}
                           </div>
+                          {(() => {
+                            const thread = store.followups.filter((f) => f.doubtId === sd.id);
+                            if (thread.length === 0) return null;
+                            return (
+                              <div className="space-y-2 border-t pt-2">
+                                <p className="text-xs font-semibold text-muted-foreground">Discussion History</p>
+                                {thread.map((f) => (
+                                  <div key={f.id} className={`p-2 rounded text-xs ${f.authorRole === "teacher" ? "bg-primary/10" : "bg-accent/10"}`}>
+                                    <p className="font-semibold">{f.authorRole === "teacher" ? "👨‍🏫" : "🙋"} {f.authorName}</p>
+                                    {f.text && <p className="mt-1 whitespace-pre-wrap">{f.text}</p>}
+                                    {f.imageUrls.map((u, i) => (
+                                      <img key={i} src={u} alt="attachment" className="max-h-40 rounded border mt-2" />
+                                    ))}
+                                    <p className="text-[10px] text-muted-foreground mt-1">{new Date(f.createdAt).toLocaleString()}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            );
+                          })()}
                         </CardContent>
                       </Card>
                     ))}
@@ -930,18 +970,40 @@ const StudentDashboard = () => {
                                   </SelectContent>
                                 </Select>
                                 <Textarea value={editDoubtText} onChange={(e) => setEditDoubtText(e.target.value)} rows={3} />
-                                {editDoubtImagePreview && (
-                                  <div className="relative inline-block">
-                                    <img src={editDoubtImagePreview} alt="Edit attachment" className="max-h-32 rounded border" />
-                                    <button onClick={() => setEditDoubtImagePreview(null)} className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1">
-                                      <X className="h-3 w-3" />
-                                    </button>
+                                {editDoubtHasImages && (
+                                  <div className="space-y-2">
+                                    <div>
+                                      <p className="text-[10px] text-muted-foreground mb-1">Question Image</p>
+                                      {editDoubtImagePreview ? (
+                                        <div className="relative inline-block">
+                                          <img src={editDoubtImagePreview} alt="Question" className="max-h-32 rounded border" />
+                                          <button onClick={() => setEditDoubtImagePreview(null)} className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1">
+                                            <X className="h-3 w-3" />
+                                          </button>
+                                        </div>
+                                      ) : null}
+                                      <input type="file" accept="image/*" ref={editFileInputRef} className="hidden" onChange={handleEditImageSelect} />
+                                      <Button variant="outline" size="sm" className="ml-2" onClick={() => editFileInputRef.current?.click()}>
+                                        <ImagePlus className="h-3 w-3 mr-1" /> Replace Question Image
+                                      </Button>
+                                    </div>
+                                    <div>
+                                      <p className="text-[10px] text-muted-foreground mb-1">Full Problem Image</p>
+                                      {editDoubtImage2Preview ? (
+                                        <div className="relative inline-block">
+                                          <img src={editDoubtImage2Preview} alt="Full problem" className="max-h-32 rounded border" />
+                                          <button onClick={() => setEditDoubtImage2Preview(null)} className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1">
+                                            <X className="h-3 w-3" />
+                                          </button>
+                                        </div>
+                                      ) : null}
+                                      <input type="file" accept="image/*" ref={editFileInput2Ref} className="hidden" onChange={handleEditImage2Select} />
+                                      <Button variant="outline" size="sm" className="ml-2" onClick={() => editFileInput2Ref.current?.click()}>
+                                        <ImagePlus className="h-3 w-3 mr-1" /> Replace Full Problem Image
+                                      </Button>
+                                    </div>
                                   </div>
                                 )}
-                                <input type="file" accept="image/*" ref={editFileInputRef} className="hidden" onChange={handleEditImageSelect} />
-                                <Button variant="outline" size="sm" onClick={() => editFileInputRef.current?.click()}>
-                                  <ImagePlus className="h-3 w-3 mr-1" /> {editDoubtImagePreview ? "Change Image" : "Add Image"}
-                                </Button>
                                 {d.answer && (
                                   <p className="text-xs text-destructive">⚠ Editing will remove the existing answer and resend to teachers.</p>
                                 )}
@@ -1171,8 +1233,8 @@ const StudentDashboard = () => {
             {feedDoubts.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
                 <Shuffle className="h-12 w-12 mb-4 opacity-30" />
-                <p className="text-lg font-medium">No solved doubts available yet</p>
-                <p className="text-sm">Come back later to learn from your peers!</p>
+                <p className="text-lg font-medium">No new solved doubts available.</p>
+                <p className="text-sm">Check back later once more doubts are completed!</p>
               </div>
             ) : (
               <div className="relative" ref={feedContainerRef}>
@@ -1220,6 +1282,7 @@ const StudentDashboard = () => {
                             </div>
                           )}
 
+
                           {/* Answer */}
                           <div className="p-4 rounded-lg bg-success/10">
                             <p className="text-xs font-medium text-muted-foreground mb-2">Answer by {d.answeredBy}</p>
@@ -1238,8 +1301,30 @@ const StudentDashboard = () => {
                             ))}
                           </div>
 
+                          {/* Complete Discussion History */}
+                          {(() => {
+                            const thread = store.followups.filter((f) => f.doubtId === d.id);
+                            if (thread.length === 0) return null;
+                            return (
+                              <div className="space-y-2 border-t pt-3">
+                                <p className="text-xs font-semibold text-muted-foreground">Discussion History</p>
+                                {thread.map((f) => (
+                                  <div key={f.id} className={`p-2 rounded text-xs ${f.authorRole === "teacher" ? "bg-primary/10" : "bg-accent/10"}`}>
+                                    <p className="font-semibold">{f.authorRole === "teacher" ? "👨‍🏫" : "🙋"} {f.authorName}</p>
+                                    {f.text && <p className="mt-1 whitespace-pre-wrap">{f.text}</p>}
+                                    {f.imageUrls.map((u, i) => (
+                                      <img key={i} src={u} alt="attachment" className="max-h-40 rounded border mt-2" />
+                                    ))}
+                                    <p className="text-[10px] text-muted-foreground mt-1">{new Date(f.createdAt).toLocaleString()}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            );
+                          })()}
+
                           {/* Footer: asked by + actions */}
                           <div className="flex items-center justify-between pt-2 border-t">
+
                             <p className="text-xs text-muted-foreground">Asked by {d.studentName}</p>
                             <div className="flex items-center gap-2">
                               <Button

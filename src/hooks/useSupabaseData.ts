@@ -740,7 +740,7 @@ export function useSupabaseData() {
 
   const searchSimilarDoubts = (
     text: string,
-    filters?: { subjectName?: string; studentYear?: number; studentDepartment?: string; ocrText?: string }
+    filters?: { subjectName?: string; studentYear?: number; studentDepartment?: string; ocrText?: string; requireTwoImages?: boolean }
   ): Doubt[] => {
     const typed = (text || "").toLowerCase().trim();
     const ocr = (filters?.ocrText || "").toLowerCase().trim();
@@ -750,19 +750,26 @@ export function useSupabaseData() {
       if (filters?.subjectName && d.subjectName.toLowerCase() !== filters.subjectName.toLowerCase()) return false;
       if (filters?.studentYear && d.studentYear !== filters.studentYear) return false;
       if (filters?.studentDepartment && d.studentDepartment.toLowerCase() !== filters.studentDepartment.toLowerCase()) return false;
+      // For text+image matching, only compare with prior text+image doubts (must have both images)
+      if (filters?.requireTwoImages && !(d.questionImageUrl && d.questionImageUrl2)) return false;
       const questionText = d.question.toLowerCase().trim();
       const ocrTarget = (d.ocrText || "").toLowerCase().trim();
-      // Match if typed OR OCR matches stored question OR stored OCR
+      // For text+image, prefer OCR match on the first image; for pure text, match typed text
+      if (filters?.requireTwoImages) {
+        if (ocr.length < 3 || ocrTarget.length === 0) return false;
+        return ocr === ocrTarget;
+      }
       const candidates = [typed, ocr].filter((s) => s.length >= 3);
       return candidates.some((c) => c === questionText || (ocrTarget.length > 0 && c === ocrTarget));
     }).slice(0, 5);
   };
 
   // Enhanced edit: resets claim so updated doubt goes back to all teachers
-  const updateDoubtQuestion = async (doubtId: string, updates: { question?: string; questionImageUrl?: string | null; subjectName?: string }) => {
+  const updateDoubtQuestion = async (doubtId: string, updates: { question?: string; questionImageUrl?: string | null; questionImageUrl2?: string | null; subjectName?: string }) => {
     const mapped: Record<string, any> = {};
     if (updates.question !== undefined) mapped.question = updates.question;
     if (updates.questionImageUrl !== undefined) mapped.question_image_url = updates.questionImageUrl;
+    if (updates.questionImageUrl2 !== undefined) mapped.question_image_url_2 = updates.questionImageUrl2;
     if (updates.subjectName !== undefined) mapped.subject_name = updates.subjectName;
     // Reset claim so it goes back to pending for teachers
     mapped.claimed_by = null;
