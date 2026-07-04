@@ -1259,8 +1259,30 @@ const StudentDashboard = () => {
                             ))}
                           </div>
 
+                          {/* Complete Discussion History */}
+                          {(() => {
+                            const thread = store.followups.filter((f) => f.doubtId === d.id);
+                            if (thread.length === 0) return null;
+                            return (
+                              <div className="space-y-2 border-t pt-3">
+                                <p className="text-xs font-semibold text-muted-foreground">Discussion History</p>
+                                {thread.map((f) => (
+                                  <div key={f.id} className={`p-2 rounded text-xs ${f.authorRole === "teacher" ? "bg-primary/10" : "bg-accent/10"}`}>
+                                    <p className="font-semibold">{f.authorRole === "teacher" ? "👨‍🏫" : "🙋"} {f.authorName}</p>
+                                    {f.text && <p className="mt-1 whitespace-pre-wrap">{f.text}</p>}
+                                    {f.imageUrls.map((u, i) => (
+                                      <img key={i} src={u} alt="attachment" className="max-h-40 rounded border mt-2" />
+                                    ))}
+                                    <p className="text-[10px] text-muted-foreground mt-1">{new Date(f.createdAt).toLocaleString()}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            );
+                          })()}
+
                           {/* Footer: asked by + actions */}
                           <div className="flex items-center justify-between pt-2 border-t">
+
                             <p className="text-xs text-muted-foreground">Asked by {d.studentName}</p>
                             <div className="flex items-center gap-2">
                               <Button
