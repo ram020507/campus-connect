@@ -292,21 +292,38 @@ const StudentDashboard = () => {
   };
 
   const handleSaveEdit = async (doubtId: string) => {
-    const updates: { question?: string; questionImageUrl?: string | null; subjectName?: string } = {};
+    const updates: { question?: string; questionImageUrl?: string | null; questionImageUrl2?: string | null; subjectName?: string } = {};
     updates.question = editDoubtText;
     if (editDoubtSubject) updates.subjectName = editDoubtSubject;
-    if (editDoubtImagePreview) updates.questionImageUrl = editDoubtImagePreview;
+    if (editDoubtHasImages) {
+      updates.questionImageUrl = editDoubtImagePreview;
+      updates.questionImageUrl2 = editDoubtImage2Preview;
+    }
     await store.updateDoubtQuestion(doubtId, updates);
     setEditingDoubtId(null);
     setEditDoubtImage(null);
     setEditDoubtImagePreview(null);
+    setEditDoubtImage2Preview(null);
+    setEditDoubtHasImages(false);
+  };
+
+  const handleEditImage2Select = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const url = await store.uploadDoubtImage(file);
+      if (url) setEditDoubtImage2Preview(url);
+      else setEditDoubtImage2Preview(URL.createObjectURL(file));
+    }
   };
 
   const startEditDoubt = (d: any) => {
     setEditingDoubtId(d.id);
     setEditDoubtText(d.question);
     setEditDoubtSubject(d.subjectName);
-    setEditDoubtImagePreview(d.questionImageUrl || null);
+    const hasImages = !!(d.questionImageUrl || d.questionImageUrl2);
+    setEditDoubtHasImages(hasImages);
+    setEditDoubtImagePreview(hasImages ? (d.questionImageUrl || null) : null);
+    setEditDoubtImage2Preview(hasImages ? (d.questionImageUrl2 || null) : null);
   };
 
   const getEmbedUrl = (url: string) => {
