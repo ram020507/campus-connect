@@ -224,6 +224,7 @@ const StudentDashboard = () => {
         studentYear: student.year,
         studentDepartment: student.department,
         ocrText: ocrSearch,
+        requireTwoImages: doubtType === "text+image",
       });
       if (results.length > 0) {
         setDuplicateResults(results);
