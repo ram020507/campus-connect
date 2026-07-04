@@ -970,18 +970,40 @@ const StudentDashboard = () => {
                                   </SelectContent>
                                 </Select>
                                 <Textarea value={editDoubtText} onChange={(e) => setEditDoubtText(e.target.value)} rows={3} />
-                                {editDoubtImagePreview && (
-                                  <div className="relative inline-block">
-                                    <img src={editDoubtImagePreview} alt="Edit attachment" className="max-h-32 rounded border" />
-                                    <button onClick={() => setEditDoubtImagePreview(null)} className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1">
-                                      <X className="h-3 w-3" />
-                                    </button>
+                                {editDoubtHasImages && (
+                                  <div className="space-y-2">
+                                    <div>
+                                      <p className="text-[10px] text-muted-foreground mb-1">Question Image</p>
+                                      {editDoubtImagePreview ? (
+                                        <div className="relative inline-block">
+                                          <img src={editDoubtImagePreview} alt="Question" className="max-h-32 rounded border" />
+                                          <button onClick={() => setEditDoubtImagePreview(null)} className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1">
+                                            <X className="h-3 w-3" />
+                                          </button>
+                                        </div>
+                                      ) : null}
+                                      <input type="file" accept="image/*" ref={editFileInputRef} className="hidden" onChange={handleEditImageSelect} />
+                                      <Button variant="outline" size="sm" className="ml-2" onClick={() => editFileInputRef.current?.click()}>
+                                        <ImagePlus className="h-3 w-3 mr-1" /> Replace Question Image
+                                      </Button>
+                                    </div>
+                                    <div>
+                                      <p className="text-[10px] text-muted-foreground mb-1">Full Problem Image</p>
+                                      {editDoubtImage2Preview ? (
+                                        <div className="relative inline-block">
+                                          <img src={editDoubtImage2Preview} alt="Full problem" className="max-h-32 rounded border" />
+                                          <button onClick={() => setEditDoubtImage2Preview(null)} className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1">
+                                            <X className="h-3 w-3" />
+                                          </button>
+                                        </div>
+                                      ) : null}
+                                      <input type="file" accept="image/*" ref={editFileInput2Ref} className="hidden" onChange={handleEditImage2Select} />
+                                      <Button variant="outline" size="sm" className="ml-2" onClick={() => editFileInput2Ref.current?.click()}>
+                                        <ImagePlus className="h-3 w-3 mr-1" /> Replace Full Problem Image
+                                      </Button>
+                                    </div>
                                   </div>
                                 )}
-                                <input type="file" accept="image/*" ref={editFileInputRef} className="hidden" onChange={handleEditImageSelect} />
-                                <Button variant="outline" size="sm" onClick={() => editFileInputRef.current?.click()}>
-                                  <ImagePlus className="h-3 w-3 mr-1" /> {editDoubtImagePreview ? "Change Image" : "Add Image"}
-                                </Button>
                                 {d.answer && (
                                   <p className="text-xs text-destructive">⚠ Editing will remove the existing answer and resend to teachers.</p>
                                 )}
