@@ -925,7 +925,11 @@ export function useSupabaseData() {
   };
 
   const markDoubtUnderstood = async (doubtId: string) => {
+    // Mark completed and reset seen state so the doubt is re-published as
+    // "unseen" to every eligible student in the Learning Feed.
     await (supabase.from("doubts").update as any)({ status: "understood", viewed_by_student: true }).eq("id", doubtId);
+    await (supabase as any).from("doubt_seen").delete().eq("doubt_id", doubtId);
+    setSeenDoubtIds((prev) => prev.filter((k) => !k.endsWith(`:${doubtId}`)));
     await fetchAll();
   };
 
