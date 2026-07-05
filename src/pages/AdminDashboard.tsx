@@ -993,7 +993,7 @@ const AdminDashboard = () => {
 };
 
 // Reusable confirm-delete button with AlertDialog
-function ConfirmDelete({ title, desc, onConfirm }: { title: string; desc: string; onConfirm: () => void }) {
+function ConfirmDelete({ title, desc, onConfirm, confirmLabel }: { title: string; desc: string; onConfirm: () => void; confirmLabel?: string }) {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
@@ -1006,7 +1006,7 @@ function ConfirmDelete({ title, desc, onConfirm }: { title: string; desc: string
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm}>Delete</AlertDialogAction>
+          <AlertDialogAction onClick={onConfirm}>{confirmLabel ?? "Delete"}</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
