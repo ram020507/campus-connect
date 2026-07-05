@@ -287,7 +287,8 @@ const AdminDashboard = () => {
                             if (name?.trim()) store.updateCollege(cCollege.id, name.trim());
                           }}><Pencil className="h-4 w-4" /></Button>
                           <ConfirmDelete title={`Delete ${cCollege.name}?`}
-                            desc="This permanently removes the college and all its years, departments, subjects, and videos."
+                            desc="This will permanently remove the selected college, all years, departments, subjects, lecture content, important notes, student accounts, teacher accounts, doubts, discussions, and Learning Feed data associated with this college. This action cannot be undone."
+                            confirmLabel="Delete Permanently"
                             onConfirm={() => { store.removeCollege(cCollege.id); setCCollegeId(""); setCYearId(""); setCDeptId(""); setCSubjectId(""); }} />
                         </>
                       )}
@@ -775,45 +776,70 @@ const AdminDashboard = () => {
         {/* ============================ TEACHER MANAGEMENT ============================ */}
         {tab === "teachers" && (
           <div className="space-y-6 animate-fade-in">
+            {/* Step 1-3: Select College -> Department -> Subject(s) */}
             <Card>
-              <CardHeader><CardTitle className="text-lg font-display">Select Location</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="text-lg font-display">Teacher Accounts</CardTitle></CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {/* Step 1: College */}
                   <div>
-                    <label className="text-xs font-medium text-muted-foreground">College</label>
-                    <Select value={tCollegeId} onValueChange={(v) => { setTCollegeId(v); setTFilterSubject("all"); }}>
+                    <label className="text-xs font-medium text-muted-foreground">Step 1 — Select College</label>
+                    <Select value={tCollegeId} onValueChange={(v) => {
+                      setTCollegeId(v);
+                      setTeacherDepartment("");
+                      setTeacherSelectedSubjects([]);
+                      setTFilterSubject("all");
+                    }}>
                       <SelectTrigger className="mt-1"><SelectValue placeholder="Select college" /></SelectTrigger>
                       <SelectContent>
                         {store.colleges.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
+                  {/* Step 2: Department (only after college) */}
                   <div>
-                    <label className="text-xs font-medium text-muted-foreground">Subject Filter</label>
+                    <label className="text-xs font-medium text-muted-foreground">Step 2 — Select Department</label>
                     <Select
-                      value={tFilterSubject}
-                      onValueChange={(v) => {
-                        setTFilterSubject(v);
-                        setTeacherSelectedSubjects(v === "all" ? [] : [v]);
-                      }}
+                      value={teacherDepartment}
+                      onValueChange={(v) => { setTeacherDepartment(v); setTeacherSelectedSubjects([]); }}
                       disabled={!tCollege}
                     >
-                      <SelectTrigger className="mt-1"><SelectValue placeholder="All subjects" /></SelectTrigger>
+                      <SelectTrigger className="mt-1"><SelectValue placeholder={tCollege ? "Select department" : "Select college first"} /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">All subjects</SelectItem>
-                        {teacherCollegeSubjects.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                        {teacherCollegeDepartments.length === 0
+                          ? <SelectItem value="__none" disabled>No departments</SelectItem>
+                          : teacherCollegeDepartments.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
-
+                  {/* Step 3: Subject filter (single-select for the list; multi-select happens below in the form) */}
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">Step 3 — Select Subject</label>
+                    <Select
+                      value={tFilterSubject}
+                      onValueChange={setTFilterSubject}
+                      disabled={!tCollege || !teacherDepartment}
+                    >
+                      <SelectTrigger className="mt-1"><SelectValue placeholder={teacherDepartment ? "All subjects in dept" : "Select department first"} /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All subjects in {teacherDepartment || "dept"}</SelectItem>
+                        {teacherDeptSubjects.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </CardContent>
             </Card>
 
-            {tCollege ? (
+            {!tCollege ? (
+              <Card><CardContent className="p-8 text-center text-muted-foreground">Select a college to continue.</CardContent></Card>
+            ) : !teacherDepartment ? (
+              <Card><CardContent className="p-8 text-center text-muted-foreground">Select a department to continue.</CardContent></Card>
+            ) : (
               <>
+                {/* Step 4: Create Teacher Account */}
                 <Card>
-                  <CardHeader><CardTitle className="text-lg font-display">Create Teacher Account</CardTitle></CardHeader>
+                  <CardHeader><CardTitle className="text-lg font-display">Step 4 — Create Teacher Account</CardTitle></CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <Input placeholder="Staff ID" value={teacherStaffId} inputMode="numeric"
@@ -821,20 +847,10 @@ const AdminDashboard = () => {
                       <Input placeholder="Teacher Name" value={teacherName} onChange={(e) => setTeacherName(e.target.value)} />
                       <Input placeholder="DOB (DD-MM-YYYY)" value={teacherDob} maxLength={10} inputMode="numeric"
                         onChange={(e) => setTeacherDob(formatDob(e.target.value))} />
-                      <Select value={teacherDepartment} onValueChange={setTeacherDepartment}>
-                        <SelectTrigger><SelectValue placeholder="Select Department" /></SelectTrigger>
-                        <SelectContent>
-                          {teacherCollegeDepartments.length === 0
-                            ? <SelectItem value="__none" disabled>No departments</SelectItem>
-                            : teacherCollegeDepartments.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
                     </div>
                     <div className="mt-3">
-                      <p className="text-sm font-medium mb-2">Assign Subjects {teacherDepartment && <span className="text-xs text-muted-foreground">(for {teacherDepartment})</span>}</p>
-                      {!teacherDepartment ? (
-                        <p className="text-xs text-muted-foreground">Select a department first to see its subjects.</p>
-                      ) : teacherDeptSubjects.length === 0 ? (
+                      <p className="text-sm font-medium mb-2">Assigned Subject(s) <span className="text-xs text-muted-foreground">(in {teacherDepartment})</span></p>
+                      {teacherDeptSubjects.length === 0 ? (
                         <p className="text-xs text-muted-foreground">No subjects in this department. Add some in Content Management.</p>
                       ) : (
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
@@ -871,7 +887,7 @@ const AdminDashboard = () => {
                                 const nextSubs = [...new Set([...existingSubs, ...teacherSelectedSubjects])].join(",");
                                 await store.updateTeacher(t.id, { department: nextDepts, subjectName: nextSubs });
                                 setTeacherStaffId(""); setTeacherName(""); setTeacherDob("");
-                                setTeacherDepartment(""); setTeacherSelectedSubjects([]);
+                                setTeacherSelectedSubjects([]);
                               }}>
                                 Use Existing
                               </Button>
@@ -880,32 +896,38 @@ const AdminDashboard = () => {
                         </div>
                       </div>
                     )}
-                    <p className="text-xs text-muted-foreground mt-2">College: {tCollege.name}</p>
-                    <Button className="mt-3" onClick={() => {
-                      if (teacherStaffId && teacherName && teacherDob && teacherDepartment && teacherSelectedSubjects.length > 0) {
-                        store.addTeacher({
-                          staffId: teacherStaffId, name: teacherName, dob: teacherDob,
-                          email: "", collegeName: tCollege.name,
-                          department: teacherDepartment,
-                          subjectName: teacherSelectedSubjects.join(","),
-                        });
-                        setTeacherStaffId(""); setTeacherName(""); setTeacherDob("");
-                        setTeacherDepartment("");
-                        setTeacherSelectedSubjects([]);
-                      }
-                    }}><Plus className="h-4 w-4 mr-1" /> Create Account</Button>
+                    <p className="text-xs text-muted-foreground mt-2">College: {tCollege.name} · Department: {teacherDepartment}</p>
+                    <Button className="mt-3"
+                      disabled={!teacherStaffId || !teacherName || !teacherDob || teacherSelectedSubjects.length === 0}
+                      onClick={() => {
+                        if (teacherStaffId && teacherName && teacherDob && teacherDepartment && teacherSelectedSubjects.length > 0) {
+                          store.addTeacher({
+                            staffId: teacherStaffId, name: teacherName, dob: teacherDob,
+                            email: "", collegeName: tCollege.name,
+                            department: teacherDepartment,
+                            subjectName: teacherSelectedSubjects.join(","),
+                          });
+                          setTeacherStaffId(""); setTeacherName(""); setTeacherDob("");
+                          setTeacherSelectedSubjects([]);
+                        }
+                      }}><Plus className="h-4 w-4 mr-1" /> Create Account</Button>
                   </CardContent>
                 </Card>
 
+                {/* Teacher List — filtered by College + Department + Subject */}
                 {(() => {
                   const list = store.teachers.filter((t) => {
                     if (t.collegeName !== tCollege.name) return false;
+                    const tDepts = (t.department || "").split(",").map((s) => s.trim()).filter(Boolean);
+                    if (!tDepts.includes(teacherDepartment)) return false;
                     if (tFilterSubject === "all") return true;
                     return getTeacherSubjects(t).includes(tFilterSubject);
                   });
                   return (
                     <div className="space-y-2">
-                      <h3 className="font-display font-semibold text-lg">Teachers ({list.length})</h3>
+                      <h3 className="font-display font-semibold text-lg">
+                        Teachers ({list.length}) <span className="text-sm font-normal text-muted-foreground">— {tCollege.name} · {teacherDepartment}{tFilterSubject !== "all" ? ` · ${tFilterSubject}` : ""}</span>
+                      </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         {list.map((t) => (
                           <Card key={t.id}>
@@ -956,7 +978,8 @@ const AdminDashboard = () => {
                                 <div className="flex items-center justify-between gap-2">
                                   <div className="text-sm min-w-0">
                                     <p className="font-medium truncate">{t.name} <span className="text-muted-foreground">#{t.staffId}</span></p>
-                                    <p className="text-xs text-muted-foreground truncate">Dept: {t.department || "—"} · Subjects: {getTeacherSubjects(t).join(", ") || "—"}</p>
+                                    <p className="text-xs text-muted-foreground truncate">College: {t.collegeName} · Dept: {t.department || "—"}</p>
+                                    <p className="text-xs text-muted-foreground truncate">Subjects: {getTeacherSubjects(t).join(", ") || "—"}</p>
                                   </div>
                                   <div className="flex items-center gap-1 shrink-0">
                                     <Button variant="ghost" size="icon" onClick={() => {
@@ -973,13 +996,11 @@ const AdminDashboard = () => {
                           </Card>
                         ))}
                       </div>
-                      {list.length === 0 && <p className="text-center text-muted-foreground py-6">No teachers yet.</p>}
+                      {list.length === 0 && <p className="text-center text-muted-foreground py-6">No teachers match the selected College, Department{tFilterSubject !== "all" ? `, and Subject` : ""}.</p>}
                     </div>
                   );
                 })()}
               </>
-            ) : (
-              <Card><CardContent className="p-8 text-center text-muted-foreground">Select a college to manage teachers.</CardContent></Card>
             )}
           </div>
         )}
@@ -992,7 +1013,7 @@ const AdminDashboard = () => {
 };
 
 // Reusable confirm-delete button with AlertDialog
-function ConfirmDelete({ title, desc, onConfirm }: { title: string; desc: string; onConfirm: () => void }) {
+function ConfirmDelete({ title, desc, onConfirm, confirmLabel }: { title: string; desc: string; onConfirm: () => void; confirmLabel?: string }) {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
@@ -1005,7 +1026,7 @@ function ConfirmDelete({ title, desc, onConfirm }: { title: string; desc: string
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm}>Delete</AlertDialogAction>
+          <AlertDialogAction onClick={onConfirm}>{confirmLabel ?? "Delete"}</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

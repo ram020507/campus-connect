@@ -393,19 +393,24 @@ export function useSupabaseData() {
   };
 
   const removeCollege = async (id: string) => {
-    const yearsRes = await supabase.from("years").select("id").eq("college_id", id);
-    for (const y of yearsRes.data || []) {
-      const deptsRes = await supabase.from("departments").select("id").eq("year_id", y.id);
-      for (const d of deptsRes.data || []) {
-        const subsRes = await supabase.from("subjects").select("id").eq("department_id", d.id);
-        for (const s of subsRes.data || []) {
-          await supabase.from("videos").delete().eq("subject_id", s.id);
-        }
-        await supabase.from("subjects").delete().eq("department_id", d.id);
-      }
-      await supabase.from("departments").delete().eq("year_id", y.id);
+    // Look up the college name so we can purge college-scoped rows
+    // in tables that only store the college name (not FK'd to colleges).
+    const collegeRow = await supabase.from("colleges").select("name").eq("id", id).maybeSingle();
+    const name = (collegeRow.data as any)?.name as string | undefined;
+
+    if (name) {
+      // Doubts (cascades to doubt_followups, doubt_seen, doubt_helpful, saved_doubts)
+      await supabase.from("doubts").delete().eq("student_college", name);
+      // Student & teacher accounts for this college
+      await supabase.from("students").delete().eq("college_name", name);
+      await supabase.from("teachers").delete().eq("college_name", name);
+      // Ancillary college-scoped tables
+      await (supabase as any).from("teacher_status").delete().eq("college_name", name);
+      await (supabase as any).from("digital_board_sessions").delete().eq("college_name", name);
+      await (supabase as any).from("call_requests").delete().eq("student_college", name);
     }
-    await supabase.from("years").delete().eq("college_id", id);
+    // Deleting the college cascades to years -> departments -> subjects ->
+    // videos / video_files / subject_notes / exam_prep_videos / exam_prep_files
     const { error } = await supabase.from("colleges").delete().eq("id", id);
     if (!error) await fetchAll();
   };
@@ -920,7 +925,11 @@ export function useSupabaseData() {
   };
 
   const markDoubtUnderstood = async (doubtId: string) => {
+    // Mark completed and reset seen state so the doubt is re-published as
+    // "unseen" to every eligible student in the Learning Feed.
     await (supabase.from("doubts").update as any)({ status: "understood", viewed_by_student: true }).eq("id", doubtId);
+    await (supabase as any).from("doubt_seen").delete().eq("doubt_id", doubtId);
+    setSeenDoubtIds((prev) => prev.filter((k) => !k.endsWith(`:${doubtId}`)));
     await fetchAll();
   };
 
