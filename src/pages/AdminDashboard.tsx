@@ -287,7 +287,8 @@ const AdminDashboard = () => {
                             if (name?.trim()) store.updateCollege(cCollege.id, name.trim());
                           }}><Pencil className="h-4 w-4" /></Button>
                           <ConfirmDelete title={`Delete ${cCollege.name}?`}
-                            desc="This permanently removes the college and all its years, departments, subjects, and videos."
+                            desc="This will permanently remove the selected college, all years, departments, subjects, lecture content, important notes, student accounts, teacher accounts, doubts, discussions, and Learning Feed data associated with this college. This action cannot be undone."
+                            confirmLabel="Delete Permanently"
                             onConfirm={() => { store.removeCollege(cCollege.id); setCCollegeId(""); setCYearId(""); setCDeptId(""); setCSubjectId(""); }} />
                         </>
                       )}
