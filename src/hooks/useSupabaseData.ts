@@ -303,6 +303,7 @@ export function useSupabaseData() {
           helpfulCount: (d as any).helpful_count || 0,
           viewedByStudent: (d as any).viewed_by_student || false,
           status: (d as any).status || undefined,
+          parentDoubtId: (d as any).parent_doubt_id || undefined,
 
         }))
       );
