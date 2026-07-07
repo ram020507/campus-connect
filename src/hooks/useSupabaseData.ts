@@ -106,6 +106,7 @@ export interface Doubt {
   helpfulCount: number;
   viewedByStudent: boolean;
   status?: string;
+  parentDoubtId?: string;
 }
 
 export interface DoubtFollowup {
@@ -302,6 +303,7 @@ export function useSupabaseData() {
           helpfulCount: (d as any).helpful_count || 0,
           viewedByStudent: (d as any).viewed_by_student || false,
           status: (d as any).status || undefined,
+          parentDoubtId: (d as any).parent_doubt_id || undefined,
 
         }))
       );
@@ -711,6 +713,7 @@ export function useSupabaseData() {
       question_image_url: doubt.questionImageUrl || null,
       question_image_url_2: doubt.questionImageUrl2 || null,
       ocr_text: doubt.ocrText || null,
+      parent_doubt_id: (doubt as any).parentDoubtId || null,
     } as any).select("id").single();
     if (!error && data) {
       // Fire-and-forget email notification

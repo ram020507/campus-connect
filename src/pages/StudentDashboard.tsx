@@ -108,32 +108,17 @@ const StudentDashboard = () => {
   const currentSubject = dept?.subjects.find((s) => s.id === selectedSubjectId);
   const currentVideo = currentSubject?.videos.find((v) => v.id === selectedVideoId);
 
-  // Feed: unseen solved doubts (status !== clarification_requested), shuffled, from same year/dept peers
+  // Feed: ALL completed doubts (status === "understood"), newest first, never removed after viewing.
   const feedDoubts = useMemo(() => {
-    const seenSet = new Set(
-      store.seenDoubtIds
-        .filter((k) => k.startsWith(`${student.registrationNumber}:`))
-        .map((k) => k.split(":")[1])
-    );
     const all = store.doubts.filter(
       (d) => d.answer
         && d.status === "understood"
-        && d.studentCollege === student.collegeName
-        && d.studentYear === student.year
-        && d.studentDepartment === student.department
-        && d.studentRegNo !== student.registrationNumber
-        && !seenSet.has(d.id)
         && (feedSubjectFilter === "all" || d.subjectName === feedSubjectFilter)
     );
-    const shuffled = [...all];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled;
-  }, [store.doubts, store.seenDoubtIds, student.year, student.department, student.registrationNumber, feedSubjectFilter]);
+    return all.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }, [store.doubts, feedSubjectFilter]);
 
-  // Mark the currently-viewed feed doubt as seen for this student
+  // Mark the currently-viewed feed doubt as seen (kept for internal tracking; does not hide it)
   useEffect(() => {
     if (view !== "learning-feed") return;
     const d = feedDoubts[feedCurrentIndex];
@@ -146,11 +131,9 @@ const StudentDashboard = () => {
 
 
   const feedSubjectOptions = useMemo(() => {
-    const all = store.doubts.filter(
-      (d) => d.answer && d.status === "understood" && d.studentCollege === student.collegeName && d.studentYear === student.year && d.studentDepartment === student.department && d.studentRegNo !== student.registrationNumber
-    );
+    const all = store.doubts.filter((d) => d.answer && d.status === "understood");
     return [...new Set(all.map((d) => d.subjectName))].sort();
-  }, [store.doubts.length, student.year, student.department, student.collegeName]);
+  }, [store.doubts.length]);
 
   // Saved doubts
   const mySavedDoubtIds = store.savedDoubts
@@ -1233,8 +1216,8 @@ const StudentDashboard = () => {
             {feedDoubts.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
                 <Shuffle className="h-12 w-12 mb-4 opacity-30" />
-                <p className="text-lg font-medium">No new solved doubts available.</p>
-                <p className="text-sm">Check back later once more doubts are completed!</p>
+                <p className="text-lg font-medium">No completed doubts yet.</p>
+                <p className="text-sm">Doubts appear here once students mark them as understood.</p>
               </div>
             ) : (
               <div className="relative" ref={feedContainerRef}>
@@ -1322,6 +1305,58 @@ const StudentDashboard = () => {
                             );
                           })()}
 
+                          {/* Child doubts (Related questions asked from this doubt) */}
+                          {(() => {
+                            const children = store.doubts.filter((c: any) => c.parentDoubtId === d.id);
+                            if (children.length === 0) return null;
+                            return (
+                              <div className="space-y-2 border-t pt-3">
+                                <p className="text-xs font-semibold text-muted-foreground">
+                                  Related Doubts ({children.length})
+                                </p>
+                                {children.map((c: any) => (
+                                  <div key={c.id} className="p-3 rounded border bg-muted/30 space-y-2">
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-[10px] text-muted-foreground">by {c.studentName}</span>
+                                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                                        {c.status === "understood" ? "Completed" : (c.status || (c.answer ? "solved" : "pending"))}
+                                      </span>
+                                    </div>
+                                    <p className="text-sm">{c.question}</p>
+                                    {c.questionImageUrl && <img src={c.questionImageUrl} className="max-h-40 rounded border" alt="child q" />}
+                                    {c.questionImageUrl2 && <img src={c.questionImageUrl2} className="max-h-40 rounded border" alt="child full" />}
+                                    {c.answer && (
+                                      <div className="p-2 rounded bg-success/10 text-xs">
+                                        <p className="text-[10px] text-muted-foreground mb-1">Answer by {c.answeredBy}</p>
+                                        <p>{c.answer}</p>
+                                        {(c.answerImageUrls && c.answerImageUrls.length > 0 ? c.answerImageUrls : c.answerImageUrl ? [c.answerImageUrl] : []).map((u: string, i: number) => (
+                                          <img key={i} src={u} className="max-h-40 rounded border mt-2" alt="child a" />
+                                        ))}
+                                      </div>
+                                    )}
+                                    {(() => {
+                                      const ct = store.followups.filter((f: any) => f.doubtId === c.id);
+                                      if (ct.length === 0) return null;
+                                      return (
+                                        <div className="space-y-1">
+                                          {ct.map((f: any) => (
+                                            <div key={f.id} className={`p-1.5 rounded text-[11px] ${f.authorRole === "teacher" ? "bg-primary/10" : "bg-accent/10"}`}>
+                                              <span className="font-semibold">{f.authorRole === "teacher" ? "👨‍🏫" : "🙋"} {f.authorName}: </span>
+                                              {f.text}
+                                              {f.imageUrls.map((u: string, i: number) => (
+                                                <img key={i} src={u} className="max-h-32 rounded border mt-1" alt="" />
+                                              ))}
+                                            </div>
+                                          ))}
+                                        </div>
+                                      );
+                                    })()}
+                                  </div>
+                                ))}
+                              </div>
+                            );
+                          })()}
+
                           {/* Footer: asked by + actions */}
                           <div className="flex items-center justify-between pt-2 border-t">
 
@@ -1383,78 +1418,82 @@ const StudentDashboard = () => {
                   Subject: <span className="font-semibold text-foreground">{feedAskSource.subjectName}</span>
                 </div>
 
-                <div>
-                  <p className="text-sm font-medium mb-2">Images</p>
-                  <div className="flex gap-2 mb-2">
-                    <Button size="sm" variant={feedAskUseExisting ? "default" : "outline"} onClick={() => setFeedAskUseExisting(true)}>
-                      Use Existing Images
-                    </Button>
-                    <Button size="sm" variant={!feedAskUseExisting ? "default" : "outline"} onClick={() => setFeedAskUseExisting(false)}>
-                      Replace Images
-                    </Button>
-                  </div>
+                {(() => {
+                  const parentHasImages = !!(feedAskSource.questionImageUrl || feedAskSource.questionImageUrl2);
+                  return parentHasImages ? (
+                    <div>
+                      <p className="text-sm font-medium mb-2">Images</p>
+                      <div className="flex gap-2 mb-2">
+                        <Button size="sm" variant={feedAskUseExisting ? "default" : "outline"} onClick={() => setFeedAskUseExisting(true)}>
+                          Use Existing Images
+                        </Button>
+                        <Button size="sm" variant={!feedAskUseExisting ? "default" : "outline"} onClick={() => setFeedAskUseExisting(false)}>
+                          Upload New Images
+                        </Button>
+                      </div>
 
-                  {feedAskUseExisting ? (
-                    <div className="grid grid-cols-2 gap-2">
-                      {feedAskSource.questionImageUrl && (
-                        <div>
-                          <p className="text-[10px] text-muted-foreground mb-1">Question Image</p>
-                          <img src={feedAskSource.questionImageUrl} className="w-full max-h-40 object-contain rounded border" alt="Question" />
+                      {feedAskUseExisting ? (
+                        <div className="grid grid-cols-2 gap-2">
+                          {feedAskSource.questionImageUrl && (
+                            <div>
+                              <p className="text-[10px] text-muted-foreground mb-1">Question Image</p>
+                              <img src={feedAskSource.questionImageUrl} className="w-full max-h-40 object-contain rounded border" alt="Question" />
+                            </div>
+                          )}
+                          {feedAskSource.questionImageUrl2 && (
+                            <div>
+                              <p className="text-[10px] text-muted-foreground mb-1">Full Problem</p>
+                              <img src={feedAskSource.questionImageUrl2} className="w-full max-h-40 object-contain rounded border" alt="Full problem" />
+                            </div>
+                          )}
                         </div>
-                      )}
-                      {feedAskSource.questionImageUrl2 && (
-                        <div>
-                          <p className="text-[10px] text-muted-foreground mb-1">Full Problem</p>
-                          <img src={feedAskSource.questionImageUrl2} className="w-full max-h-40 object-contain rounded border" alt="Full problem" />
+                      ) : (
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <p className="text-[10px] text-muted-foreground mb-1">New Question Image</p>
+                            {feedAskImage1Preview ? (
+                              <div className="relative">
+                                <img src={feedAskImage1Preview} className="w-full max-h-40 object-contain rounded border" alt="Q1" />
+                                <button type="button" onClick={() => { setFeedAskImage1(null); setFeedAskImage1Preview(null); }} className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1">
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </div>
+                            ) : (
+                              <label className="cursor-pointer flex flex-col items-center justify-center h-32 border-2 border-dashed rounded text-xs text-muted-foreground hover:bg-muted/50">
+                                <ImagePlus className="h-5 w-5 mb-1" /> Upload
+                                <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                                  const f = e.target.files?.[0]; if (!f) return;
+                                  setFeedAskImage1(f); setFeedAskImage1Preview(URL.createObjectURL(f));
+                                }} />
+                              </label>
+                            )}
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-muted-foreground mb-1">New Full Problem Image</p>
+                            {feedAskImage2Preview ? (
+                              <div className="relative">
+                                <img src={feedAskImage2Preview} className="w-full max-h-40 object-contain rounded border" alt="Q2" />
+                                <button type="button" onClick={() => { setFeedAskImage2(null); setFeedAskImage2Preview(null); }} className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1">
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </div>
+                            ) : (
+                              <label className="cursor-pointer flex flex-col items-center justify-center h-32 border-2 border-dashed rounded text-xs text-muted-foreground hover:bg-muted/50">
+                                <ImagePlus className="h-5 w-5 mb-1" /> Upload
+                                <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                                  const f = e.target.files?.[0]; if (!f) return;
+                                  setFeedAskImage2(f); setFeedAskImage2Preview(URL.createObjectURL(f));
+                                }} />
+                              </label>
+                            )}
+                          </div>
                         </div>
-                      )}
-                      {!feedAskSource.questionImageUrl && !feedAskSource.questionImageUrl2 && (
-                        <p className="text-xs text-muted-foreground col-span-2">Original doubt had no images.</p>
                       )}
                     </div>
                   ) : (
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <p className="text-[10px] text-muted-foreground mb-1">New Question Image</p>
-                        {feedAskImage1Preview ? (
-                          <div className="relative">
-                            <img src={feedAskImage1Preview} className="w-full max-h-40 object-contain rounded border" alt="Q1" />
-                            <button type="button" onClick={() => { setFeedAskImage1(null); setFeedAskImage1Preview(null); }} className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1">
-                              <X className="h-3 w-3" />
-                            </button>
-                          </div>
-                        ) : (
-                          <label className="cursor-pointer flex flex-col items-center justify-center h-32 border-2 border-dashed rounded text-xs text-muted-foreground hover:bg-muted/50">
-                            <ImagePlus className="h-5 w-5 mb-1" /> Upload
-                            <input type="file" accept="image/*" className="hidden" onChange={(e) => {
-                              const f = e.target.files?.[0]; if (!f) return;
-                              setFeedAskImage1(f); setFeedAskImage1Preview(URL.createObjectURL(f));
-                            }} />
-                          </label>
-                        )}
-                      </div>
-                      <div>
-                        <p className="text-[10px] text-muted-foreground mb-1">New Full Problem Image</p>
-                        {feedAskImage2Preview ? (
-                          <div className="relative">
-                            <img src={feedAskImage2Preview} className="w-full max-h-40 object-contain rounded border" alt="Q2" />
-                            <button type="button" onClick={() => { setFeedAskImage2(null); setFeedAskImage2Preview(null); }} className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1">
-                              <X className="h-3 w-3" />
-                            </button>
-                          </div>
-                        ) : (
-                          <label className="cursor-pointer flex flex-col items-center justify-center h-32 border-2 border-dashed rounded text-xs text-muted-foreground hover:bg-muted/50">
-                            <ImagePlus className="h-5 w-5 mb-1" /> Upload
-                            <input type="file" accept="image/*" className="hidden" onChange={(e) => {
-                              const f = e.target.files?.[0]; if (!f) return;
-                              setFeedAskImage2(f); setFeedAskImage2Preview(URL.createObjectURL(f));
-                            }} />
-                          </label>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                    <p className="text-xs text-muted-foreground">Text-only doubt — just type your related question below.</p>
+                  );
+                })()}
 
                 <div>
                   <p className="text-sm font-medium mb-1">Your Doubt <span className="text-destructive">*</span></p>
@@ -1472,14 +1511,17 @@ const StudentDashboard = () => {
                   onClick={async () => {
                     setFeedAskSubmitting(true);
                     try {
+                      const parentHasImages = !!(feedAskSource.questionImageUrl || feedAskSource.questionImageUrl2);
                       let q1 = "";
                       let q2 = "";
-                      if (feedAskUseExisting) {
-                        q1 = feedAskSource.questionImageUrl || "";
-                        q2 = feedAskSource.questionImageUrl2 || "";
-                      } else {
-                        if (feedAskImage1) q1 = (await store.uploadDoubtImage(feedAskImage1)) || "";
-                        if (feedAskImage2) q2 = (await store.uploadDoubtImage(feedAskImage2)) || "";
+                      if (parentHasImages) {
+                        if (feedAskUseExisting) {
+                          q1 = feedAskSource.questionImageUrl || "";
+                          q2 = feedAskSource.questionImageUrl2 || "";
+                        } else {
+                          if (feedAskImage1) q1 = (await store.uploadDoubtImage(feedAskImage1)) || "";
+                          if (feedAskImage2) q2 = (await store.uploadDoubtImage(feedAskImage2)) || "";
+                        }
                       }
                       await store.addDoubt({
                         studentName: student.name,
@@ -1491,7 +1533,8 @@ const StudentDashboard = () => {
                         question: feedAskText,
                         questionImageUrl: q1 || undefined,
                         questionImageUrl2: q2 || undefined,
-                      });
+                        parentDoubtId: feedAskSource.id,
+                      } as any);
                       setView("doubts");
                     } finally {
                       setFeedAskSubmitting(false);
