@@ -108,32 +108,17 @@ const StudentDashboard = () => {
   const currentSubject = dept?.subjects.find((s) => s.id === selectedSubjectId);
   const currentVideo = currentSubject?.videos.find((v) => v.id === selectedVideoId);
 
-  // Feed: unseen solved doubts (status !== clarification_requested), shuffled, from same year/dept peers
+  // Feed: ALL completed doubts (status === "understood"), newest first, never removed after viewing.
   const feedDoubts = useMemo(() => {
-    const seenSet = new Set(
-      store.seenDoubtIds
-        .filter((k) => k.startsWith(`${student.registrationNumber}:`))
-        .map((k) => k.split(":")[1])
-    );
     const all = store.doubts.filter(
       (d) => d.answer
         && d.status === "understood"
-        && d.studentCollege === student.collegeName
-        && d.studentYear === student.year
-        && d.studentDepartment === student.department
-        && d.studentRegNo !== student.registrationNumber
-        && !seenSet.has(d.id)
         && (feedSubjectFilter === "all" || d.subjectName === feedSubjectFilter)
     );
-    const shuffled = [...all];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled;
-  }, [store.doubts, store.seenDoubtIds, student.year, student.department, student.registrationNumber, feedSubjectFilter]);
+    return all.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }, [store.doubts, feedSubjectFilter]);
 
-  // Mark the currently-viewed feed doubt as seen for this student
+  // Mark the currently-viewed feed doubt as seen (kept for internal tracking; does not hide it)
   useEffect(() => {
     if (view !== "learning-feed") return;
     const d = feedDoubts[feedCurrentIndex];
@@ -146,11 +131,9 @@ const StudentDashboard = () => {
 
 
   const feedSubjectOptions = useMemo(() => {
-    const all = store.doubts.filter(
-      (d) => d.answer && d.status === "understood" && d.studentCollege === student.collegeName && d.studentYear === student.year && d.studentDepartment === student.department && d.studentRegNo !== student.registrationNumber
-    );
+    const all = store.doubts.filter((d) => d.answer && d.status === "understood");
     return [...new Set(all.map((d) => d.subjectName))].sort();
-  }, [store.doubts.length, student.year, student.department, student.collegeName]);
+  }, [store.doubts.length]);
 
   // Saved doubts
   const mySavedDoubtIds = store.savedDoubts
