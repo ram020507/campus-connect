@@ -1216,8 +1216,8 @@ const StudentDashboard = () => {
             {feedDoubts.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
                 <Shuffle className="h-12 w-12 mb-4 opacity-30" />
-                <p className="text-lg font-medium">No new solved doubts available.</p>
-                <p className="text-sm">Check back later once more doubts are completed!</p>
+                <p className="text-lg font-medium">No completed doubts yet.</p>
+                <p className="text-sm">Doubts appear here once students mark them as understood.</p>
               </div>
             ) : (
               <div className="relative" ref={feedContainerRef}>
