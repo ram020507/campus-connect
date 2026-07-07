@@ -713,6 +713,7 @@ export function useSupabaseData() {
       question_image_url: doubt.questionImageUrl || null,
       question_image_url_2: doubt.questionImageUrl2 || null,
       ocr_text: doubt.ocrText || null,
+      parent_doubt_id: (doubt as any).parentDoubtId || null,
     } as any).select("id").single();
     if (!error && data) {
       // Fire-and-forget email notification
