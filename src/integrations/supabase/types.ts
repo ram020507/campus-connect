@@ -323,6 +323,7 @@ export type Database = {
           helpful_count: number
           id: string
           ocr_text: string | null
+          parent_doubt_id: string | null
           question: string
           question_image_url: string | null
           question_image_url_2: string | null
@@ -347,6 +348,7 @@ export type Database = {
           helpful_count?: number
           id?: string
           ocr_text?: string | null
+          parent_doubt_id?: string | null
           question: string
           question_image_url?: string | null
           question_image_url_2?: string | null
@@ -371,6 +373,7 @@ export type Database = {
           helpful_count?: number
           id?: string
           ocr_text?: string | null
+          parent_doubt_id?: string | null
           question?: string
           question_image_url?: string | null
           question_image_url_2?: string | null
@@ -383,7 +386,15 @@ export type Database = {
           subject_name?: string
           viewed_by_student?: boolean
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "doubts_parent_doubt_id_fkey"
+            columns: ["parent_doubt_id"]
+            isOneToOne: false
+            referencedRelation: "doubts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       exam_prep_files: {
         Row: {
