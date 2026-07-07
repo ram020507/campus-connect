@@ -1305,6 +1305,58 @@ const StudentDashboard = () => {
                             );
                           })()}
 
+                          {/* Child doubts (Related questions asked from this doubt) */}
+                          {(() => {
+                            const children = store.doubts.filter((c: any) => c.parentDoubtId === d.id);
+                            if (children.length === 0) return null;
+                            return (
+                              <div className="space-y-2 border-t pt-3">
+                                <p className="text-xs font-semibold text-muted-foreground">
+                                  Related Doubts ({children.length})
+                                </p>
+                                {children.map((c: any) => (
+                                  <div key={c.id} className="p-3 rounded border bg-muted/30 space-y-2">
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-[10px] text-muted-foreground">by {c.studentName}</span>
+                                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                                        {c.status === "understood" ? "Completed" : (c.status || (c.answer ? "solved" : "pending"))}
+                                      </span>
+                                    </div>
+                                    <p className="text-sm">{c.question}</p>
+                                    {c.questionImageUrl && <img src={c.questionImageUrl} className="max-h-40 rounded border" alt="child q" />}
+                                    {c.questionImageUrl2 && <img src={c.questionImageUrl2} className="max-h-40 rounded border" alt="child full" />}
+                                    {c.answer && (
+                                      <div className="p-2 rounded bg-success/10 text-xs">
+                                        <p className="text-[10px] text-muted-foreground mb-1">Answer by {c.answeredBy}</p>
+                                        <p>{c.answer}</p>
+                                        {(c.answerImageUrls && c.answerImageUrls.length > 0 ? c.answerImageUrls : c.answerImageUrl ? [c.answerImageUrl] : []).map((u: string, i: number) => (
+                                          <img key={i} src={u} className="max-h-40 rounded border mt-2" alt="child a" />
+                                        ))}
+                                      </div>
+                                    )}
+                                    {(() => {
+                                      const ct = store.followups.filter((f: any) => f.doubtId === c.id);
+                                      if (ct.length === 0) return null;
+                                      return (
+                                        <div className="space-y-1">
+                                          {ct.map((f: any) => (
+                                            <div key={f.id} className={`p-1.5 rounded text-[11px] ${f.authorRole === "teacher" ? "bg-primary/10" : "bg-accent/10"}`}>
+                                              <span className="font-semibold">{f.authorRole === "teacher" ? "👨‍🏫" : "🙋"} {f.authorName}: </span>
+                                              {f.text}
+                                              {f.imageUrls.map((u: string, i: number) => (
+                                                <img key={i} src={u} className="max-h-32 rounded border mt-1" alt="" />
+                                              ))}
+                                            </div>
+                                          ))}
+                                        </div>
+                                      );
+                                    })()}
+                                  </div>
+                                ))}
+                              </div>
+                            );
+                          })()}
+
                           {/* Footer: asked by + actions */}
                           <div className="flex items-center justify-between pt-2 border-t">
 
