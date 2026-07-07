@@ -106,6 +106,7 @@ export interface Doubt {
   helpfulCount: number;
   viewedByStudent: boolean;
   status?: string;
+  parentDoubtId?: string;
 }
 
 export interface DoubtFollowup {
