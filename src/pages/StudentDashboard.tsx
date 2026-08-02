@@ -1050,92 +1050,20 @@ const StudentDashboard = () => {
                                 })()}
                                 {/* Understood / Still Have a Doubt actions */}
                                 {d.status !== "understood" && d.status !== "clarification_requested" && (
-                                  <div className="mt-3 border-t pt-3 space-y-2">
-                                    {!followupInputs[d.id] ? (
-                                      <div className="flex gap-2">
-                                        <Button size="sm" variant="outline" className="gap-1" onClick={() => store.markDoubtUnderstood(d.id)}>
-                                          <CheckCircle2 className="h-3 w-3" /> Understood
-                                        </Button>
-                                        <Button
-                                          size="sm" variant="outline" className="gap-1"
-                                          onClick={() => setFollowupInputs((p) => ({ ...p, [d.id]: { text: "", images: [], previews: [] } }))}
-                                        >
-                                          <MessageCircle className="h-3 w-3" /> Still Have a Doubt
-                                        </Button>
-                                      </div>
-                                    ) : (
-                                      <div className="space-y-2">
-                                        <Textarea
-                                          placeholder="Describe what you still don't understand..."
-                                          value={followupInputs[d.id].text}
-                                          onChange={(e) => setFollowupInputs((p) => ({ ...p, [d.id]: { ...p[d.id], text: e.target.value } }))}
-                                          rows={3}
-                                        />
-                                        <div className="flex flex-wrap gap-2">
-                                          {followupInputs[d.id].previews.map((src, i) => (
-                                            <div key={i} className="relative">
-                                              <img src={src} alt="preview" className="h-20 w-20 object-cover rounded border" />
-                                              <button
-                                                type="button"
-                                                onClick={() => setFollowupInputs((p) => {
-                                                  const cur = p[d.id];
-                                                  return { ...p, [d.id]: { ...cur, images: cur.images.filter((_, idx) => idx !== i), previews: cur.previews.filter((_, idx) => idx !== i) } };
-                                                })}
-                                                className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5"
-                                              >
-                                                <X className="h-3 w-3" />
-                                              </button>
-                                            </div>
-                                          ))}
-                                          <label className="cursor-pointer flex items-center justify-center h-20 w-20 border-2 border-dashed rounded text-xs text-muted-foreground hover:bg-muted/50">
-                                            <ImagePlus className="h-4 w-4" />
-                                            <input
-                                              type="file" accept="image/*" multiple className="hidden"
-                                              onChange={(e) => {
-                                                const files = Array.from(e.target.files || []);
-                                                if (files.length === 0) return;
-                                                const previews = files.map((f) => URL.createObjectURL(f));
-                                                setFollowupInputs((p) => ({ ...p, [d.id]: { ...p[d.id], images: [...p[d.id].images, ...files], previews: [...p[d.id].previews, ...previews] } }));
-                                                e.target.value = "";
-                                              }}
-                                            />
-                                          </label>
-                                        </div>
-                                        <div className="flex gap-2">
-                                          <Button
-                                            size="sm" disabled={followupSubmitting === d.id || !followupInputs[d.id].text.trim()}
-                                            onClick={async () => {
-                                              setFollowupSubmitting(d.id);
-                                              try {
-                                                const cur = followupInputs[d.id];
-                                                const urls: string[] = [];
-                                                for (const f of cur.images) {
-                                                  const url = await store.uploadDoubtImage(f);
-                                                  if (url) urls.push(url);
-                                                }
-                                                await store.addFollowup({
-                                                  doubtId: d.id,
-                                                  authorRole: "student",
-                                                  authorName: student.name,
-                                                  text: cur.text,
-                                                  imageUrls: urls,
-                                                });
-                                                setFollowupInputs((p) => {
-                                                  const n = { ...p }; delete n[d.id]; return n;
-                                                });
-                                              } finally {
-                                                setFollowupSubmitting(null);
-                                              }
-                                            }}
-                                          >
-                                            {followupSubmitting === d.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
-                                            Send Follow-up
-                                          </Button>
-                                          <Button size="sm" variant="ghost" onClick={() => setFollowupInputs((p) => { const n = { ...p }; delete n[d.id]; return n; })}>
-                                            Cancel
-                                          </Button>
-                                        </div>
-                                      </div>
+                                  <div className="mt-3 border-t pt-3 space-y-3">
+                                    <div className="flex gap-2">
+                                      <Button size="sm" variant="outline" className="gap-1" onClick={() => store.markDoubtUnderstood(d.id)}>
+                                        <CheckCircle2 className="h-3 w-3" /> Understood
+                                      </Button>
+                                      <Button
+                                        size="sm" variant={showFollowup[d.id] ? "default" : "outline"} className="gap-1"
+                                        onClick={() => setShowFollowup((p) => ({ ...p, [d.id]: !p[d.id] }))}
+                                      >
+                                        <MessageCircle className="h-3 w-3" /> Still Have a Doubt
+                                      </Button>
+                                    </div>
+                                    {showFollowup[d.id] && (
+                                      <FollowupActions doubt={d} student={student} store={store} />
                                     )}
                                   </div>
                                 )}
@@ -1359,12 +1287,6 @@ const StudentDashboard = () => {
                                 variant="outline" size="sm" className="gap-1"
                                 onClick={() => {
                                   setFeedAskSource(d);
-                                  setFeedAskText("");
-                                  setFeedAskUseExisting(true);
-                                  setFeedAskImage1(null);
-                                  setFeedAskImage1Preview(null);
-                                  setFeedAskImage2(null);
-                                  setFeedAskImage2Preview(null);
                                   setView("feed-ask-doubt");
                                 }}
                               >
