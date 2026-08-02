@@ -714,6 +714,10 @@ export function useSupabaseData() {
       question_image_url_2: doubt.questionImageUrl2 || null,
       ocr_text: doubt.ocrText || null,
       parent_doubt_id: (doubt as any).parentDoubtId || null,
+      // Directed doubts (follow-up "Ask a New Doubt") go straight to the same teacher
+      claimed_by: doubt.claimedBy || null,
+      handling_teacher: (doubt as any).handlingTeacher || null,
+      status: doubt.status || "pending",
     } as any).select("id").single();
     if (!error && data) {
       // Fire-and-forget email notification
@@ -748,13 +752,14 @@ export function useSupabaseData() {
 
   const searchSimilarDoubts = (
     text: string,
-    filters?: { subjectName?: string; studentYear?: number; studentDepartment?: string; ocrText?: string; requireTwoImages?: boolean }
+    filters?: { subjectName?: string; studentYear?: number; studentDepartment?: string; ocrText?: string; requireTwoImages?: boolean; excludeDoubtId?: string }
   ): Doubt[] => {
     const typed = (text || "").toLowerCase().trim();
     const ocr = (filters?.ocrText || "").toLowerCase().trim();
     if (typed.length < 3 && ocr.length < 3) return [];
     return doubts.filter((d) => {
       if (!d.answer) return false;
+      if (filters?.excludeDoubtId && d.id === filters.excludeDoubtId) return false;
       if (filters?.subjectName && d.subjectName.toLowerCase() !== filters.subjectName.toLowerCase()) return false;
       if (filters?.studentYear && d.studentYear !== filters.studentYear) return false;
       if (filters?.studentDepartment && d.studentDepartment.toLowerCase() !== filters.studentDepartment.toLowerCase()) return false;
