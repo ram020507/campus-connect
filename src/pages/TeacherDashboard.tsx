@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import DigitalBoardTeacher from "@/components/DigitalBoardTeacher";
 import { verifySession, clearSession } from "@/lib/authGuard";
+import { supabase } from "@/integrations/supabase/client";
 
 type Section = "unclaimed" | "claimed" | "all";
 
@@ -58,6 +59,31 @@ const TeacherDashboard = () => {
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const [expandedSubjects, setExpandedSubjects] = useState<Record<string, boolean>>({});
 
+  // Availability (IN/OUT) — gates new doubt requests and board calls
+  const [availability, setAvailability] = useState<"in" | "out">("out");
+
+  useEffect(() => {
+    if (!teacher) return;
+    (async () => {
+      const { data } = await supabase
+        .from("teacher_status")
+        .select("availability")
+        .eq("staff_id", teacher.staffId)
+        .maybeSingle();
+      if (data && (data as any).availability === "in") setAvailability("in");
+    })();
+  }, [teacher?.staffId]);
+
+  const toggleAvailability = async () => {
+    if (!teacher) return;
+    const next = availability === "in" ? "out" : "in";
+    setAvailability(next);
+    await supabase
+      .from("teacher_status")
+      .update({ availability: next, updated_at: new Date().toISOString() } as any)
+      .eq("staff_id", teacher.staffId);
+  };
+
   if (!teacher) {
     navigate("/teacher/login");
     return null;
@@ -68,13 +94,13 @@ const TeacherDashboard = () => {
     navigate("/");
   };
 
-  // Section 1: Claim & Solve — pending unclaimed matching teacher's subjects
-  const unclaimedDoubts = store.doubts.filter(
+  // Section 1: Claim & Solve — pending unclaimed matching teacher's subjects (only when IN)
+  const unclaimedDoubts = availability === "in" ? store.doubts.filter(
     (d) =>
       teacherSubjects.some(s => s.toLowerCase() === d.subjectName.toLowerCase()) &&
       !d.answer &&
       !d.claimedBy
-  );
+  ) : [];
 
   // In-progress: claimed by me OR answered by me, but NOT yet marked understood by student
   const inProgressDoubts = store.doubts.filter(
@@ -198,7 +224,34 @@ const TeacherDashboard = () => {
       </header>
 
       <div className="max-w-3xl mx-auto p-4 space-y-4">
-        <DigitalBoardTeacher teacher={teacher} />
+        {/* Availability toggle — controls both new doubt requests and board calls */}
+        <Card className={availability === "in" ? "border-success/50" : "border-border"}>
+          <CardContent className="p-3 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">Availability</span>
+              <span className={`text-xs px-2 py-0.5 rounded-full ${availability === "in" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}`}>
+                {availability === "in" ? "IN — receiving doubts & board calls" : "OUT — requests paused"}
+              </span>
+            </div>
+            <Button
+              variant={availability === "in" ? "outline" : "default"}
+              size="sm"
+              onClick={toggleAvailability}
+            >
+              {availability === "in" ? "Go OUT" : "Go IN"}
+            </Button>
+          </CardContent>
+        </Card>
+
+        <DigitalBoardTeacher teacher={teacher} availability={availability} />
+
+        {availability === "out" && (
+          <Card>
+            <CardContent className="p-3 text-xs text-muted-foreground">
+              You are OUT. New doubt and board requests are paused — go IN to receive them. Your in-progress and solved doubts remain below.
+            </CardContent>
+          </Card>
+        )}
 
         {/* Section Tabs */}
         <div className="flex gap-1 border-b overflow-x-auto">
@@ -293,6 +346,14 @@ const TeacherDashboard = () => {
                         <span className="text-xs font-medium bg-primary/10 text-primary px-2 py-0.5 rounded ml-auto">{d.subjectName}</span>
                       </div>
                       <p className="text-sm font-medium mb-3">{d.question}</p>
+                      {d.parentDoubtId && (() => {
+                        const parent = store.doubts.find((x) => x.id === d.parentDoubtId);
+                        return parent ? (
+                          <p className="text-[10px] text-muted-foreground mb-2">
+                            🔗 New doubt related to previous: "{parent.question.slice(0, 80)}{parent.question.length > 80 ? "…" : ""}"
+                          </p>
+                        ) : null;
+                      })()}
                       {d.questionImageUrl && (
                         <div className="mb-3">
                           <p className="text-xs text-muted-foreground mb-1">Question Image</p>
