@@ -17,14 +17,14 @@ interface DigitalBoardTeacherProps {
     collegeName: string;
     subjectName: string;
   };
+  availability: "in" | "out";
 }
 
-const DigitalBoardTeacher = ({ teacher }: DigitalBoardTeacherProps) => {
+const DigitalBoardTeacher = ({ teacher, availability }: DigitalBoardTeacherProps) => {
   const board = useDigitalBoard();
   const whiteboardRef = useRef<WhiteboardRef>(null);
   const [accepting, setAccepting] = useState<string | null>(null);
   const [teacherLocked, setTeacherLocked] = useState(false);
-  const [availability, setAvailability] = useState<"in" | "out">("out");
 
   // WebRTC voice
   const webrtc = useWebRTC({
@@ -32,17 +32,11 @@ const DigitalBoardTeacher = ({ teacher }: DigitalBoardTeacherProps) => {
     userId: `teacher-${teacher.staffId}`,
   });
 
-  // Set teacher online (OUT by default) when component mounts
+  // Set teacher online when component mounts (preserves existing IN/OUT availability)
   useEffect(() => {
-    board.setTeacherOnline(teacher.staffId, teacher.name, teacher.collegeName, teacher.subjectName, "out");
+    board.setTeacherOnline(teacher.staffId, teacher.name, teacher.collegeName, teacher.subjectName);
     return () => { board.setTeacherOffline(teacher.staffId); };
   }, [teacher.staffId]);
-
-  const toggleAvailability = async () => {
-    const next = availability === "in" ? "out" : "in";
-    setAvailability(next);
-    await board.setTeacherAvailability(teacher.staffId, next);
-  };
 
   // Filter requests for any of this teacher's subjects, exclude if busy or OUT
   const teacherSubjects = getTeacherSubjects(teacher as any);
@@ -117,6 +111,13 @@ const DigitalBoardTeacher = ({ teacher }: DigitalBoardTeacherProps) => {
             </div>
           </div>
 
+          {webrtc.error && (
+            <div className="flex items-center justify-between gap-2 p-2 rounded bg-destructive/10 border border-destructive/30 text-xs text-destructive">
+              <span>Voice connection failed{webrtc.error ? `: ${webrtc.error}` : ""}</span>
+              <Button size="sm" variant="outline" className="h-6 text-xs shrink-0" onClick={() => webrtc.startCall(true)}>Retry Voice</Button>
+            </div>
+          )}
+
           {(board.activeSession.doubtText || board.activeSession.questionImageUrl) && (
             <div className="p-3 rounded bg-muted text-sm space-y-2">
               <p className="text-xs font-semibold text-primary">{board.activeSession.studentName}</p>
@@ -149,25 +150,9 @@ const DigitalBoardTeacher = ({ teacher }: DigitalBoardTeacherProps) => {
 
   return (
     <div className="space-y-3">
-      {/* Availability toggle */}
-      <Card className={availability === "in" ? "border-success/50" : "border-border"}>
-        <CardContent className="p-3 flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <Monitor className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium">Digital Board</span>
-            <span className={`text-xs px-2 py-0.5 rounded-full ${availability === "in" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}`}>
-              {availability === "in" ? "Available (IN)" : "Unavailable (OUT)"}
-            </span>
-          </div>
-          <Button
-            variant={availability === "in" ? "outline" : "default"}
-            size="sm"
-            onClick={toggleAvailability}
-          >
-            {availability === "in" ? "Go OUT" : "Go IN"}
-          </Button>
-        </CardContent>
-      </Card>
+      <h3 className="font-display font-semibold text-base flex items-center gap-2">
+        <Monitor className="h-5 w-5 text-primary" /> Digital Board
+      </h3>
 
       {availability === "in" && incomingRequests.length === 0 && (
         <p className="text-xs text-muted-foreground">Waiting for student board calls…</p>

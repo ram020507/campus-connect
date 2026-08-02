@@ -22,6 +22,7 @@ export function useWebRTC({ sessionId, userId, onConnectionStateChange }: UseWeb
   const [muted, setMuted] = useState(false);
   const [connected, setConnected] = useState(false);
   const [connecting, setConnecting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const pendingCandidates = useRef<RTCIceCandidateInit[]>([]);
   const hasRemoteDesc = useRef(false);
 
@@ -54,6 +55,7 @@ export function useWebRTC({ sessionId, userId, onConnectionStateChange }: UseWeb
   const startCall = useCallback(async (isInitiator: boolean) => {
     if (pcRef.current) return;
     setConnecting(true);
+    setError(null);
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -79,7 +81,11 @@ export function useWebRTC({ sessionId, userId, onConnectionStateChange }: UseWeb
         const state = pc.connectionState;
         onConnectionStateChange?.(state);
         setConnected(state === "connected");
-        if (state === "failed" || state === "disconnected" || state === "closed") {
+        if (state === "failed") {
+          setConnected(false);
+          setError("Voice connection failed");
+        }
+        if (state === "disconnected" || state === "closed") {
           setConnected(false);
         }
       };
@@ -158,7 +164,12 @@ export function useWebRTC({ sessionId, userId, onConnectionStateChange }: UseWeb
       setConnecting(false);
     } catch (err) {
       console.error("WebRTC start error:", err);
-      setConnecting(false);
+      cleanup();
+      setError(
+        err instanceof Error && err.message
+          ? err.message
+          : "Microphone access failed or voice connection could not be established"
+      );
     }
   }, [sessionId, userId, channelName, cleanup, addBufferedCandidates, onConnectionStateChange]);
 
@@ -168,6 +179,7 @@ export function useWebRTC({ sessionId, userId, onConnectionStateChange }: UseWeb
       event: "end-call",
       payload: { from: userId },
     });
+    setError(null);
     cleanup();
   }, [cleanup, userId]);
 
@@ -185,5 +197,5 @@ export function useWebRTC({ sessionId, userId, onConnectionStateChange }: UseWeb
     return () => { cleanup(); };
   }, [cleanup]);
 
-  return { startCall, endCall, toggleMute, muted, connected, connecting, cleanup };
+  return { startCall, endCall, toggleMute, muted, connected, connecting, error, cleanup };
 }

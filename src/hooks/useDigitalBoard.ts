@@ -154,12 +154,12 @@ export function useDigitalBoard() {
       .single();
 
     if (existing) {
+      // Preserve the teacher's existing IN/OUT availability — only refresh presence
       await supabase
         .from("teacher_status")
         .update({
           is_online: true,
           is_busy: false,
-          availability,
           last_seen_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         } as any)
