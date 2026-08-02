@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 
 import DigitalBoardStudent from "@/components/DigitalBoardStudent";
+import FollowupActions from "@/components/FollowupActions";
 import { verifySession, clearSession } from "@/lib/authGuard";
 
 type View = "dashboard" | "learning-resources" | "subjects" | "videos" | "video-player" | "doubts" | "digital-board" | "learning-feed" | "saved-doubts" | "exam-subjects" | "exam-content" | "feed-ask-doubt";
@@ -71,15 +72,7 @@ const StudentDashboard = () => {
   const [feedCurrentIndex, setFeedCurrentIndex] = useState(0);
   const [feedSubjectFilter, setFeedSubjectFilter] = useState<string>("all");
   const [feedAskSource, setFeedAskSource] = useState<any | null>(null);
-  const [feedAskText, setFeedAskText] = useState("");
-  const [feedAskUseExisting, setFeedAskUseExisting] = useState(true);
-  const [feedAskImage1, setFeedAskImage1] = useState<File | null>(null);
-  const [feedAskImage1Preview, setFeedAskImage1Preview] = useState<string | null>(null);
-  const [feedAskImage2, setFeedAskImage2] = useState<File | null>(null);
-  const [feedAskImage2Preview, setFeedAskImage2Preview] = useState<string | null>(null);
-  const [feedAskSubmitting, setFeedAskSubmitting] = useState(false);
-  const [followupInputs, setFollowupInputs] = useState<Record<string, { text: string; images: File[]; previews: string[] }>>({});
-  const [followupSubmitting, setFollowupSubmitting] = useState<string | null>(null);
+  const [showFollowup, setShowFollowup] = useState<Record<string, boolean>>({});
 
   const [doubtImage2, setDoubtImage2] = useState<File | null>(null);
   const [doubtImage2Preview, setDoubtImage2Preview] = useState<string | null>(null);

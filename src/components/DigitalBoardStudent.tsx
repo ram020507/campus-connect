@@ -283,6 +283,13 @@ const DigitalBoardStudent = ({ student, subjects, onBack }: DigitalBoardStudentP
         </div>
       </div>
 
+      {webrtc.error && (
+        <div className="flex items-center justify-between gap-2 p-2 rounded bg-destructive/10 border border-destructive/30 text-xs text-destructive">
+          <span>Voice connection failed{webrtc.error ? `: ${webrtc.error}` : ""}</span>
+          <Button size="sm" variant="outline" className="h-6 text-xs shrink-0" onClick={() => webrtc.startCall(false)}>Retry Voice</Button>
+        </div>
+      )}
+
       {/* Question panel */}
       {(board.activeSession.doubtText || board.activeSession.questionImageUrl) && (
         <div className="p-3 rounded bg-muted text-sm space-y-2">
