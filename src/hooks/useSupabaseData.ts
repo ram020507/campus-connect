@@ -100,6 +100,7 @@ export interface Doubt {
   answerImageUrls?: string[];
   answeredBy?: string;
   claimedBy?: string;
+  handlingTeacher?: string;
   createdAt: string;
   answeredAt?: string;
   ocrText?: string;
@@ -297,6 +298,7 @@ export function useSupabaseData() {
           answerImageUrls: (d as any).answer_image_urls || [],
           answeredBy: d.answered_by || undefined,
           claimedBy: d.claimed_by || undefined,
+          handlingTeacher: (d as any).handling_teacher || undefined,
           createdAt: d.created_at,
           answeredAt: d.answered_at || undefined,
           ocrText: (d as any).ocr_text || undefined,
@@ -736,6 +738,17 @@ export function useSupabaseData() {
     await fetchAll();
   };
 
+  // Claim a clarification request WITHOUT changing its status, so the
+  // teacher lands directly on the "send additional explanation" reply box.
+  const claimClarification = async (doubtId: string, teacherStaffId: string) => {
+    const teacher = teachers.find((t) => t.staffId === teacherStaffId);
+    await (supabase.from("doubts").update as any)({
+      claimed_by: teacherStaffId,
+      handling_teacher: teacher?.name || teacherStaffId,
+    }).eq("id", doubtId);
+    await fetchAll();
+  };
+
   const answerDoubt = async (doubtId: string, answer: string, teacherName: string, answerImageUrl?: string, answerImageUrls?: string[]) => {
     await supabase.from("doubts").update({
       answer,
@@ -896,6 +909,8 @@ export function useSupabaseData() {
     authorName: string;
     text: string;
     imageUrls?: string[];
+    /** Feed clarifications on others' doubts: reopen to every teacher of the subject */
+    reopenToAllTeachers?: boolean;
   }) => {
     await (supabase as any).from("doubt_followups").insert({
       doubt_id: params.doubtId,
@@ -912,6 +927,12 @@ export function useSupabaseData() {
     } else {
       // Reopen for student — mark unviewed so student sees fresh reply later
       patch.viewed_by_student = false;
+      if (params.reopenToAllTeachers) {
+        // Clarification from the Learning Feed on someone else's doubt:
+        // release the claim so ALL teachers of the subject can respond.
+        patch.claimed_by = null;
+        patch.handling_teacher = null;
+      }
     }
     await (supabase.from("doubts").update as any)(patch).eq("id", params.doubtId);
     if (params.authorRole === "student") {
@@ -955,7 +976,7 @@ export function useSupabaseData() {
     uploadDoubtImage,
     addStudent, removeStudent, updateStudent,
     addTeacher, removeTeacher, updateTeacher,
-    addDoubt, claimDoubt, answerDoubt,
+    addDoubt, claimDoubt, claimClarification, answerDoubt,
     searchSimilarDoubts, extractOcrText,
     updateDoubtQuestion, deleteDoubt, updateDoubtAnswer, deleteDoubtAnswer,
     saveDoubt, unsaveDoubt, toggleHelpful,

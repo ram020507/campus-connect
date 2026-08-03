@@ -94,18 +94,25 @@ const TeacherDashboard = () => {
     navigate("/");
   };
 
-  // Section 1: Claim & Solve — pending unclaimed matching teacher's subjects (only when IN)
+  // Section 1: Claim & Solve — pending requests for my subjects (only when IN).
+  // Includes: normal pending doubts (open to all, or directed to me by a
+  // follow-up "Ask a New Doubt") and Learning-Feed clarification requests
+  // reopened to every teacher of the subject.
   const unclaimedDoubts = availability === "in" ? store.doubts.filter(
-    (d) =>
-      teacherSubjects.some(s => s.toLowerCase() === d.subjectName.toLowerCase()) &&
-      !d.answer &&
-      !d.claimedBy
+    (d) => {
+      if (!teacherSubjects.some(s => s.toLowerCase() === d.subjectName.toLowerCase())) return false;
+      if (d.claimedBy) return false;
+      const directedToMe = !d.handlingTeacher || d.handlingTeacher === teacher.name;
+      if (!d.answer && directedToMe) return true;                             // new pending doubt
+      if (d.status === "clarification_requested" && directedToMe) return true; // feed clarification
+      return false;
+    }
   ) : [];
 
   // In-progress: claimed by me OR answered by me, but NOT yet marked understood by student
   const inProgressDoubts = store.doubts.filter(
     (d) =>
-      ((d.claimedBy === teacher.staffId && !d.answer) || d.answeredBy === teacher.name) &&
+      (d.claimedBy === teacher.staffId || d.answeredBy === teacher.name) &&
       d.status !== "understood"
   );
 
@@ -133,7 +140,12 @@ const TeacherDashboard = () => {
       setClaimAlert({ show: true, teacherName: claimerTeacher?.name || doubt.claimedBy });
       return;
     }
-    await store.claimDoubt(doubtId, teacher.staffId);
+    if (doubt?.status === "clarification_requested") {
+      // Keep the status so the In Progress card shows the clarification reply box
+      await store.claimClarification(doubtId, teacher.staffId);
+    } else {
+      await store.claimDoubt(doubtId, teacher.staffId);
+    }
   };
 
   const handleReplyImageSelect = (doubtId: string, e: React.ChangeEvent<HTMLInputElement>) => {
@@ -297,6 +309,24 @@ const TeacherDashboard = () => {
                         </span>
                         <span className="text-xs font-medium bg-primary/10 text-primary px-2 py-0.5 rounded ml-auto">{d.subjectName}</span>
                       </div>
+                      {d.status === "clarification_requested" && (() => {
+                        const thread = store.followups.filter((f) => f.doubtId === d.id);
+                        const lastStudent = [...thread].reverse().find((f) => f.authorRole === "student");
+                        return (
+                          <div className="mb-3 p-2 rounded bg-accent/10 border border-accent/30 text-xs space-y-1">
+                            <p className="font-semibold text-accent">💬 Clarification requested{lastStudent ? ` by ${lastStudent.authorName}` : ""}</p>
+                            {d.answer && (
+                              <p className="text-muted-foreground">
+                                <span className="font-medium">Previous answer ({d.answeredBy}):</span> {d.answer.slice(0, 120)}{d.answer.length > 120 ? "…" : ""}
+                              </p>
+                            )}
+                            {lastStudent?.text && <p><span className="font-medium">Clarification:</span> {lastStudent.text}</p>}
+                            {lastStudent?.imageUrls?.map((u, i) => (
+                              <img key={i} src={u} alt="clarification" className="max-h-24 rounded border mt-1" />
+                            ))}
+                          </div>
+                        );
+                      })()}
                       <p className="text-sm font-medium mb-3">{d.question}</p>
                       {d.questionImageUrl && (
                         <div className="mb-3">
@@ -317,7 +347,7 @@ const TeacherDashboard = () => {
                         </div>
                       )}
                       <Button size="sm" onClick={() => handleClaim(d.id)}>
-                        Claim & Solve
+                        {d.status === "clarification_requested" ? "Claim & Respond" : "Claim & Solve"}
                       </Button>
                     </CardContent>
                   </Card>
@@ -454,28 +484,32 @@ const TeacherDashboard = () => {
                               </div>
                             </div>
                           ) : (
-                          <div className="p-3 rounded bg-success/10 text-sm">
-                            <p className="text-xs text-muted-foreground mb-1">Your Original Answer</p>
-                            <p className="whitespace-pre-wrap">{d.answer}</p>
-                            {(d.answerImageUrls && d.answerImageUrls.length > 0 ? d.answerImageUrls : d.answerImageUrl ? [d.answerImageUrl] : []).map((u, i) => (
-                              <img key={i} src={u} alt="answer" className="max-h-40 rounded border mt-2" />
-                            ))}
-                            <div className="mt-2">
-                              <Button
-                                variant="outline" size="sm"
-                                disabled={d.viewedByStudent}
-                                title={d.viewedByStudent ? "Student has viewed this — editing locked" : "Edit your solution"}
-                                onClick={() => {
-                                  setEditingAnswerId(d.id);
-                                  setEditAnswerText(d.answer || "");
-                                  setEditAnswerImages(d.answerImageUrls && d.answerImageUrls.length > 0 ? d.answerImageUrls : d.answerImageUrl ? [d.answerImageUrl] : []);
-                                }}
-                              >
-                                {d.viewedByStudent ? <Lock className="h-3 w-3 mr-1" /> : <Pencil className="h-3 w-3 mr-1" />}
-                                {d.viewedByStudent ? "Locked — student viewed" : "Edit Solution"}
-                              </Button>
-                            </div>
-                          </div>
+                           <div className="p-3 rounded bg-success/10 text-sm">
+                             <p className="text-xs text-muted-foreground mb-1">
+                               {d.answeredBy === teacher.name ? "Your Original Answer" : `Original Answer by ${d.answeredBy}`}
+                             </p>
+                             <p className="whitespace-pre-wrap">{d.answer}</p>
+                             {(d.answerImageUrls && d.answerImageUrls.length > 0 ? d.answerImageUrls : d.answerImageUrl ? [d.answerImageUrl] : []).map((u, i) => (
+                               <img key={i} src={u} alt="answer" className="max-h-40 rounded border mt-2" />
+                             ))}
+                             {d.answeredBy === teacher.name && (
+                             <div className="mt-2">
+                               <Button
+                                 variant="outline" size="sm"
+                                 disabled={d.viewedByStudent}
+                                 title={d.viewedByStudent ? "Student has viewed this — editing locked" : "Edit your solution"}
+                                 onClick={() => {
+                                   setEditingAnswerId(d.id);
+                                   setEditAnswerText(d.answer || "");
+                                   setEditAnswerImages(d.answerImageUrls && d.answerImageUrls.length > 0 ? d.answerImageUrls : d.answerImageUrl ? [d.answerImageUrl] : []);
+                                 }}
+                               >
+                                 {d.viewedByStudent ? <Lock className="h-3 w-3 mr-1" /> : <Pencil className="h-3 w-3 mr-1" />}
+                                 {d.viewedByStudent ? "Locked — student viewed" : "Edit Solution"}
+                               </Button>
+                             </div>
+                             )}
+                           </div>
                           )}
                           {(() => {
                             const thread = store.followups.filter((f) => f.doubtId === d.id);
