@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  Loader2, Send, ImagePlus, X, MessageCircle, HelpCircle, Search, CheckCircle2, Check,
+  Loader2, Send, ImagePlus, X, MessageCircle, HelpCircle, CheckCircle2, Check,
 } from "lucide-react";
 import type { Doubt } from "@/hooks/useSupabaseData";
 
@@ -17,16 +17,26 @@ interface FollowupActionsProps {
     collegeName: string;
   };
   store: any;
+  /**
+   * "own"  — student's own solved doubt (My Doubts): clarification goes to the
+   *          same teacher; "Ask a New Doubt" closes the previous doubt as
+   *          Understood and sends a brand-new pending doubt to the same teacher.
+   * "feed" — someone else's doubt (Learning Feed): clarification reopens the
+   *          thread to ALL teachers of the subject; "Ask a New Doubt" creates a
+   *          normal pending doubt for all subject teachers.
+   */
+  context?: "own" | "feed";
   onClarificationSent?: () => void;
   onNewDoubtCreated?: () => void;
 }
 
 /**
  * Two-card follow-up workflow shown under a solved doubt:
- *  Card 1 – Clarify Previous Answer / Continue Previous Question (same thread, same teacher)
- *  Card 2 – Ask a New Doubt (match-check, then directed to the same teacher as a separate doubt)
+ *  Card 1 – Clarify Previous Answer / Continue Previous Question (same thread)
+ *  Card 2 – Ask a New Doubt (completely separate discussion, no parent-child link)
  */
-const FollowupActions = ({ doubt, student, store, onClarificationSent, onNewDoubtCreated }: FollowupActionsProps) => {
+const FollowupActions = ({ doubt, student, store, context = "own", onClarificationSent, onNewDoubtCreated }: FollowupActionsProps) => {
+  const isOwn = context === "own";
   const hasImages = !!(doubt.questionImageUrl || doubt.questionImageUrl2);
   const answerImages: string[] = doubt.answerImageUrls && doubt.answerImageUrls.length > 0
     ? doubt.answerImageUrls
@@ -52,12 +62,8 @@ const FollowupActions = ({ doubt, student, store, onClarificationSent, onNewDoub
   const [img1Preview, setImg1Preview] = useState<string | null>(null);
   const [img2, setImg2] = useState<File | null>(null);
   const [img2Preview, setImg2Preview] = useState<string | null>(null);
-  const [checking, setChecking] = useState(false);
-  const [matches, setMatches] = useState<Doubt[] | null>(null);
   const [newSending, setNewSending] = useState(false);
   const [newCreated, setNewCreated] = useState(false);
-  // Cache uploads so "Ask Anyway" doesn't re-upload
-  const [uploaded, setUploaded] = useState<{ url1?: string; url2?: string; ocr?: string }>({});
 
   const togglePrev = (url: string) =>
     setSelectedPrev((p) => (p.includes(url) ? p.filter((u) => u !== url) : [...p, url]));
@@ -77,6 +83,8 @@ const FollowupActions = ({ doubt, student, store, onClarificationSent, onNewDoub
         authorName: student.name,
         text: clarifyText.trim(),
         imageUrls: urls,
+        // Feed clarifications on others' doubts go to all subject teachers
+        reopenToAllTeachers: !isOwn,
       });
       setClarifySent(true);
       onClarificationSent?.();
@@ -85,9 +93,24 @@ const FollowupActions = ({ doubt, student, store, onClarificationSent, onNewDoub
     }
   };
 
-  const createDirectedDoubt = async (urls: { url1?: string; url2?: string; ocr?: string }) => {
+  const submitNewDoubt = async () => {
+    if (!newText.trim()) return;
+    if (hasImages && (!img1 || !img2)) return;
     setNewSending(true);
     try {
+      let url1: string | undefined;
+      let url2: string | undefined;
+      let ocr: string | undefined;
+      if (hasImages && img1 && img2) {
+        url1 = (await store.uploadDoubtImage(img1)) || undefined;
+        url2 = (await store.uploadDoubtImage(img2)) || undefined;
+        if (url1) ocr = await store.extractOcrText(url1);
+      }
+      if (isOwn) {
+        // Close the previous discussion: mark it Understood so it leaves the
+        // teacher's Claim & Solve section before the new doubt is created.
+        await store.markDoubtUnderstood(doubt.id);
+      }
       await store.addDoubt({
         studentName: student.name,
         studentRegNo: student.registrationNumber,
@@ -96,50 +119,17 @@ const FollowupActions = ({ doubt, student, store, onClarificationSent, onNewDoub
         studentCollege: student.collegeName,
         subjectName: doubt.subjectName,
         question: newText.trim(),
-        questionImageUrl: urls.url1 || undefined,
-        questionImageUrl2: urls.url2 || undefined,
-        ocrText: urls.ocr || undefined,
-        parentDoubtId: doubt.id,
-        // Direct to the same teacher who solved the original doubt
-        claimedBy: doubt.claimedBy || undefined,
-        handlingTeacher: doubt.answeredBy || undefined,
-        status: doubt.claimedBy ? "in_progress" : "pending",
+        questionImageUrl: url1,
+        questionImageUrl2: url2,
+        ocrText: ocr || undefined,
+        // Own doubts: direct the new pending doubt to the same teacher.
+        // Feed doubts: normal pending doubt for all subject teachers.
+        ...(isOwn && doubt.answeredBy ? { handlingTeacher: doubt.answeredBy, status: "pending" } : {}),
       } as any);
       setNewCreated(true);
-      setMatches(null);
       onNewDoubtCreated?.();
     } finally {
       setNewSending(false);
-    }
-  };
-
-  const handleCheckNewDoubt = async () => {
-    if (!newText.trim()) return;
-    if (hasImages && (!img1 || !img2)) return;
-    setChecking(true);
-    try {
-      let { url1, url2, ocr } = uploaded;
-      if (hasImages) {
-        if (!url1 && img1) url1 = (await store.uploadDoubtImage(img1)) || undefined;
-        if (!url2 && img2) url2 = (await store.uploadDoubtImage(img2)) || undefined;
-        if (url1 && !ocr) ocr = await store.extractOcrText(url1);
-        setUploaded({ url1, url2, ocr });
-      }
-      const results = store.searchSimilarDoubts(newText.trim(), {
-        subjectName: doubt.subjectName,
-        studentYear: student.year,
-        studentDepartment: student.department,
-        ocrText: hasImages ? (ocr || "") : "",
-        requireTwoImages: hasImages,
-        excludeDoubtId: doubt.id,
-      });
-      if (results.length > 0) {
-        setMatches(results);
-        return;
-      }
-      await createDirectedDoubt({ url1, url2, ocr });
-    } finally {
-      setChecking(false);
     }
   };
 
@@ -163,7 +153,10 @@ const FollowupActions = ({ doubt, student, store, onClarificationSent, onNewDoub
 
           {clarifySent ? (
             <p className="text-xs text-success flex items-center gap-1">
-              <CheckCircle2 className="h-3 w-3" /> Clarification sent to {doubt.answeredBy || "the teacher"}. It will appear in the same discussion.
+              <CheckCircle2 className="h-3 w-3" />
+              {isOwn
+                ? `Clarification sent to ${doubt.answeredBy || "the teacher"}. It will appear in the same discussion.`
+                : `Clarification sent to all ${doubt.subjectName} teachers. Track the reply in My Doubts.`}
             </p>
           ) : (
             <>
@@ -253,14 +246,22 @@ const FollowupActions = ({ doubt, student, store, onClarificationSent, onNewDoub
 
           {newCreated ? (
             <p className="text-xs text-success flex items-center gap-1">
-              <CheckCircle2 className="h-3 w-3" /> New doubt sent to {doubt.answeredBy || "the teacher"}. Track it in My Doubts — it will be published separately once completed.
+              <CheckCircle2 className="h-3 w-3" />
+              {isOwn
+                ? `Previous doubt marked as understood. New doubt sent to ${doubt.answeredBy || "the teacher"} — track it in My Doubts.`
+                : `New doubt sent to all ${doubt.subjectName} teachers — track it in My Doubts. It will appear in the Learning Feed once solved and marked understood.`}
             </p>
           ) : (
             <>
+              {isOwn && (
+                <p className="text-[11px] text-muted-foreground">
+                  Submitting closes this discussion (marked as Understood) and sends your new doubt to {doubt.answeredBy || "the same teacher"} as a separate pending request.
+                </p>
+              )}
               <Textarea
                 placeholder="Type your new doubt…"
                 value={newText}
-                onChange={(e) => { setNewText(e.target.value); setMatches(null); }}
+                onChange={(e) => setNewText(e.target.value)}
                 rows={3}
               />
 
@@ -272,7 +273,7 @@ const FollowupActions = ({ doubt, student, store, onClarificationSent, onNewDoub
                     {img1Preview ? (
                       <div className="relative">
                         <img src={img1Preview} className="w-full max-h-32 object-contain rounded border" alt="New question" />
-                        <button type="button" onClick={() => { setImg1(null); setImg1Preview(null); setUploaded((u) => ({ ...u, url1: undefined, ocr: undefined })); }} className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1">
+                        <button type="button" onClick={() => { setImg1(null); setImg1Preview(null); }} className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1">
                           <X className="h-3 w-3" />
                         </button>
                       </div>
@@ -282,7 +283,6 @@ const FollowupActions = ({ doubt, student, store, onClarificationSent, onNewDoub
                         <input type="file" accept="image/*" className="hidden" onChange={(e) => {
                           const f = e.target.files?.[0]; if (!f) return;
                           setImg1(f); setImg1Preview(URL.createObjectURL(f));
-                          setUploaded((u) => ({ ...u, url1: undefined, ocr: undefined }));
                         }} />
                       </label>
                     )}
@@ -292,7 +292,7 @@ const FollowupActions = ({ doubt, student, store, onClarificationSent, onNewDoub
                     {img2Preview ? (
                       <div className="relative">
                         <img src={img2Preview} className="w-full max-h-32 object-contain rounded border" alt="New full problem" />
-                        <button type="button" onClick={() => { setImg2(null); setImg2Preview(null); setUploaded((u) => ({ ...u, url2: undefined })); }} className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1">
+                        <button type="button" onClick={() => { setImg2(null); setImg2Preview(null); }} className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1">
                           <X className="h-3 w-3" />
                         </button>
                       </div>
@@ -302,7 +302,6 @@ const FollowupActions = ({ doubt, student, store, onClarificationSent, onNewDoub
                         <input type="file" accept="image/*" className="hidden" onChange={(e) => {
                           const f = e.target.files?.[0]; if (!f) return;
                           setImg2(f); setImg2Preview(URL.createObjectURL(f));
-                          setUploaded((u) => ({ ...u, url2: undefined }));
                         }} />
                       </label>
                     )}
@@ -310,63 +309,18 @@ const FollowupActions = ({ doubt, student, store, onClarificationSent, onNewDoub
                 </div>
               )}
 
-              {/* Match results */}
-              {matches && matches.length > 0 && (
-                <div className="space-y-2 border-t pt-2">
-                  <p className="text-xs font-semibold text-accent flex items-center gap-1">
-                    <Search className="h-3 w-3" /> Exact match found — previously solved discussion:
-                  </p>
-                  {matches.map((m) => (
-                    <div key={m.id} className="p-3 rounded border border-success/30 bg-success/5 space-y-2">
-                      <p className="text-xs font-medium">{m.question}</p>
-                      {m.questionImageUrl && <img src={m.questionImageUrl} className="max-h-32 rounded border" alt="Question" />}
-                      {m.questionImageUrl2 && <img src={m.questionImageUrl2} className="max-h-32 rounded border" alt="Full problem" />}
-                      <div className="p-2 rounded bg-success/10 text-xs">
-                        <p className="text-[10px] text-muted-foreground mb-1">Answer by {m.answeredBy}</p>
-                        <p className="whitespace-pre-wrap">{m.answer}</p>
-                        {(m.answerImageUrls && m.answerImageUrls.length > 0 ? m.answerImageUrls : m.answerImageUrl ? [m.answerImageUrl] : []).map((u, i) => (
-                          <img key={i} src={u} className="max-h-32 rounded border mt-1" alt={`Answer ${i + 1}`} />
-                        ))}
-                      </div>
-                      {(() => {
-                        const thread = store.followups.filter((f: any) => f.doubtId === m.id);
-                        if (thread.length === 0) return null;
-                        return (
-                          <div className="space-y-1">
-                            {thread.map((f: any) => (
-                              <div key={f.id} className={`p-1.5 rounded text-[11px] ${f.authorRole === "teacher" ? "bg-primary/10" : "bg-accent/10"}`}>
-                                <span className="font-semibold">{f.authorRole === "teacher" ? "👨‍🏫" : "🙋"} {f.authorName}: </span>
-                                {f.text}
-                                {f.imageUrls.map((u: string, i: number) => (
-                                  <img key={i} src={u} className="max-h-24 rounded border mt-1" alt="" />
-                                ))}
-                              </div>
-                            ))}
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  ))}
-                  <div className="flex gap-2">
-                    <Button size="sm" onClick={() => createDirectedDoubt(uploaded)} disabled={newSending}>
-                      {newSending ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Send className="h-3 w-3 mr-1" />}
-                      Ask New Doubt Anyway
-                    </Button>
-                    <Button size="sm" variant="ghost" onClick={() => setMatches(null)}>Back</Button>
-                  </div>
-                </div>
-              )}
-
-              {(!matches || matches.length === 0) && (
-                <Button
-                  size="sm"
-                  onClick={handleCheckNewDoubt}
-                  disabled={!newText.trim() || (hasImages && (!img1 || !img2)) || checking || newSending}
-                >
-                  {checking || newSending ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Send className="h-3 w-3 mr-1" />}
-                  {checking ? "Checking for matches…" : `Send to ${doubt.answeredBy || "Teacher"}`}
-                </Button>
-              )}
+              <Button
+                size="sm"
+                onClick={submitNewDoubt}
+                disabled={!newText.trim() || (hasImages && (!img1 || !img2)) || newSending}
+              >
+                {newSending ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Send className="h-3 w-3 mr-1" />}
+                {newSending
+                  ? "Sending…"
+                  : isOwn
+                    ? `Close & Send to ${doubt.answeredBy || "Teacher"}`
+                    : `Send to ${doubt.subjectName} Teachers`}
+              </Button>
             </>
           )}
         </CardContent>

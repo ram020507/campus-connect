@@ -101,15 +101,31 @@ const StudentDashboard = () => {
   const currentSubject = dept?.subjects.find((s) => s.id === selectedSubjectId);
   const currentVideo = currentSubject?.videos.find((v) => v.id === selectedVideoId);
 
-  // Feed: ALL completed doubts (status === "understood"), newest first, never removed after viewing.
+  // Doubts where this student authored a clarification follow-up
+  // (those discussions belong in My Doubts, never in the Learning Feed).
+  const myFollowupDoubtIds = useMemo(() => {
+    return new Set(
+      store.followups
+        .filter((f) => f.authorRole === "student" && f.authorName === student.name)
+        .map((f) => f.doubtId)
+    );
+  }, [store.followups, student.name]);
+
+  // Feed: completed doubts from OTHER students in the same college/dept/year.
+  // A student never sees their own doubts or doubts they clarified.
   const feedDoubts = useMemo(() => {
     const all = store.doubts.filter(
       (d) => d.answer
         && d.status === "understood"
+        && d.studentRegNo !== student.registrationNumber
+        && d.studentCollege === student.collegeName
+        && d.studentDepartment === student.department
+        && d.studentYear === student.year
+        && !myFollowupDoubtIds.has(d.id)
         && (feedSubjectFilter === "all" || d.subjectName === feedSubjectFilter)
     );
     return all.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }, [store.doubts, feedSubjectFilter]);
+  }, [store.doubts, feedSubjectFilter, myFollowupDoubtIds, student.registrationNumber, student.collegeName, student.department, student.year]);
 
   // Mark the currently-viewed feed doubt as seen (kept for internal tracking; does not hide it)
   useEffect(() => {
@@ -124,9 +140,16 @@ const StudentDashboard = () => {
 
 
   const feedSubjectOptions = useMemo(() => {
-    const all = store.doubts.filter((d) => d.answer && d.status === "understood");
+    const all = store.doubts.filter(
+      (d) => d.answer && d.status === "understood"
+        && d.studentRegNo !== student.registrationNumber
+        && d.studentCollege === student.collegeName
+        && d.studentDepartment === student.department
+        && d.studentYear === student.year
+        && !myFollowupDoubtIds.has(d.id)
+    );
     return [...new Set(all.map((d) => d.subjectName))].sort();
-  }, [store.doubts.length]);
+  }, [store.doubts.length, myFollowupDoubtIds, student.registrationNumber, student.collegeName, student.department, student.year]);
 
   // Saved doubts
   const mySavedDoubtIds = store.savedDoubts
@@ -353,7 +376,7 @@ const StudentDashboard = () => {
         </div>
       </header>
 
-      <div className="max-w-4xl mx-auto p-4">
+      <div className={`mx-auto p-4 ${view === "doubts" ? "max-w-6xl" : "max-w-4xl"}`}>
         {view === "dashboard" && (
           <div className="space-y-6 animate-fade-in">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -654,8 +677,8 @@ const StudentDashboard = () => {
             <Button variant="ghost" size="sm" onClick={() => setView("dashboard")}>
               <ArrowLeft className="h-4 w-4 mr-1" /> Back
             </Button>
-            <div className="grid grid-cols-1 lg:grid-cols-10 gap-4 items-start">
-              <div className="lg:col-span-7">
+            <div className="grid grid-cols-1 md:grid-cols-[60fr_40fr] lg:grid-cols-[65fr_35fr] gap-4 items-start">
+              <div>
             <Card>
               <CardHeader>
                 <CardTitle className="font-display text-lg">Ask a Doubt</CardTitle>
@@ -870,11 +893,12 @@ const StudentDashboard = () => {
               </CardContent>
             </Card>
               </div>
-              <div className="lg:col-span-3 space-y-3">
+              <div className="space-y-3">
             <h3 className="font-display font-semibold">My Doubts</h3>
             {(() => {
+              // Own doubts + others' doubts where this student asked a clarification
               const myDoubts = store.doubts
-                .filter((d) => d.studentRegNo === student.registrationNumber)
+                .filter((d) => d.studentRegNo === student.registrationNumber || myFollowupDoubtIds.has(d.id))
                 .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
               const subjectGroups = myDoubts.reduce<Record<string, typeof myDoubts>>((acc, d) => {
                 (acc[d.subjectName] = acc[d.subjectName] || []).push(d);
@@ -925,7 +949,7 @@ const StudentDashboard = () => {
                                 </span>
                               )}
                               <span className="text-xs text-muted-foreground ml-auto">{new Date(d.createdAt).toLocaleDateString()}</span>
-                              {!d.claimedBy && (
+                              {d.studentRegNo === student.registrationNumber && !d.claimedBy && (
                                 <>
                                   <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => startEditDoubt(d)}>
                                     <Pencil className="h-3 w-3" />
@@ -1065,9 +1089,14 @@ const StudentDashboard = () => {
                                         <MessageCircle className="h-3 w-3" /> Still Have a Doubt
                                       </Button>
                                     </div>
-                                    {showFollowup[d.id] && (
-                                      <FollowupActions doubt={d} student={student} store={store} />
-                                    )}
+                                     {showFollowup[d.id] && (
+                                       <FollowupActions
+                                         doubt={d}
+                                         student={student}
+                                         store={store}
+                                         context={d.studentRegNo === student.registrationNumber ? "own" : "feed"}
+                                       />
+                                     )}
                                   </div>
                                 )}
                                 {d.status === "clarification_requested" && (
@@ -1332,13 +1361,14 @@ const StudentDashboard = () => {
             <h2 className="font-display font-semibold text-lg flex items-center gap-2">
               <MessageCircle className="h-5 w-5 text-accent" /> Follow up on this Doubt
             </h2>
-            <FollowupActions
-              doubt={feedAskSource}
-              student={student}
-              store={store}
-              onNewDoubtCreated={() => setView("doubts")}
-              onClarificationSent={() => setView("learning-feed")}
-            />
+             <FollowupActions
+               doubt={feedAskSource}
+               student={student}
+               store={store}
+               context="feed"
+               onNewDoubtCreated={() => setView("doubts")}
+               onClarificationSent={() => setView("doubts")}
+             />
           </div>
         )}
 
