@@ -1000,7 +1000,7 @@ export function useSupabaseData() {
     updateDoubtQuestion, deleteDoubt, updateDoubtAnswer, deleteDoubtAnswer,
     saveDoubt, unsaveDoubt, toggleHelpful,
     markDoubtViewed,
-    addFollowup, markDoubtSeen, markDoubtUnderstood,
+    addFollowup, markDoubtSeen, markDoubtUnderstood, hideFeedCard,
     refetch: fetchAll,
   };
 }
