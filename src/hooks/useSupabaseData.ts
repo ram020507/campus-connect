@@ -202,6 +202,7 @@ export function useSupabaseData() {
           (supabase as any).from("exam_prep_files").select("*"),
           (supabase as any).from("doubt_followups").select("*").order("created_at", { ascending: true }),
           (supabase as any).from("doubt_seen").select("*"),
+          (supabase as any).from("feed_hidden").select("*"),
         ]);
 
 
@@ -366,6 +367,9 @@ export function useSupabaseData() {
       );
       setSeenDoubtIds(
         ((seenRes as any)?.data || []).map((s: any) => `${s.student_reg_no}:${s.doubt_id}`)
+      );
+      setHiddenFeedKeys(
+        ((hiddenRes as any)?.data || []).map((h: any) => `${h.student_reg_no}:${h.doubt_id}`)
       );
 
     } catch (err) {
