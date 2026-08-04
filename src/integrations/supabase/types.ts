@@ -463,6 +463,35 @@ export type Database = {
           },
         ]
       }
+      feed_hidden: {
+        Row: {
+          created_at: string
+          doubt_id: string
+          id: string
+          student_reg_no: string
+        }
+        Insert: {
+          created_at?: string
+          doubt_id: string
+          id?: string
+          student_reg_no: string
+        }
+        Update: {
+          created_at?: string
+          doubt_id?: string
+          id?: string
+          student_reg_no?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feed_hidden_doubt_id_fkey"
+            columns: ["doubt_id"]
+            isOneToOne: false
+            referencedRelation: "doubts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       saved_doubts: {
         Row: {
           created_at: string

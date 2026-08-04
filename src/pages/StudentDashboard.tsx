@@ -122,10 +122,11 @@ const StudentDashboard = () => {
         && d.studentDepartment === student.department
         && d.studentYear === student.year
         && !myFollowupDoubtIds.has(d.id)
+        && !store.hiddenFeedKeys.includes(`${student.registrationNumber}:${d.id}`)
         && (feedSubjectFilter === "all" || d.subjectName === feedSubjectFilter)
     );
     return all.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }, [store.doubts, feedSubjectFilter, myFollowupDoubtIds, student.registrationNumber, student.collegeName, student.department, student.year]);
+  }, [store.doubts, feedSubjectFilter, myFollowupDoubtIds, store.hiddenFeedKeys, student.registrationNumber, student.collegeName, student.department, student.year]);
 
   // Mark the currently-viewed feed doubt as seen (kept for internal tracking; does not hide it)
   useEffect(() => {
@@ -147,9 +148,10 @@ const StudentDashboard = () => {
         && d.studentDepartment === student.department
         && d.studentYear === student.year
         && !myFollowupDoubtIds.has(d.id)
+        && !store.hiddenFeedKeys.includes(`${student.registrationNumber}:${d.id}`)
     );
     return [...new Set(all.map((d) => d.subjectName))].sort();
-  }, [store.doubts.length, myFollowupDoubtIds, student.registrationNumber, student.collegeName, student.department, student.year]);
+  }, [store.doubts.length, myFollowupDoubtIds, store.hiddenFeedKeys, student.registrationNumber, student.collegeName, student.department, student.year]);
 
   // Saved doubts
   const mySavedDoubtIds = store.savedDoubts
@@ -935,19 +937,43 @@ const StudentDashboard = () => {
                         ) : filtered.map((d) => (
                           <div key={d.id} className={`border rounded-lg p-3 ${d.answer ? "border-success/30" : ""}`}>
                             <div className="flex items-center gap-2 mb-1">
-                              {d.answer ? (
-                                <span className="text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full bg-green-500/15 text-green-600 border border-green-500/30 flex items-center gap-1">
-                                  <CheckCircle2 className="h-3 w-3" /> Answered
-                                </span>
-                              ) : d.claimedBy ? (
-                                <span className="text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-600 border border-blue-500/30">
-                                  🔒 Claimed
-                                </span>
-                              ) : (
-                                <span className="text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full bg-orange-500/15 text-orange-600 border border-orange-500/30">
-                                  ● Pending
-                                </span>
-                              )}
+                              {(() => {
+                                // Follow-up entries (someone else's discussion I'm
+                                // participating in) follow: Pending → Claimed → Solved → Completed
+                                const isFollowupEntry = d.studentRegNo !== student.registrationNumber;
+                                const base = "text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full";
+                                if (isFollowupEntry) {
+                                  if (d.status === "understood") {
+                                    return (
+                                      <span className={`${base} bg-green-500/15 text-green-600 border border-green-500/30 flex items-center gap-1`}>
+                                        <CheckCircle2 className="h-3 w-3" /> Completed
+                                      </span>
+                                    );
+                                  }
+                                  if (d.answer) {
+                                    return (
+                                      <span className={`${base} bg-green-500/15 text-green-600 border border-green-500/30 flex items-center gap-1`}>
+                                        <CheckCircle2 className="h-3 w-3" /> Solved
+                                      </span>
+                                    );
+                                  }
+                                  if (d.claimedBy) {
+                                    return <span className={`${base} bg-blue-500/15 text-blue-600 border border-blue-500/30`}>🔒 Claimed</span>;
+                                  }
+                                  return <span className={`${base} bg-orange-500/15 text-orange-600 border border-orange-500/30`}>● Pending</span>;
+                                }
+                                if (d.answer) {
+                                  return (
+                                    <span className={`${base} bg-green-500/15 text-green-600 border border-green-500/30 flex items-center gap-1`}>
+                                      <CheckCircle2 className="h-3 w-3" /> Answered
+                                    </span>
+                                  );
+                                }
+                                if (d.claimedBy) {
+                                  return <span className={`${base} bg-blue-500/15 text-blue-600 border border-blue-500/30`}>🔒 Claimed</span>;
+                                }
+                                return <span className={`${base} bg-orange-500/15 text-orange-600 border border-orange-500/30`}>● Pending</span>;
+                              })()}
                               <span className="text-xs text-muted-foreground ml-auto">{new Date(d.createdAt).toLocaleDateString()}</span>
                               {d.studentRegNo === student.registrationNumber && !d.claimedBy && (
                                 <>

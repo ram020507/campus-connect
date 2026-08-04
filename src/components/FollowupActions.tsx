@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  Loader2, Send, ImagePlus, X, MessageCircle, HelpCircle, CheckCircle2, Check,
+  Loader2, Send, ImagePlus, X, MessageCircle, HelpCircle, CheckCircle2, Check, AlertTriangle,
 } from "lucide-react";
 import type { Doubt } from "@/hooks/useSupabaseData";
 
@@ -23,7 +23,8 @@ interface FollowupActionsProps {
    *          Understood and sends a brand-new pending doubt to the same teacher.
    * "feed" — someone else's doubt (Learning Feed): clarification reopens the
    *          thread to ALL teachers of the subject; "Ask a New Doubt" creates a
-   *          normal pending doubt for all subject teachers.
+   *          normal pending doubt for all subject teachers and hides the feed
+   *          card for this student only.
    */
   context?: "own" | "feed";
   onClarificationSent?: () => void;
@@ -31,9 +32,10 @@ interface FollowupActionsProps {
 }
 
 /**
- * Two-card follow-up workflow shown under a solved doubt:
+ * Two-card follow-up workflow shown under a solved doubt. The cards are fully
+ * independent — the student may submit either one, or both:
  *  Card 1 – Clarify Previous Answer / Continue Previous Question (same thread)
- *  Card 2 – Ask a New Doubt (completely separate discussion, no parent-child link)
+ *  Card 2 – Ask a New Doubt (duplicate-checked, completely separate discussion)
  */
 const FollowupActions = ({ doubt, student, store, context = "own", onClarificationSent, onNewDoubtCreated }: FollowupActionsProps) => {
   const isOwn = context === "own";
@@ -64,6 +66,12 @@ const FollowupActions = ({ doubt, student, store, context = "own", onClarificati
   const [img2Preview, setImg2Preview] = useState<string | null>(null);
   const [newSending, setNewSending] = useState(false);
   const [newCreated, setNewCreated] = useState(false);
+  const [dupMatches, setDupMatches] = useState<Doubt[] | null>(null);
+
+  // Reset duplicate results whenever the new-doubt inputs change
+  useEffect(() => {
+    setDupMatches(null);
+  }, [newText, img1, img2]);
 
   const togglePrev = (url: string) =>
     setSelectedPrev((p) => (p.includes(url) ? p.filter((u) => u !== url) : [...p, url]));
@@ -93,7 +101,7 @@ const FollowupActions = ({ doubt, student, store, context = "own", onClarificati
     }
   };
 
-  const submitNewDoubt = async () => {
+  const submitNewDoubt = async (skipDuplicateCheck = false) => {
     if (!newText.trim()) return;
     if (hasImages && (!img1 || !img2)) return;
     setNewSending(true);
@@ -106,6 +114,27 @@ const FollowupActions = ({ doubt, student, store, context = "own", onClarificati
         url2 = (await store.uploadDoubtImage(img2)) || undefined;
         if (url1) ocr = await store.extractOcrText(url1);
       }
+
+      // Duplicate check BEFORE sending:
+      //  - Text doubts: compare typed text against solved TEXT doubts.
+      //  - Text + Two Image doubts: compare only the Question Image OCR
+      //    against solved question images (Full Problem Image never compared).
+      if (!skipDuplicateCheck) {
+        const matches = store.searchSimilarDoubts(newText.trim(), {
+          subjectName: doubt.subjectName,
+          studentYear: student.year,
+          studentDepartment: student.department,
+          ocrText: hasImages ? (ocr || "") : "",
+          requireTwoImages: hasImages,
+          textOnly: !hasImages,
+          excludeDoubtId: doubt.id,
+        });
+        if (matches.length > 0) {
+          setDupMatches(matches);
+          return; // do not send — show previous solution(s)
+        }
+      }
+
       if (isOwn) {
         // Close the previous discussion: mark it Understood so it leaves the
         // teacher's Claim & Solve section before the new doubt is created.
@@ -126,6 +155,10 @@ const FollowupActions = ({ doubt, student, store, context = "own", onClarificati
         // Feed doubts: normal pending doubt for all subject teachers.
         ...(isOwn && doubt.answeredBy ? { handlingTeacher: doubt.answeredBy, status: "pending" } : {}),
       } as any);
+      if (!isOwn) {
+        // Feed: remove this card from the student's own feed only
+        await store.hideFeedCard(student.registrationNumber, doubt.id);
+      }
       setNewCreated(true);
       onNewDoubtCreated?.();
     } finally {
@@ -251,6 +284,69 @@ const FollowupActions = ({ doubt, student, store, context = "own", onClarificati
                 ? `Previous doubt marked as understood. New doubt sent to ${doubt.answeredBy || "the teacher"} — track it in My Doubts.`
                 : `New doubt sent to all ${doubt.subjectName} teachers — track it in My Doubts. It will appear in the Learning Feed once solved and marked understood.`}
             </p>
+          ) : dupMatches ? (
+            /* ===== Duplicate match found — show previous solution(s), don't send ===== */
+            <div className="space-y-3">
+              <p className="text-xs font-medium text-amber-600 flex items-center gap-1">
+                <AlertTriangle className="h-3 w-3" />
+                A similar doubt was already solved — check the full solution below before sending.
+              </p>
+              {dupMatches.map((m) => {
+                const mAnswerImages: string[] = m.answerImageUrls && m.answerImageUrls.length > 0
+                  ? m.answerImageUrls
+                  : m.answerImageUrl ? [m.answerImageUrl] : [];
+                const thread = (store.followups || []).filter((f: any) => f.doubtId === m.id);
+                return (
+                  <div key={m.id} className="p-3 rounded border bg-muted/40 space-y-2 text-xs">
+                    <p><span className="font-semibold">Previous Question:</span> {m.question}</p>
+                    {m.questionImageUrl && (
+                      <div>
+                        <p className="text-[10px] text-muted-foreground mb-1">Question Image</p>
+                        <img src={m.questionImageUrl} alt="Previous question" className="max-h-40 rounded border" />
+                      </div>
+                    )}
+                    {m.questionImageUrl2 && (
+                      <div>
+                        <p className="text-[10px] text-muted-foreground mb-1">Full Problem Image</p>
+                        <img src={m.questionImageUrl2} alt="Previous full problem" className="max-h-40 rounded border" />
+                      </div>
+                    )}
+                    {m.answer && (
+                      <div className="p-2 rounded bg-success/10">
+                        <p className="text-[10px] text-muted-foreground mb-1">Answer by {m.answeredBy}</p>
+                        <p className="whitespace-pre-wrap">{m.answer}</p>
+                        {mAnswerImages.map((u, i) => (
+                          <img key={i} src={u} alt={`Answer ${i + 1}`} className="max-h-40 rounded border mt-2" />
+                        ))}
+                      </div>
+                    )}
+                    {thread.length > 0 && (
+                      <div className="space-y-1 border-t pt-2">
+                        <p className="text-[10px] font-semibold text-muted-foreground">Complete Previous Discussion</p>
+                        {thread.map((f: any) => (
+                          <div key={f.id} className={`p-1.5 rounded text-[11px] ${f.authorRole === "teacher" ? "bg-primary/10" : "bg-accent/10"}`}>
+                            <span className="font-semibold">{f.authorRole === "teacher" ? "👨‍🏫" : "🙋"} {f.authorName}: </span>
+                            {f.text}
+                            {f.imageUrls.map((u: string, i: number) => (
+                              <img key={i} src={u} className="max-h-32 rounded border mt-1" alt="" />
+                            ))}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={() => setDupMatches(null)}>
+                  Edit My Doubt
+                </Button>
+                <Button size="sm" variant="secondary" onClick={() => submitNewDoubt(true)} disabled={newSending}>
+                  {newSending ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Send className="h-3 w-3 mr-1" />}
+                  Ask New Doubt Anyway
+                </Button>
+              </div>
+            </div>
           ) : (
             <>
               {isOwn && (
@@ -311,12 +407,12 @@ const FollowupActions = ({ doubt, student, store, context = "own", onClarificati
 
               <Button
                 size="sm"
-                onClick={submitNewDoubt}
+                onClick={() => submitNewDoubt(false)}
                 disabled={!newText.trim() || (hasImages && (!img1 || !img2)) || newSending}
               >
                 {newSending ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Send className="h-3 w-3 mr-1" />}
                 {newSending
-                  ? "Sending…"
+                  ? "Checking & Sending…"
                   : isOwn
                     ? `Close & Send to ${doubt.answeredBy || "Teacher"}`
                     : `Send to ${doubt.subjectName} Teachers`}

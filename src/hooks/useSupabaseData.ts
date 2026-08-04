@@ -178,12 +178,13 @@ export function useSupabaseData() {
   const [examPrepFiles, setExamPrepFiles] = useState<ExamPrepFile[]>([]);
   const [followups, setFollowups] = useState<DoubtFollowup[]>([]);
   const [seenDoubtIds, setSeenDoubtIds] = useState<string[]>([]);
+  const [hiddenFeedKeys, setHiddenFeedKeys] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
 
   const fetchAll = useCallback(async () => {
     try {
-      const [collegesRes, yearsRes, deptsRes, subjectsRes, videosRes, videoFilesRes, studentsRes, teachersRes, doubtsRes, savedRes, helpfulRes, subjectNotesRes, examPrepVideosRes, examPrepFilesRes, followupsRes, seenRes] =
+      const [collegesRes, yearsRes, deptsRes, subjectsRes, videosRes, videoFilesRes, studentsRes, teachersRes, doubtsRes, savedRes, helpfulRes, subjectNotesRes, examPrepVideosRes, examPrepFilesRes, followupsRes, seenRes, hiddenRes] =
         await Promise.all([
           supabase.from("colleges").select("*"),
           supabase.from("years").select("*"),
@@ -201,6 +202,7 @@ export function useSupabaseData() {
           (supabase as any).from("exam_prep_files").select("*"),
           (supabase as any).from("doubt_followups").select("*").order("created_at", { ascending: true }),
           (supabase as any).from("doubt_seen").select("*"),
+          (supabase as any).from("feed_hidden").select("*"),
         ]);
 
 
@@ -365,6 +367,9 @@ export function useSupabaseData() {
       );
       setSeenDoubtIds(
         ((seenRes as any)?.data || []).map((s: any) => `${s.student_reg_no}:${s.doubt_id}`)
+      );
+      setHiddenFeedKeys(
+        ((hiddenRes as any)?.data || []).map((h: any) => `${h.student_reg_no}:${h.doubt_id}`)
       );
 
     } catch (err) {
@@ -765,7 +770,7 @@ export function useSupabaseData() {
 
   const searchSimilarDoubts = (
     text: string,
-    filters?: { subjectName?: string; studentYear?: number; studentDepartment?: string; ocrText?: string; requireTwoImages?: boolean; excludeDoubtId?: string }
+    filters?: { subjectName?: string; studentYear?: number; studentDepartment?: string; ocrText?: string; requireTwoImages?: boolean; excludeDoubtId?: string; textOnly?: boolean }
   ): Doubt[] => {
     const typed = (text || "").toLowerCase().trim();
     const ocr = (filters?.ocrText || "").toLowerCase().trim();
@@ -778,6 +783,8 @@ export function useSupabaseData() {
       if (filters?.studentDepartment && d.studentDepartment.toLowerCase() !== filters.studentDepartment.toLowerCase()) return false;
       // For text+image matching, only compare with prior text+image doubts (must have both images)
       if (filters?.requireTwoImages && !(d.questionImageUrl && d.questionImageUrl2)) return false;
+      // For text-only matching, only compare with prior pure text doubts (no images)
+      if (filters?.textOnly && (d.questionImageUrl || d.questionImageUrl2)) return false;
       const questionText = d.question.toLowerCase().trim();
       const ocrTarget = (d.ocrText || "").toLowerCase().trim();
       // For text+image, prefer OCR match on the first image; for pure text, match typed text
@@ -953,6 +960,18 @@ export function useSupabaseData() {
     });
   };
 
+  // Permanently hide a Learning Feed card for ONE student (used when they
+  // ask a new doubt from that feed card — the card leaves their feed only).
+  const hideFeedCard = async (studentRegNo: string, doubtId: string) => {
+    const key = `${studentRegNo}:${doubtId}`;
+    if (hiddenFeedKeys.includes(key)) return;
+    setHiddenFeedKeys((prev) => [...prev, key]);
+    await (supabase as any).from("feed_hidden").insert({
+      student_reg_no: studentRegNo,
+      doubt_id: doubtId,
+    });
+  };
+
   const markDoubtUnderstood = async (doubtId: string) => {
     // Mark completed and reset seen state so the doubt is re-published as
     // "unseen" to every eligible student in the Learning Feed.
@@ -964,7 +983,7 @@ export function useSupabaseData() {
 
   return {
     colleges, students, teachers, doubts, savedDoubts, helpfulByMe, loading,
-    subjectNotes, examPrepVideos, examPrepFiles, followups, seenDoubtIds,
+    subjectNotes, examPrepVideos, examPrepFiles, followups, seenDoubtIds, hiddenFeedKeys,
     uploadSubjectNote, removeSubjectNote,
     addExamPrepVideo, removeExamPrepVideo, uploadExamPrepFile, removeExamPrepFile,
     addCollege, removeCollege, updateCollege,
@@ -981,7 +1000,7 @@ export function useSupabaseData() {
     updateDoubtQuestion, deleteDoubt, updateDoubtAnswer, deleteDoubtAnswer,
     saveDoubt, unsaveDoubt, toggleHelpful,
     markDoubtViewed,
-    addFollowup, markDoubtSeen, markDoubtUnderstood,
+    addFollowup, markDoubtSeen, markDoubtUnderstood, hideFeedCard,
     refetch: fetchAll,
   };
 }
