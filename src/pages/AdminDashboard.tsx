@@ -812,12 +812,18 @@ const AdminDashboard = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  {/* Step 3: Subject filter (single-select for the list; multi-select happens below in the form) */}
+                  {/* Step 3: Subject filter (single-select for the list; selecting also adds it to Assigned Subjects) */}
                   <div>
                     <label className="text-xs font-medium text-muted-foreground">Step 3 — Select Subject</label>
                     <Select
                       value={tFilterSubject}
-                      onValueChange={setTFilterSubject}
+                      onValueChange={(v) => {
+                        setTFilterSubject(v);
+                        // Auto-add the selected subject to the Assigned Subjects list
+                        if (v !== "all") {
+                          setTeacherSelectedSubjects((prev) => prev.includes(v) ? prev : [...prev, v]);
+                        }
+                      }}
                       disabled={!tCollege || !teacherDepartment}
                     >
                       <SelectTrigger className="mt-1"><SelectValue placeholder={teacherDepartment ? "All subjects in dept" : "Select department first"} /></SelectTrigger>
@@ -987,7 +993,7 @@ const AdminDashboard = () => {
                                       setEditTeacherData({ staffId: t.staffId, name: t.name, dob: t.dob, email: "", collegeName: t.collegeName, department: t.department, subjectName: t.subjectName });
                                     }}><Pencil className="h-4 w-4 text-primary" /></Button>
                                     <ConfirmDelete title={`Delete ${t.name}?`}
-                                      desc="This removes the teacher account, their answers in the doubt system and learning feed, and any active digital board sessions."
+                                      desc="Are you sure you want to delete this teacher account? This also removes their answers in the doubt system and learning feed, and any active digital board sessions."
                                       onConfirm={() => store.removeTeacher(t.id)} />
                                   </div>
                                 </div>

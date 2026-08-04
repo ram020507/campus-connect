@@ -122,10 +122,11 @@ const StudentDashboard = () => {
         && d.studentDepartment === student.department
         && d.studentYear === student.year
         && !myFollowupDoubtIds.has(d.id)
+        && !store.hiddenFeedKeys.includes(`${student.registrationNumber}:${d.id}`)
         && (feedSubjectFilter === "all" || d.subjectName === feedSubjectFilter)
     );
     return all.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }, [store.doubts, feedSubjectFilter, myFollowupDoubtIds, student.registrationNumber, student.collegeName, student.department, student.year]);
+  }, [store.doubts, feedSubjectFilter, myFollowupDoubtIds, store.hiddenFeedKeys, student.registrationNumber, student.collegeName, student.department, student.year]);
 
   // Mark the currently-viewed feed doubt as seen (kept for internal tracking; does not hide it)
   useEffect(() => {
@@ -147,9 +148,10 @@ const StudentDashboard = () => {
         && d.studentDepartment === student.department
         && d.studentYear === student.year
         && !myFollowupDoubtIds.has(d.id)
+        && !store.hiddenFeedKeys.includes(`${student.registrationNumber}:${d.id}`)
     );
     return [...new Set(all.map((d) => d.subjectName))].sort();
-  }, [store.doubts.length, myFollowupDoubtIds, student.registrationNumber, student.collegeName, student.department, student.year]);
+  }, [store.doubts.length, myFollowupDoubtIds, store.hiddenFeedKeys, student.registrationNumber, student.collegeName, student.department, student.year]);
 
   // Saved doubts
   const mySavedDoubtIds = store.savedDoubts
