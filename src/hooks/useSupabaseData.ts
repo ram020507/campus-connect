@@ -178,12 +178,13 @@ export function useSupabaseData() {
   const [examPrepFiles, setExamPrepFiles] = useState<ExamPrepFile[]>([]);
   const [followups, setFollowups] = useState<DoubtFollowup[]>([]);
   const [seenDoubtIds, setSeenDoubtIds] = useState<string[]>([]);
+  const [hiddenFeedKeys, setHiddenFeedKeys] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
 
   const fetchAll = useCallback(async () => {
     try {
-      const [collegesRes, yearsRes, deptsRes, subjectsRes, videosRes, videoFilesRes, studentsRes, teachersRes, doubtsRes, savedRes, helpfulRes, subjectNotesRes, examPrepVideosRes, examPrepFilesRes, followupsRes, seenRes] =
+      const [collegesRes, yearsRes, deptsRes, subjectsRes, videosRes, videoFilesRes, studentsRes, teachersRes, doubtsRes, savedRes, helpfulRes, subjectNotesRes, examPrepVideosRes, examPrepFilesRes, followupsRes, seenRes, hiddenRes] =
         await Promise.all([
           supabase.from("colleges").select("*"),
           supabase.from("years").select("*"),
