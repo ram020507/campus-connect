@@ -701,13 +701,13 @@ const AdminDashboard = () => {
                     <p className="text-xs text-muted-foreground mt-2">
                       {sCollege.name} · Year {sYear.yearNumber} · {sDept.name}
                     </p>
-                    <Button className="mt-3" onClick={() => {
+                    <Button className="mt-3" onClick={async () => {
                       if (studentRegNo && studentName && studentDob) {
-                        store.addStudent({
+                        const ok = await store.addStudent({
                           registrationNumber: studentRegNo, name: studentName, dob: studentDob,
                           email: "", collegeName: sCollege.name, department: sDept.name, year: sYear.yearNumber,
                         });
-                        setStudentRegNo(""); setStudentName(""); setStudentDob("");
+                        if (ok) { setStudentRegNo(""); setStudentName(""); setStudentDob(""); }
                       }
                     }}><Plus className="h-4 w-4 mr-1" /> Create Account</Button>
                   </CardContent>
@@ -905,16 +905,18 @@ const AdminDashboard = () => {
                     <p className="text-xs text-muted-foreground mt-2">College: {tCollege.name} · Department: {teacherDepartment}</p>
                     <Button className="mt-3"
                       disabled={!teacherStaffId || !teacherName || !teacherDob || teacherSelectedSubjects.length === 0}
-                      onClick={() => {
+                      onClick={async () => {
                         if (teacherStaffId && teacherName && teacherDob && teacherDepartment && teacherSelectedSubjects.length > 0) {
-                          store.addTeacher({
+                          const ok = await store.addTeacher({
                             staffId: teacherStaffId, name: teacherName, dob: teacherDob,
                             email: "", collegeName: tCollege.name,
                             department: teacherDepartment,
                             subjectName: teacherSelectedSubjects.join(","),
                           });
-                          setTeacherStaffId(""); setTeacherName(""); setTeacherDob("");
-                          setTeacherSelectedSubjects([]);
+                          if (ok) {
+                            setTeacherStaffId(""); setTeacherName(""); setTeacherDob("");
+                            setTeacherSelectedSubjects([]);
+                          }
                         }
                       }}><Plus className="h-4 w-4 mr-1" /> Create Account</Button>
                   </CardContent>

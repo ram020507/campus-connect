@@ -1129,7 +1129,26 @@ const StudentDashboard = () => {
                                   <p className="mt-2 text-xs italic text-accent-foreground">⏳ Clarification requested — waiting for teacher's response.</p>
                                 )}
                                 {d.status === "understood" && (
-                                  <p className="mt-2 text-xs italic text-success">✅ Marked as understood.</p>
+                                  <div className="mt-3 border-t pt-3 space-y-3">
+                                    <p className="text-xs italic text-success">✅ Discussion completed.</p>
+                                    {/* Completed discussions are synchronized for every
+                                        participant — anyone can continue with another
+                                        clarification or a completely new doubt. */}
+                                    <Button
+                                      size="sm" variant={showFollowup[d.id] ? "default" : "outline"} className="gap-1"
+                                      onClick={() => setShowFollowup((p) => ({ ...p, [d.id]: !p[d.id] }))}
+                                    >
+                                      <MessageCircle className="h-3 w-3" /> Ask a Doubt
+                                    </Button>
+                                    {showFollowup[d.id] && (
+                                      <FollowupActions
+                                        doubt={d}
+                                        student={student}
+                                        store={store}
+                                        context={d.studentRegNo === student.registrationNumber ? "own" : "feed"}
+                                      />
+                                    )}
+                                  </div>
                                 )}
                               </div>
                             )}
