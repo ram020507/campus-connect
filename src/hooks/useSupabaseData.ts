@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 function getSessionAuth(): { token: string; role: "student" | "teacher" | "admin" } | null {
   const s = sessionStorage.getItem("student-token");
@@ -193,7 +194,7 @@ export function useSupabaseData() {
           supabase.from("videos").select("*"),
           supabase.from("video_files").select("*"),
           supabase.from("students").select("id, registration_number, name, college_name, department, year"),
-          supabase.from("teachers").select("*"),
+          supabase.from("teachers").select("id, staff_id, name, college_name, subject_name, department, created_at"),
           supabase.from("doubts").select("*"),
           supabase.from("saved_doubts").select("*"),
           supabase.from("doubt_helpful").select("*"),
@@ -616,7 +617,7 @@ export function useSupabaseData() {
     ]);
   };
 
-  const addStudent = async (student: Omit<StudentAccount, "id">) => {
+  const addStudent = async (student: Omit<StudentAccount, "id">): Promise<boolean> => {
     const { error } = await supabase.from("students").insert({
       registration_number: student.registrationNumber,
       name: student.name,
@@ -626,7 +627,16 @@ export function useSupabaseData() {
       department: student.department,
       year: student.year,
     });
-    if (!error) await fetchAll();
+    if (error) {
+      console.error("addStudent failed:", error);
+      toast.error(error.code === "23505"
+        ? "A student with this registration number already exists."
+        : `Could not create student account: ${error.message}`);
+      return false;
+    }
+    await fetchAll();
+    toast.success("Student account created.");
+    return true;
   };
 
   const removeStudent = async (id: string) => {
@@ -659,7 +669,7 @@ export function useSupabaseData() {
     await fetchAll();
   };
 
-  const addTeacher = async (teacher: Omit<TeacherAccount, "id">) => {
+  const addTeacher = async (teacher: Omit<TeacherAccount, "id">): Promise<boolean> => {
     const { error } = await supabase.from("teachers").insert({
       staff_id: teacher.staffId,
       name: teacher.name,
@@ -669,7 +679,16 @@ export function useSupabaseData() {
       department: teacher.department || null,
       subject_name: teacher.subjectName,
     } as any);
-    if (!error) await fetchAll();
+    if (error) {
+      console.error("addTeacher failed:", error);
+      toast.error(error.code === "23505"
+        ? "A teacher with this Staff ID already exists."
+        : `Could not create teacher account: ${error.message}`);
+      return false;
+    }
+    await fetchAll();
+    toast.success("Teacher account created.");
+    return true;
   };
 
   const removeTeacher = async (id: string) => {
