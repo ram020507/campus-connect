@@ -111,6 +111,33 @@ const StudentDashboard = () => {
     );
   }, [store.followups, student.name]);
 
+  // "Ask a Doubt" unlock rule for completed discussions:
+  // the button appears ONLY when ANOTHER participant's clarification has been
+  // answered by a teacher (merged into the discussion) AFTER this student's
+  // own latest contribution. Prevents endless clarification chains — right
+  // after completing your own doubt/clarification, no button is shown.
+  const isExtendedByOthers = (doubtId: string) => {
+    const thread = store.followups.filter((f: any) => f.doubtId === doubtId);
+    const studentMsgs = thread.filter((f: any) => f.authorRole === "student");
+    const others = studentMsgs.filter((f: any) => f.authorName !== student.name);
+    if (others.length === 0) return false;
+    const myLatest = Math.max(
+      0,
+      ...studentMsgs
+        .filter((f: any) => f.authorName === student.name)
+        .map((f: any) => new Date(f.createdAt).getTime())
+    );
+    const latestOther = others.reduce((a: any, b: any) =>
+      new Date(a.createdAt).getTime() > new Date(b.createdAt).getTime() ? a : b
+    );
+    if (new Date(latestOther.createdAt).getTime() <= myLatest) return false;
+    // The other student's clarification must have been answered (merged).
+    return thread.some(
+      (f: any) => f.authorRole === "teacher"
+        && new Date(f.createdAt).getTime() > new Date(latestOther.createdAt).getTime()
+    );
+  };
+
   // Feed: completed doubts from OTHER students in the same college/dept/year.
   // A student never sees their own doubts or doubts they clarified.
   const feedDoubts = useMemo(() => {
@@ -1131,22 +1158,28 @@ const StudentDashboard = () => {
                                 {d.status === "understood" && (
                                   <div className="mt-3 border-t pt-3 space-y-3">
                                     <p className="text-xs italic text-success">✅ Discussion completed.</p>
-                                    {/* Completed discussions are synchronized for every
-                                        participant — anyone can continue with another
-                                        clarification or a completely new doubt. */}
-                                    <Button
-                                      size="sm" variant={showFollowup[d.id] ? "default" : "outline"} className="gap-1"
-                                      onClick={() => setShowFollowup((p) => ({ ...p, [d.id]: !p[d.id] }))}
-                                    >
-                                      <MessageCircle className="h-3 w-3" /> Ask a Doubt
-                                    </Button>
-                                    {showFollowup[d.id] && (
-                                      <FollowupActions
-                                        doubt={d}
-                                        student={student}
-                                        store={store}
-                                        context={d.studentRegNo === student.registrationNumber ? "own" : "feed"}
-                                      />
+                                    {/* The Ask a Doubt button unlocks only after ANOTHER
+                                        participant's answered clarification has been merged
+                                        into this discussion (synchronized to My Doubts).
+                                        Such discussions are communal — requests broadcast
+                                        to all subject teachers, so context is "feed". */}
+                                    {isExtendedByOthers(d.id) && (
+                                      <>
+                                        <Button
+                                          size="sm" variant={showFollowup[d.id] ? "default" : "outline"} className="gap-1"
+                                          onClick={() => setShowFollowup((p) => ({ ...p, [d.id]: !p[d.id] }))}
+                                        >
+                                          <MessageCircle className="h-3 w-3" /> Ask a Doubt
+                                        </Button>
+                                        {showFollowup[d.id] && (
+                                          <FollowupActions
+                                            doubt={d}
+                                            student={student}
+                                            store={store}
+                                            context="feed"
+                                          />
+                                        )}
+                                      </>
                                     )}
                                   </div>
                                 )}
