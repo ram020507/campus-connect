@@ -1158,22 +1158,28 @@ const StudentDashboard = () => {
                                 {d.status === "understood" && (
                                   <div className="mt-3 border-t pt-3 space-y-3">
                                     <p className="text-xs italic text-success">✅ Discussion completed.</p>
-                                    {/* Completed discussions are synchronized for every
-                                        participant — anyone can continue with another
-                                        clarification or a completely new doubt. */}
-                                    <Button
-                                      size="sm" variant={showFollowup[d.id] ? "default" : "outline"} className="gap-1"
-                                      onClick={() => setShowFollowup((p) => ({ ...p, [d.id]: !p[d.id] }))}
-                                    >
-                                      <MessageCircle className="h-3 w-3" /> Ask a Doubt
-                                    </Button>
-                                    {showFollowup[d.id] && (
-                                      <FollowupActions
-                                        doubt={d}
-                                        student={student}
-                                        store={store}
-                                        context={d.studentRegNo === student.registrationNumber ? "own" : "feed"}
-                                      />
+                                    {/* The Ask a Doubt button unlocks only after ANOTHER
+                                        participant's answered clarification has been merged
+                                        into this discussion (synchronized to My Doubts).
+                                        Such discussions are communal — requests broadcast
+                                        to all subject teachers, so context is "feed". */}
+                                    {isExtendedByOthers(d.id) && (
+                                      <>
+                                        <Button
+                                          size="sm" variant={showFollowup[d.id] ? "default" : "outline"} className="gap-1"
+                                          onClick={() => setShowFollowup((p) => ({ ...p, [d.id]: !p[d.id] }))}
+                                        >
+                                          <MessageCircle className="h-3 w-3" /> Ask a Doubt
+                                        </Button>
+                                        {showFollowup[d.id] && (
+                                          <FollowupActions
+                                            doubt={d}
+                                            student={student}
+                                            store={store}
+                                            context="feed"
+                                          />
+                                        )}
+                                      </>
                                     )}
                                   </div>
                                 )}
