@@ -4,6 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Loader2, Send, ImagePlus, X, MessageCircle, HelpCircle, CheckCircle2, Check, AlertTriangle,
+  Layers, Undo2,
 } from "lucide-react";
 import type { Doubt } from "@/hooks/useSupabaseData";
 
@@ -18,24 +19,31 @@ interface FollowupActionsProps {
   };
   store: any;
   /**
-   * "own"  — student's own solved doubt (My Doubts): clarification goes to the
-   *          same teacher; "Ask a New Doubt" closes the previous doubt as
-   *          Understood and sends a brand-new pending doubt to the same teacher.
-   * "feed" — someone else's doubt (Learning Feed): clarification reopens the
-   *          thread to ALL teachers of the subject; "Ask a New Doubt" creates a
-   *          normal pending doubt for all subject teachers and hides the feed
-   *          card for this student only.
+   * "own"  — student's own solved doubt (My Doubts → Still Have a Doubt):
+   *          clarification goes to the same teacher; "Ask a New Doubt" closes
+   *          the previous doubt as Understood and sends a brand-new pending
+   *          doubt to the same teacher.
+   * "feed" — shared/completed discussion (Learning Feed → Ask a Doubt, or a
+   *          synchronized discussion in My Doubts): clarification reopens the
+   *          thread to ALL teachers of the subject; "Ask a New Doubt" creates
+   *          a normal pending doubt for all subject teachers and hides the
+   *          feed card for this student only.
    */
   context?: "own" | "feed";
   onClarificationSent?: () => void;
   onNewDoubtCreated?: () => void;
 }
 
+type FollowupOption = "clarify" | "new" | "both";
+
 /**
- * Two-card follow-up workflow shown under a solved doubt. The cards are fully
- * independent — the student may submit either one, or both:
- *  Card 1 – Clarify Previous Answer / Continue Previous Question (same thread)
- *  Card 2 – Ask a New Doubt (duplicate-checked, completely separate discussion)
+ * Three-option follow-up workflow shown under a solved/completed doubt.
+ * Step 1: the student MUST pick one option before any form is displayed:
+ *   1. Clarify Teacher's Answer                        (same thread)
+ *   2. Understood the Previous Answer, Ask a New Doubt (new discussion)
+ *   3. Use Both                                        (two independent requests)
+ * The cards are fully independent — with "Use Both" the student may submit
+ * either one, or both, and the teacher answers each request separately.
  */
 const FollowupActions = ({ doubt, student, store, context = "own", onClarificationSent, onNewDoubtCreated }: FollowupActionsProps) => {
   const isOwn = context === "own";
@@ -49,6 +57,9 @@ const FollowupActions = ({ doubt, student, store, context = "own", onClarificati
     ...(doubt.questionImageUrl2 ? [{ url: doubt.questionImageUrl2, label: "Full Problem Image" }] : []),
     ...answerImages.map((u, i) => ({ url: u, label: `Answer Image ${i + 1}` })),
   ];
+
+  // ===== Step 1: option selection (no form until an option is chosen) =====
+  const [option, setOption] = useState<FollowupOption | null>(null);
 
   // ===== Card 1: Clarify / Continue =====
   const [clarifyText, setClarifyText] = useState("");
@@ -94,6 +105,11 @@ const FollowupActions = ({ doubt, student, store, context = "own", onClarificati
         // Feed clarifications on others' doubts go to all subject teachers
         reopenToAllTeachers: !isOwn,
       });
+      if (!isOwn) {
+        // Feed: remove this card from the student's own feed only — they
+        // track the clarification from My Doubts instead.
+        await store.hideFeedCard(student.registrationNumber, doubt.id);
+      }
       setClarifySent(true);
       onClarificationSent?.();
     } finally {
@@ -169,21 +185,104 @@ const FollowupActions = ({ doubt, student, store, context = "own", onClarificati
     }
   };
 
+  const nothingSent = !clarifySent && !newCreated;
+  const showClarify = option === "clarify" || option === "both";
+  const showNew = option === "new" || option === "both";
+
+  // ============ Step 1: Option picker — always shown first ============
+  if (option === null) {
+    const optionBtn =
+      "w-full text-left p-3 rounded-lg border bg-card hover:bg-accent/10 hover:border-accent transition-colors flex items-start gap-3";
+    return (
+      <div className="space-y-3">
+        {/* Original discussion context */}
+        <Card>
+          <CardContent className="p-4 space-y-2">
+            <p className="text-sm font-semibold">Original Discussion</p>
+            <div className="p-2 rounded bg-muted/50 text-xs space-y-1">
+              <p><span className="font-medium">Q:</span> {doubt.question}</p>
+              {doubt.answer && (
+                <p className="whitespace-pre-wrap"><span className="font-medium">A ({doubt.answeredBy}):</span> {doubt.answer}</p>
+              )}
+            </div>
+            {previousImages.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {previousImages.map((img) => (
+                  <div key={img.url}>
+                    <img src={img.url} alt={img.label} className="h-16 w-16 object-cover rounded border" />
+                    <span className="block text-[9px] text-muted-foreground text-center mt-0.5 max-w-16 truncate">{img.label}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <p className="text-xs font-medium text-muted-foreground">Choose how you want to continue:</p>
+        <div className="grid gap-2">
+          <button type="button" onClick={() => setOption("clarify")} className={optionBtn}>
+            <MessageCircle className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+            <span>
+              <span className="block text-sm font-semibold">Clarify Teacher's Answer</span>
+              <span className="block text-xs text-muted-foreground mt-0.5">
+                {isOwn
+                  ? `Continue the same discussion — your clarification goes to ${doubt.answeredBy || "the teacher who solved this"}.`
+                  : `Continue this discussion — your clarification goes to all ${doubt.subjectName} teachers.`}
+              </span>
+            </span>
+          </button>
+          <button type="button" onClick={() => setOption("new")} className={optionBtn}>
+            <HelpCircle className="h-5 w-5 text-accent mt-0.5 shrink-0" />
+            <span>
+              <span className="block text-sm font-semibold">Understood the Previous Answer, Ask a New Doubt</span>
+              <span className="block text-xs text-muted-foreground mt-0.5">
+                {isOwn
+                  ? `Close this discussion as understood and send a new doubt to ${doubt.answeredBy || "the same teacher"}.`
+                  : `Send a completely new doubt to all ${doubt.subjectName} teachers.`}
+              </span>
+            </span>
+          </button>
+          <button type="button" onClick={() => setOption("both")} className={optionBtn}>
+            <Layers className="h-5 w-5 text-success mt-0.5 shrink-0" />
+            <span>
+              <span className="block text-sm font-semibold">Use Both</span>
+              <span className="block text-xs text-muted-foreground mt-0.5">
+                Send a clarification AND a new doubt together — they are handled as two independent requests, each with its own claim, answer and submit.
+              </span>
+            </span>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ============ Step 2: Selected form(s) ============
   return (
     <div className="space-y-3">
-      {/* ============ Card 1: Clarify Previous Answer / Continue Previous Question ============ */}
+      {nothingSent && (
+        <button
+          type="button"
+          onClick={() => setOption(null)}
+          className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+        >
+          <Undo2 className="h-3 w-3" /> Choose a different option
+        </button>
+      )}
+
+      {/* ============ Card 1: Clarify Teacher's Answer ============ */}
+      {showClarify && (
       <Card className="border-primary/30">
         <CardContent className="p-4 space-y-3">
           <p className="text-sm font-semibold flex items-center gap-2">
             <MessageCircle className="h-4 w-4 text-primary" />
-            {hasImages ? "Continue Previous Question" : "Clarify Previous Answer"}
+            Clarify Teacher's Answer
           </p>
 
           {/* Original context */}
           <div className="p-2 rounded bg-muted/50 text-xs space-y-1">
             <p><span className="font-medium">Q:</span> {doubt.question}</p>
             {doubt.answer && (
-              <p className="line-clamp-3"><span className="font-medium">A ({doubt.answeredBy}):</span> {doubt.answer}</p>
+              <p className="whitespace-pre-wrap"><span className="font-medium">A ({doubt.answeredBy}):</span> {doubt.answer}</p>
             )}
           </div>
 
@@ -272,8 +371,10 @@ const FollowupActions = ({ doubt, student, store, context = "own", onClarificati
           )}
         </CardContent>
       </Card>
+      )}
 
       {/* ============ Card 2: Ask a New Doubt ============ */}
+      {showNew && (
       <Card className="border-accent/30">
         <CardContent className="p-4 space-y-3">
           <p className="text-sm font-semibold flex items-center gap-2">
@@ -424,6 +525,7 @@ const FollowupActions = ({ doubt, student, store, context = "own", onClarificati
           )}
         </CardContent>
       </Card>
+      )}
     </div>
   );
 };
