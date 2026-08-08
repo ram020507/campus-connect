@@ -540,24 +540,50 @@ const FollowupActions = ({ doubt, student, store, context = "own", onClarificati
                 </div>
               )}
 
-              <Button
-                size="sm"
-                onClick={() => submitNewDoubt(false)}
-                disabled={!newText.trim() || (hasImages && (!img1 || !img2)) || newSending}
-              >
-                {newSending ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Send className="h-3 w-3 mr-1" />}
-                {newSending
-                  ? "Checking & Sending…"
-                  : isOwn
-                    ? `Close & Send to ${doubt.answeredBy || "Teacher"}`
-                    : `Send to ${doubt.subjectName} Teachers`}
-              </Button>
+              {!bothMode && (
+                <Button
+                  size="sm"
+                  onClick={() => submitNewDoubt(false)}
+                  disabled={!newText.trim() || (hasImages && (!img1 || !img2)) || newSending}
+                >
+                  {newSending ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Send className="h-3 w-3 mr-1" />}
+                  {newSending
+                    ? "Checking & Sending…"
+                    : isOwn
+                      ? `Close & Send to ${doubt.answeredBy || "Teacher"}`
+                      : `Send to ${doubt.subjectName} Teachers`}
+                </Button>
+              )}
             </>
           )}
         </CardContent>
       </Card>
       )}
+
+      {/* ===== Use Both: one common Submit button for both requests ===== */}
+      {bothMode && nothingSent && (
+        <div className="space-y-2">
+          <p className="text-[11px] text-muted-foreground">
+            Both requests are sent together and handled independently by the teacher. Your previous discussion stays active — it is not marked as Understood.
+          </p>
+          <Button
+            onClick={submitBoth}
+            disabled={
+              clarifySending || newSending ||
+              !clarifyText.trim() ||
+              !newText.trim() ||
+              (hasImages && (!img1 || !img2))
+            }
+          >
+            {(clarifySending || newSending)
+              ? <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+              : <Send className="h-4 w-4 mr-1" />}
+            {(clarifySending || newSending) ? "Submitting…" : "Submit"}
+          </Button>
+        </div>
+      )}
     </div>
+
   );
 };
 
