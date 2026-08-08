@@ -464,22 +464,30 @@ const FollowupActions = ({ doubt, student, store, context = "own", onClarificati
                   </div>
                 );
               })}
-              <div className="flex gap-2">
-                <Button size="sm" variant="outline" onClick={() => setDupMatches(null)}>
-                  Edit My Doubt
-                </Button>
-                <Button size="sm" variant="secondary" onClick={() => submitNewDoubt(true)} disabled={newSending}>
-                  {newSending ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Send className="h-3 w-3 mr-1" />}
-                  Ask New Doubt Anyway
-                </Button>
-              </div>
+              {bothMode ? (
+                <p className="text-[11px] text-muted-foreground">
+                  Your new doubt was <span className="font-medium">not sent</span> because it has already been solved — the solution is shown above.
+                  {clarifySent ? " Your clarification request was sent to the teacher." : ""}
+                </p>
+              ) : (
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" onClick={() => setDupMatches(null)}>
+                    Edit My Doubt
+                  </Button>
+                  <Button size="sm" variant="secondary" onClick={() => submitNewDoubt(true)} disabled={newSending}>
+                    {newSending ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Send className="h-3 w-3 mr-1" />}
+                    Ask New Doubt Anyway
+                  </Button>
+                </div>
+              )}
             </div>
           ) : (
             <>
-              {isOwn && (
+              {isOwn && !bothMode && (
                 <p className="text-[11px] text-muted-foreground">
                   Submitting closes this discussion (marked as Understood) and sends your new doubt to {doubt.answeredBy || "the same teacher"} as a separate pending request.
                 </p>
+
               )}
               <Textarea
                 placeholder="Type your new doubt…"
