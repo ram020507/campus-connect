@@ -151,14 +151,14 @@ const FollowupActions = ({ doubt, student, store, context = "own", onClarificati
         }
       }
 
-      if (isOwn && doubt.status !== "clarification_requested" && !clarifySent) {
+      if (isOwn && option !== "both" && doubt.status !== "clarification_requested" && !clarifySent) {
         // Close the previous discussion: mark it Understood so it leaves the
         // teacher's Claim & Solve section before the new doubt is created.
-        // Skipped when a clarification is still in flight (or was just sent) —
-        // the clarification and the new doubt are independent requests, so
-        // completing one must not affect the status of the other.
+        // Never done in "Use Both" mode — the previous discussion must stay
+        // active while the clarification is handled independently.
         await store.markDoubtUnderstood(doubt.id);
       }
+
       await store.addDoubt({
         studentName: student.name,
         studentRegNo: student.registrationNumber,
@@ -185,9 +185,28 @@ const FollowupActions = ({ doubt, student, store, context = "own", onClarificati
     }
   };
 
+  /**
+   * "Use Both" — one Submit button processes the two requests independently:
+   *  1. the clarification always goes to the same teacher (or all subject
+   *     teachers from the feed) and continues the existing thread;
+   *  2. the new doubt runs the duplicate check first — if a match is found it
+   *     is NOT sent and the previous solution is shown instead.
+   * The previous doubt is never auto-marked as Understood in this mode.
+   */
+  const submitBoth = async () => {
+    if (clarifyText.trim() && !clarifySent) {
+      await submitClarification();
+    }
+    if (newText.trim() && !newCreated && !(hasImages && (!img1 || !img2))) {
+      await submitNewDoubt(false);
+    }
+  };
+
   const nothingSent = !clarifySent && !newCreated;
+  const bothMode = option === "both";
   const showClarify = option === "clarify" || option === "both";
   const showNew = option === "new" || option === "both";
+
 
   // ============ Step 1: Option picker — always shown first ============
   if (option === null) {
@@ -234,7 +253,7 @@ const FollowupActions = ({ doubt, student, store, context = "own", onClarificati
           <button type="button" onClick={() => setOption("new")} className={optionBtn}>
             <HelpCircle className="h-5 w-5 text-accent mt-0.5 shrink-0" />
             <span>
-              <span className="block text-sm font-semibold">Understood the Previous Answer, Ask a New Doubt</span>
+              <span className="block text-sm font-semibold">Ask a New Doubt</span>
               <span className="block text-xs text-muted-foreground mt-0.5">
                 {isOwn
                   ? `Close this discussion as understood and send a new doubt to ${doubt.answeredBy || "the same teacher"}.`
@@ -247,8 +266,9 @@ const FollowupActions = ({ doubt, student, store, context = "own", onClarificati
             <span>
               <span className="block text-sm font-semibold">Use Both</span>
               <span className="block text-xs text-muted-foreground mt-0.5">
-                Send a clarification AND a new doubt together — they are handled as two independent requests, each with its own claim, answer and submit.
+                Fill in a clarification AND a new doubt, then send them with one Submit button — the previous discussion stays active and each request is claimed and answered separately.
               </span>
+
             </span>
           </button>
         </div>
@@ -363,10 +383,13 @@ const FollowupActions = ({ doubt, student, store, context = "own", onClarificati
                 onChange={(e) => setClarifyText(e.target.value)}
                 rows={3}
               />
-              <Button size="sm" onClick={submitClarification} disabled={!clarifyText.trim() || clarifySending}>
-                {clarifySending ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Send className="h-3 w-3 mr-1" />}
-                Send Clarification
-              </Button>
+              {!bothMode && (
+                <Button size="sm" onClick={submitClarification} disabled={!clarifyText.trim() || clarifySending}>
+                  {clarifySending ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Send className="h-3 w-3 mr-1" />}
+                  Send Clarification
+                </Button>
+              )}
+
             </>
           )}
         </CardContent>
@@ -441,22 +464,30 @@ const FollowupActions = ({ doubt, student, store, context = "own", onClarificati
                   </div>
                 );
               })}
-              <div className="flex gap-2">
-                <Button size="sm" variant="outline" onClick={() => setDupMatches(null)}>
-                  Edit My Doubt
-                </Button>
-                <Button size="sm" variant="secondary" onClick={() => submitNewDoubt(true)} disabled={newSending}>
-                  {newSending ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Send className="h-3 w-3 mr-1" />}
-                  Ask New Doubt Anyway
-                </Button>
-              </div>
+              {bothMode ? (
+                <p className="text-[11px] text-muted-foreground">
+                  Your new doubt was <span className="font-medium">not sent</span> because it has already been solved — the solution is shown above.
+                  {clarifySent ? " Your clarification request was sent to the teacher." : ""}
+                </p>
+              ) : (
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" onClick={() => setDupMatches(null)}>
+                    Edit My Doubt
+                  </Button>
+                  <Button size="sm" variant="secondary" onClick={() => submitNewDoubt(true)} disabled={newSending}>
+                    {newSending ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Send className="h-3 w-3 mr-1" />}
+                    Ask New Doubt Anyway
+                  </Button>
+                </div>
+              )}
             </div>
           ) : (
             <>
-              {isOwn && (
+              {isOwn && !bothMode && (
                 <p className="text-[11px] text-muted-foreground">
                   Submitting closes this discussion (marked as Understood) and sends your new doubt to {doubt.answeredBy || "the same teacher"} as a separate pending request.
                 </p>
+
               )}
               <Textarea
                 placeholder="Type your new doubt…"
@@ -509,24 +540,50 @@ const FollowupActions = ({ doubt, student, store, context = "own", onClarificati
                 </div>
               )}
 
-              <Button
-                size="sm"
-                onClick={() => submitNewDoubt(false)}
-                disabled={!newText.trim() || (hasImages && (!img1 || !img2)) || newSending}
-              >
-                {newSending ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Send className="h-3 w-3 mr-1" />}
-                {newSending
-                  ? "Checking & Sending…"
-                  : isOwn
-                    ? `Close & Send to ${doubt.answeredBy || "Teacher"}`
-                    : `Send to ${doubt.subjectName} Teachers`}
-              </Button>
+              {!bothMode && (
+                <Button
+                  size="sm"
+                  onClick={() => submitNewDoubt(false)}
+                  disabled={!newText.trim() || (hasImages && (!img1 || !img2)) || newSending}
+                >
+                  {newSending ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Send className="h-3 w-3 mr-1" />}
+                  {newSending
+                    ? "Checking & Sending…"
+                    : isOwn
+                      ? `Close & Send to ${doubt.answeredBy || "Teacher"}`
+                      : `Send to ${doubt.subjectName} Teachers`}
+                </Button>
+              )}
             </>
           )}
         </CardContent>
       </Card>
       )}
+
+      {/* ===== Use Both: one common Submit button for both requests ===== */}
+      {bothMode && nothingSent && (
+        <div className="space-y-2">
+          <p className="text-[11px] text-muted-foreground">
+            Both requests are sent together and handled independently by the teacher. Your previous discussion stays active — it is not marked as Understood.
+          </p>
+          <Button
+            onClick={submitBoth}
+            disabled={
+              clarifySending || newSending ||
+              !clarifyText.trim() ||
+              !newText.trim() ||
+              (hasImages && (!img1 || !img2))
+            }
+          >
+            {(clarifySending || newSending)
+              ? <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+              : <Send className="h-4 w-4 mr-1" />}
+            {(clarifySending || newSending) ? "Submitting…" : "Submit"}
+          </Button>
+        </div>
+      )}
     </div>
+
   );
 };
 
