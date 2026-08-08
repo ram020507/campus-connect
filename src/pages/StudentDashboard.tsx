@@ -1002,7 +1002,10 @@ const StudentDashboard = () => {
                                 return <span className={`${base} bg-orange-500/15 text-orange-600 border border-orange-500/30`}>● Pending</span>;
                               })()}
                               <span className="text-xs text-muted-foreground ml-auto">{new Date(d.createdAt).toLocaleDateString()}</span>
-                              {d.studentRegNo === student.registrationNumber && !d.claimedBy && (
+                              {/* Edit & Delete only while the doubt is still Pending —
+                                  they disappear the moment a teacher claims it. */}
+                              {d.studentRegNo === student.registrationNumber && !d.claimedBy && !d.answer && d.status !== "understood" && (
+
                                 <>
                                   <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => startEditDoubt(d)}>
                                     <Pencil className="h-3 w-3" />
