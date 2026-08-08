@@ -185,9 +185,28 @@ const FollowupActions = ({ doubt, student, store, context = "own", onClarificati
     }
   };
 
+  /**
+   * "Use Both" — one Submit button processes the two requests independently:
+   *  1. the clarification always goes to the same teacher (or all subject
+   *     teachers from the feed) and continues the existing thread;
+   *  2. the new doubt runs the duplicate check first — if a match is found it
+   *     is NOT sent and the previous solution is shown instead.
+   * The previous doubt is never auto-marked as Understood in this mode.
+   */
+  const submitBoth = async () => {
+    if (clarifyText.trim() && !clarifySent) {
+      await submitClarification();
+    }
+    if (newText.trim() && !newCreated && !(hasImages && (!img1 || !img2))) {
+      await submitNewDoubt(false);
+    }
+  };
+
   const nothingSent = !clarifySent && !newCreated;
+  const bothMode = option === "both";
   const showClarify = option === "clarify" || option === "both";
   const showNew = option === "new" || option === "both";
+
 
   // ============ Step 1: Option picker — always shown first ============
   if (option === null) {
