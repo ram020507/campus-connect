@@ -383,10 +383,13 @@ const FollowupActions = ({ doubt, student, store, context = "own", onClarificati
                 onChange={(e) => setClarifyText(e.target.value)}
                 rows={3}
               />
-              <Button size="sm" onClick={submitClarification} disabled={!clarifyText.trim() || clarifySending}>
-                {clarifySending ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Send className="h-3 w-3 mr-1" />}
-                Send Clarification
-              </Button>
+              {!bothMode && (
+                <Button size="sm" onClick={submitClarification} disabled={!clarifyText.trim() || clarifySending}>
+                  {clarifySending ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Send className="h-3 w-3 mr-1" />}
+                  Send Clarification
+                </Button>
+              )}
+
             </>
           )}
         </CardContent>
