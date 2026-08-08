@@ -1047,7 +1047,7 @@ export function useSupabaseData() {
     updateDoubtQuestion, deleteDoubt, updateDoubtAnswer, deleteDoubtAnswer,
     saveDoubt, unsaveDoubt, toggleHelpful,
     markDoubtViewed,
-    addFollowup, markDoubtSeen, markDoubtUnderstood, hideFeedCard,
+    addFollowup, updateFollowup, deleteFollowup, markDoubtSeen, markDoubtUnderstood, hideFeedCard,
     refetch: fetchAll,
   };
 }
