@@ -66,6 +66,11 @@ const StudentDashboard = () => {
   const [editDoubtImagePreview, setEditDoubtImagePreview] = useState<string | null>(null);
   const [editDoubtImage2Preview, setEditDoubtImage2Preview] = useState<string | null>(null);
   const [editDoubtHasImages, setEditDoubtHasImages] = useState(false);
+  // Pending clarification (follow-up) editing
+  const [editingFollowupId, setEditingFollowupId] = useState<string | null>(null);
+  const [editFollowupText, setEditFollowupText] = useState("");
+  const [editFollowupImages, setEditFollowupImages] = useState<string[]>([]);
+
   const editFileInput2Ref = useRef<HTMLInputElement>(null);
   const [savedSearch, setSavedSearch] = useState("");
   const [savedSubjectFilter, setSavedSubjectFilter] = useState("all");
