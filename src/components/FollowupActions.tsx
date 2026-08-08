@@ -253,7 +253,7 @@ const FollowupActions = ({ doubt, student, store, context = "own", onClarificati
           <button type="button" onClick={() => setOption("new")} className={optionBtn}>
             <HelpCircle className="h-5 w-5 text-accent mt-0.5 shrink-0" />
             <span>
-              <span className="block text-sm font-semibold">Understood the Previous Answer, Ask a New Doubt</span>
+              <span className="block text-sm font-semibold">Ask a New Doubt</span>
               <span className="block text-xs text-muted-foreground mt-0.5">
                 {isOwn
                   ? `Close this discussion as understood and send a new doubt to ${doubt.answeredBy || "the same teacher"}.`
@@ -266,8 +266,9 @@ const FollowupActions = ({ doubt, student, store, context = "own", onClarificati
             <span>
               <span className="block text-sm font-semibold">Use Both</span>
               <span className="block text-xs text-muted-foreground mt-0.5">
-                Send a clarification AND a new doubt together — they are handled as two independent requests, each with its own claim, answer and submit.
+                Fill in a clarification AND a new doubt, then send them with one Submit button — the previous discussion stays active and each request is claimed and answered separately.
               </span>
+
             </span>
           </button>
         </div>
