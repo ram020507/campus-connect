@@ -1118,16 +1118,76 @@ const StudentDashboard = () => {
                                   return (
                                     <div className="mt-3 space-y-2 border-t pt-3">
                                       <p className="text-xs font-semibold text-muted-foreground">Discussion</p>
-                                      {thread.map((f) => (
-                                        <div key={f.id} className={`p-2 rounded text-xs ${f.authorRole === "teacher" ? "bg-primary/10" : "bg-accent/10"}`}>
-                                          <p className="font-semibold">{f.authorRole === "teacher" ? "👨‍🏫" : "🙋"} {f.authorName}</p>
-                                          {f.text && <p className="mt-1 whitespace-pre-wrap">{f.text}</p>}
-                                          {f.imageUrls.map((u, i) => (
-                                            <img key={i} src={u} alt="attachment" className="max-h-40 rounded border mt-2" />
-                                          ))}
-                                          <p className="text-[10px] text-muted-foreground mt-1">{new Date(f.createdAt).toLocaleString()}</p>
-                                        </div>
-                                      ))}
+                                      {thread.map((f, fi) => {
+                                        // Clarifications can be edited/deleted only while
+                                        // they are still Pending (no teacher has claimed).
+                                        const isMine = f.authorRole === "student" && f.authorName === student.name;
+                                        const isLast = fi === thread.length - 1;
+                                        const canModify = isMine && isLast && d.status === "clarification_requested" && !d.claimedBy;
+                                        const editing = editingFollowupId === f.id;
+                                        return (
+                                         <div key={f.id} className={`p-2 rounded text-xs ${f.authorRole === "teacher" ? "bg-primary/10" : "bg-accent/10"}`}>
+                                           <div className="flex items-center gap-2">
+                                             <p className="font-semibold flex-1">{f.authorRole === "teacher" ? "👨‍🏫" : "🙋"} {f.authorName}</p>
+                                             {canModify && !editing && (
+                                               <>
+                                                 <Button variant="ghost" size="sm" className="h-6 w-6 p-0"
+                                                   onClick={() => { setEditingFollowupId(f.id); setEditFollowupText(f.text || ""); setEditFollowupImages(f.imageUrls || []); }}>
+                                                   <Pencil className="h-3 w-3" />
+                                                 </Button>
+                                                 <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-destructive"
+                                                   onClick={async () => { if (confirm("Delete this clarification request?")) await store.deleteFollowup(f.id, d.id); }}>
+                                                   <Trash2 className="h-3 w-3" />
+                                                 </Button>
+                                               </>
+                                             )}
+                                           </div>
+                                           {editing ? (
+                                             <div className="space-y-2 mt-2">
+                                               <Textarea value={editFollowupText} onChange={(e) => setEditFollowupText(e.target.value)} rows={3} />
+                                               <div className="flex flex-wrap gap-2">
+                                                 {editFollowupImages.map((u) => (
+                                                   <div key={u} className="relative">
+                                                     <img src={u} alt="attachment" className="h-16 w-16 object-cover rounded border" />
+                                                     <button onClick={() => setEditFollowupImages((p) => p.filter((x) => x !== u))}
+                                                       className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5">
+                                                       <X className="h-3 w-3" />
+                                                     </button>
+                                                   </div>
+                                                 ))}
+                                                 <label className="cursor-pointer flex flex-col items-center justify-center h-16 w-16 border-2 border-dashed rounded text-[9px] text-muted-foreground hover:bg-muted/50">
+                                                   <ImagePlus className="h-4 w-4 mb-0.5" /> Add
+                                                   <input type="file" accept="image/*" multiple className="hidden" onChange={async (e) => {
+                                                     const files = Array.from(e.target.files || []);
+                                                     e.target.value = "";
+                                                     for (const file of files) {
+                                                       const url = await store.uploadDoubtImage(file);
+                                                       if (url) setEditFollowupImages((p) => [...p, url]);
+                                                     }
+                                                   }} />
+                                                 </label>
+                                               </div>
+                                               <div className="flex gap-2">
+                                                 <Button size="sm" onClick={async () => {
+                                                   await store.updateFollowup(f.id, { text: editFollowupText, imageUrls: editFollowupImages });
+                                                   setEditingFollowupId(null);
+                                                 }}>Save</Button>
+                                                 <Button size="sm" variant="outline" onClick={() => setEditingFollowupId(null)}>Cancel</Button>
+                                               </div>
+                                             </div>
+                                           ) : (
+                                             <>
+                                               {f.text && <p className="mt-1 whitespace-pre-wrap">{f.text}</p>}
+                                               {f.imageUrls.map((u, i) => (
+                                                 <img key={i} src={u} alt="attachment" className="max-h-40 rounded border mt-2" />
+                                               ))}
+                                             </>
+                                           )}
+                                           <p className="text-[10px] text-muted-foreground mt-1">{new Date(f.createdAt).toLocaleString()}</p>
+                                         </div>
+                                        );
+                                      })}
+
                                     </div>
                                   );
                                 })()}
