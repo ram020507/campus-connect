@@ -151,14 +151,14 @@ const FollowupActions = ({ doubt, student, store, context = "own", onClarificati
         }
       }
 
-      if (isOwn && doubt.status !== "clarification_requested" && !clarifySent) {
+      if (isOwn && option !== "both" && doubt.status !== "clarification_requested" && !clarifySent) {
         // Close the previous discussion: mark it Understood so it leaves the
         // teacher's Claim & Solve section before the new doubt is created.
-        // Skipped when a clarification is still in flight (or was just sent) —
-        // the clarification and the new doubt are independent requests, so
-        // completing one must not affect the status of the other.
+        // Never done in "Use Both" mode — the previous discussion must stay
+        // active while the clarification is handled independently.
         await store.markDoubtUnderstood(doubt.id);
       }
+
       await store.addDoubt({
         studentName: student.name,
         studentRegNo: student.registrationNumber,
