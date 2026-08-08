@@ -969,6 +969,34 @@ export function useSupabaseData() {
     await fetchAll();
   };
 
+  /** Edit a pending clarification (student's own, before a teacher claims it). */
+  const updateFollowup = async (
+    followupId: string,
+    updates: { text?: string; imageUrls?: string[] }
+  ) => {
+    const patch: Record<string, any> = {};
+    if (updates.text !== undefined) patch.text = updates.text;
+    if (updates.imageUrls !== undefined) patch.image_urls = updates.imageUrls;
+    await (supabase as any).from("doubt_followups").update(patch).eq("id", followupId);
+    await fetchAll();
+  };
+
+  /**
+   * Delete a pending clarification. The parent discussion returns to its
+   * previous "solved" state so the teacher panel no longer shows the request.
+   */
+  const deleteFollowup = async (followupId: string, doubtId: string) => {
+    await (supabase as any).from("doubt_followups").delete().eq("id", followupId);
+    const remaining = followups.filter((f) => f.doubtId === doubtId && f.id !== followupId);
+    const last = remaining[remaining.length - 1];
+    if (!last || last.authorRole === "teacher") {
+      await (supabase.from("doubts").update as any)({ status: "solved" }).eq("id", doubtId);
+    }
+    await fetchAll();
+  };
+
+
+
   const markDoubtSeen = async (studentRegNo: string, doubtId: string) => {
     const key = `${studentRegNo}:${doubtId}`;
     if (seenDoubtIds.includes(key)) return;
