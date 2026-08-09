@@ -59,7 +59,7 @@ Run the following commands:
 
 ```bash
 git clone https://github.com/ram020507/camp-conect.git
-cd camp-conect
+cd campus-connect
 npm install
 npm run dev
 ```
