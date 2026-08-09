@@ -110,4 +110,4 @@ The following features will be implemented after validating the core platform in
 
 ## Goal
 
-The goal of Campus Connect is to integrate with existing college ERP platforms and provide a centralized learning environment where students can access lecture videos, study materials, and doubt clarification from their own college teachers.
+The goal of Campus Connect is to integrate with existing college ERP platforms and provide a centralized learning environment where students can access lecture videos, study materials, and doubt clarification from their own college teachers
