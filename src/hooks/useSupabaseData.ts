@@ -313,6 +313,11 @@ export function useSupabaseData() {
           viewedByStudent: (d as any).viewed_by_student || false,
           status: (d as any).status || undefined,
           parentDoubtId: (d as any).parent_doubt_id || undefined,
+          assignedTeacherId: (d as any).assigned_teacher_id || undefined,
+          assignedAt: (d as any).assigned_at || undefined,
+          declinedBy: (d as any).declined_by || [],
+          startedAt: (d as any).started_at || undefined,
+
 
         }))
       );
