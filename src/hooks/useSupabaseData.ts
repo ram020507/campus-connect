@@ -109,6 +109,10 @@ export interface Doubt {
   viewedByStudent: boolean;
   status?: string;
   parentDoubtId?: string;
+  assignedTeacherId?: string;
+  assignedAt?: string;
+  declinedBy?: string[];
+  startedAt?: string;
 }
 
 export interface DoubtFollowup {
