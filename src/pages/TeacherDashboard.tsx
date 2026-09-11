@@ -339,12 +339,22 @@ const TeacherDashboard = () => {
                 .map((d) => (
                   <Card key={d.id} className="border-accent/30 animate-fade-in">
                     <CardContent className="p-4">
-                      <div className="flex items-center gap-2 mb-2">
+                      <div className="flex items-center gap-2 mb-1">
                         <MessageCircle className="h-4 w-4 text-accent" />
                         <span className="text-xs text-muted-foreground">
-                          From {d.studentName} · {d.studentDepartment} · Year {d.studentYear}
+                          From {d.studentName} · {d.studentCollege} · {d.studentDepartment} · Year {d.studentYear}
                         </span>
                         <span className="text-xs font-medium bg-primary/10 text-primary px-2 py-0.5 rounded ml-auto">{d.subjectName}</span>
+                      </div>
+                      <div className="flex items-center gap-2 mb-2 text-[11px] text-muted-foreground">
+                        <span>{d.questionImageUrl ? "Text + Images" : "Text"}</span>
+                        <span>·</span>
+                        <span>{new Date(d.createdAt).toLocaleString()}</span>
+                        {d.status === "assigned" && secondsLeft(d.assignedAt) !== null && (
+                          <span className="ml-auto font-semibold text-accent">
+                            Respond in {secondsLeft(d.assignedAt)}s
+                          </span>
+                        )}
                       </div>
                       {d.status === "clarification_requested" && (() => {
                         const thread = store.followups.filter((f) => f.doubtId === d.id);
