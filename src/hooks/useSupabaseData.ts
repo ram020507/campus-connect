@@ -1091,6 +1091,7 @@ export function useSupabaseData() {
     addStudent, removeStudent, updateStudent,
     addTeacher, removeTeacher, updateTeacher,
     addDoubt, claimDoubt, claimClarification, answerDoubt,
+    runAssignment, startSolving, passDoubtToOtherTeacher,
     searchSimilarDoubts, extractOcrText,
     updateDoubtQuestion, deleteDoubt, updateDoubtAnswer, deleteDoubtAnswer,
     saveDoubt, unsaveDoubt, toggleHelpful,
