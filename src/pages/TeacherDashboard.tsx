@@ -82,6 +82,35 @@ const TeacherDashboard = () => {
       .from("teacher_status")
       .update({ availability: next, updated_at: new Date().toISOString() } as any)
       .eq("staff_id", teacher.staffId);
+    await store.runAssignment();
+    await store.refetch();
+  };
+
+  // Ticker for the 10-second response countdown
+  const [nowTs, setNowTs] = useState(Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNowTs(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  // Continuous routing pass: expires ignored offers, assigns waiting doubts
+  // and rebalances claimed-but-not-started doubts by workload.
+  useEffect(() => {
+    if (!teacher) return;
+    let cancelled = false;
+    const run = async () => {
+      await store.runAssignment();
+      if (!cancelled) await store.refetch();
+    };
+    run();
+    const id = setInterval(run, 4000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, [teacher?.staffId, availability]);
+
+  const secondsLeft = (assignedAt?: string) => {
+    if (!assignedAt) return null;
+    const left = 10 - Math.floor((nowTs - new Date(assignedAt).getTime()) / 1000);
+    return left > 0 ? left : 0;
   };
 
   if (!teacher) {
