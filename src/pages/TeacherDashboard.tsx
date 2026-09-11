@@ -94,26 +94,34 @@ const TeacherDashboard = () => {
     navigate("/");
   };
 
-  // Section 1: Claim & Solve — pending requests for my subjects (only when IN).
-  // Includes: normal pending doubts (open to all, or directed to me by a
-  // follow-up "Ask a New Doubt") and Learning-Feed clarification requests
-  // reopened to every teacher of the subject.
+  // Section 1: Claim & Solve — requests for my subjects (only when IN).
+  // Includes: doubts the system assigned to me (10-second response window),
+  // doubts directed to me by a follow-up, and Learning-Feed clarifications.
   const unclaimedDoubts = availability === "in" ? store.doubts.filter(
     (d) => {
       if (!teacherSubjects.some(s => s.toLowerCase() === d.subjectName.toLowerCase())) return false;
       if (d.claimedBy) return false;
       const directedToMe = !d.handlingTeacher || d.handlingTeacher === teacher.name;
-      if (!d.answer && directedToMe) return true;                             // new pending doubt
       if (d.status === "clarification_requested" && directedToMe) return true; // feed clarification
+      if (d.answer) return false;
+      if (d.status === "assigned") return d.assignedTeacherId === teacher.staffId; // routed to me
+      if (d.handlingTeacher === teacher.name) return true;                     // directed follow-up
       return false;
     }
   ) : [];
 
-  // In-progress: claimed by me OR answered by me, but NOT yet marked understood by student
+  // Claimed but not started — still reassignable until "Start Solving"
+  const claimedNotStarted = store.doubts.filter(
+    (d) => d.claimedBy === teacher.staffId && d.status === "claimed" && !d.answer
+  );
+
+  // In-progress: locked to me (started, answered or clarification), until understood
   const inProgressDoubts = store.doubts.filter(
     (d) =>
       (d.claimedBy === teacher.staffId || d.answeredBy === teacher.name) &&
-      d.status !== "understood"
+      d.status !== "understood" &&
+      d.status !== "claimed" &&
+      d.status !== "assigned"
   );
 
   // Section 2: My Solutions — doubts I answered AND student marked understood
