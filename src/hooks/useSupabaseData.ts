@@ -109,6 +109,10 @@ export interface Doubt {
   viewedByStudent: boolean;
   status?: string;
   parentDoubtId?: string;
+  assignedTeacherId?: string;
+  assignedAt?: string;
+  declinedBy?: string[];
+  startedAt?: string;
 }
 
 export interface DoubtFollowup {
@@ -309,6 +313,11 @@ export function useSupabaseData() {
           viewedByStudent: (d as any).viewed_by_student || false,
           status: (d as any).status || undefined,
           parentDoubtId: (d as any).parent_doubt_id || undefined,
+          assignedTeacherId: (d as any).assigned_teacher_id || undefined,
+          assignedAt: (d as any).assigned_at || undefined,
+          declinedBy: (d as any).declined_by || [],
+          startedAt: (d as any).started_at || undefined,
+
 
         }))
       );
@@ -748,17 +757,56 @@ export function useSupabaseData() {
     if (!error && data) {
       // Fire-and-forget email notification
       invokeNotify({ type: "new_doubt", doubtId: data.id });
+      // Route the new doubt to an available teacher straight away
+      await runAssignment();
       await fetchAll();
     }
+  };
+
+  // Server-side routing pass: expires 10-second offers, assigns pending
+  // doubts and rebalances claimed-but-not-started doubts by workload.
+  const runAssignment = async () => {
+    try {
+      await (supabase as any).rpc("assign_doubts");
+    } catch { /* routing is best-effort */ }
   };
 
   const claimDoubt = async (doubtId: string, teacherStaffId: string) => {
     const teacher = teachers.find((t) => t.staffId === teacherStaffId);
     await supabase.from("doubts").update({
       claimed_by: teacherStaffId,
-      status: "in_progress",
+      status: "claimed",
+      assigned_teacher_id: teacherStaffId,
       handling_teacher: teacher?.name || teacherStaffId,
+    } as any).eq("id", doubtId);
+    await fetchAll();
+  };
+
+  // Teacher starts working: locks the doubt so it can no longer be reassigned.
+  const startSolving = async (doubtId: string, teacherStaffId: string) => {
+    await (supabase.from("doubts").update as any)({
+      status: "in_progress",
+      started_at: new Date().toISOString(),
+      claimed_by: teacherStaffId,
     }).eq("id", doubtId);
+    await fetchAll();
+  };
+
+  // Teacher passes the doubt on: it returns to the assignable pool and this
+  // teacher is excluded from the next round of offers.
+  const passDoubtToOtherTeacher = async (doubtId: string, teacherStaffId: string) => {
+    const current = doubts.find((d) => d.id === doubtId);
+    const declined = Array.from(new Set([...(current?.declinedBy || []), teacherStaffId]));
+    await (supabase.from("doubts").update as any)({
+      status: "pending",
+      claimed_by: null,
+      handling_teacher: null,
+      assigned_teacher_id: null,
+      assigned_at: null,
+      started_at: null,
+      declined_by: declined,
+    }).eq("id", doubtId);
+    await runAssignment();
     await fetchAll();
   };
 
@@ -1043,6 +1091,7 @@ export function useSupabaseData() {
     addStudent, removeStudent, updateStudent,
     addTeacher, removeTeacher, updateTeacher,
     addDoubt, claimDoubt, claimClarification, answerDoubt,
+    runAssignment, startSolving, passDoubtToOtherTeacher,
     searchSimilarDoubts, extractOcrText,
     updateDoubtQuestion, deleteDoubt, updateDoubtAnswer, deleteDoubtAnswer,
     saveDoubt, unsaveDoubt, toggleHelpful,

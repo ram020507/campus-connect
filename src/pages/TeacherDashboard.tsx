@@ -82,6 +82,35 @@ const TeacherDashboard = () => {
       .from("teacher_status")
       .update({ availability: next, updated_at: new Date().toISOString() } as any)
       .eq("staff_id", teacher.staffId);
+    await store.runAssignment();
+    await store.refetch();
+  };
+
+  // Ticker for the 10-second response countdown
+  const [nowTs, setNowTs] = useState(Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNowTs(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  // Continuous routing pass: expires ignored offers, assigns waiting doubts
+  // and rebalances claimed-but-not-started doubts by workload.
+  useEffect(() => {
+    if (!teacher) return;
+    let cancelled = false;
+    const run = async () => {
+      await store.runAssignment();
+      if (!cancelled) await store.refetch();
+    };
+    run();
+    const id = setInterval(run, 4000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, [teacher?.staffId, availability]);
+
+  const secondsLeft = (assignedAt?: string) => {
+    if (!assignedAt) return null;
+    const left = 10 - Math.floor((nowTs - new Date(assignedAt).getTime()) / 1000);
+    return left > 0 ? left : 0;
   };
 
   if (!teacher) {
@@ -94,26 +123,34 @@ const TeacherDashboard = () => {
     navigate("/");
   };
 
-  // Section 1: Claim & Solve — pending requests for my subjects (only when IN).
-  // Includes: normal pending doubts (open to all, or directed to me by a
-  // follow-up "Ask a New Doubt") and Learning-Feed clarification requests
-  // reopened to every teacher of the subject.
+  // Section 1: Claim & Solve — requests for my subjects (only when IN).
+  // Includes: doubts the system assigned to me (10-second response window),
+  // doubts directed to me by a follow-up, and Learning-Feed clarifications.
   const unclaimedDoubts = availability === "in" ? store.doubts.filter(
     (d) => {
       if (!teacherSubjects.some(s => s.toLowerCase() === d.subjectName.toLowerCase())) return false;
       if (d.claimedBy) return false;
       const directedToMe = !d.handlingTeacher || d.handlingTeacher === teacher.name;
-      if (!d.answer && directedToMe) return true;                             // new pending doubt
       if (d.status === "clarification_requested" && directedToMe) return true; // feed clarification
+      if (d.answer) return false;
+      if (d.status === "assigned") return d.assignedTeacherId === teacher.staffId; // routed to me
+      if (d.handlingTeacher === teacher.name) return true;                     // directed follow-up
       return false;
     }
   ) : [];
 
-  // In-progress: claimed by me OR answered by me, but NOT yet marked understood by student
+  // Claimed but not started — still reassignable until "Start Solving"
+  const claimedNotStarted = store.doubts.filter(
+    (d) => d.claimedBy === teacher.staffId && d.status === "claimed" && !d.answer
+  );
+
+  // In-progress: locked to me (started, answered or clarification), until understood
   const inProgressDoubts = store.doubts.filter(
     (d) =>
       (d.claimedBy === teacher.staffId || d.answeredBy === teacher.name) &&
-      d.status !== "understood"
+      d.status !== "understood" &&
+      d.status !== "claimed" &&
+      d.status !== "assigned"
   );
 
   // Section 2: My Solutions — doubts I answered AND student marked understood
@@ -302,12 +339,22 @@ const TeacherDashboard = () => {
                 .map((d) => (
                   <Card key={d.id} className="border-accent/30 animate-fade-in">
                     <CardContent className="p-4">
-                      <div className="flex items-center gap-2 mb-2">
+                      <div className="flex items-center gap-2 mb-1">
                         <MessageCircle className="h-4 w-4 text-accent" />
                         <span className="text-xs text-muted-foreground">
-                          From {d.studentName} · {d.studentDepartment} · Year {d.studentYear}
+                          From {d.studentName} · {d.studentCollege} · {d.studentDepartment} · Year {d.studentYear}
                         </span>
                         <span className="text-xs font-medium bg-primary/10 text-primary px-2 py-0.5 rounded ml-auto">{d.subjectName}</span>
+                      </div>
+                      <div className="flex items-center gap-2 mb-2 text-[11px] text-muted-foreground">
+                        <span>{d.questionImageUrl ? "Text + Images" : "Text"}</span>
+                        <span>·</span>
+                        <span>{new Date(d.createdAt).toLocaleString()}</span>
+                        {d.status === "assigned" && secondsLeft(d.assignedAt) !== null && (
+                          <span className="ml-auto font-semibold text-accent">
+                            Respond in {secondsLeft(d.assignedAt)}s
+                          </span>
+                        )}
                       </div>
                       {d.status === "clarification_requested" && (() => {
                         const thread = store.followups.filter((f) => f.doubtId === d.id);
