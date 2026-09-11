@@ -317,8 +317,11 @@ export type Database = {
           answer_image_urls: Json | null
           answered_at: string | null
           answered_by: string | null
+          assigned_at: string | null
+          assigned_teacher_id: string | null
           claimed_by: string | null
           created_at: string
+          declined_by: Json
           handling_teacher: string | null
           helpful_count: number
           id: string
@@ -327,6 +330,7 @@ export type Database = {
           question: string
           question_image_url: string | null
           question_image_url_2: string | null
+          started_at: string | null
           status: string
           student_college: string
           student_department: string
@@ -342,8 +346,11 @@ export type Database = {
           answer_image_urls?: Json | null
           answered_at?: string | null
           answered_by?: string | null
+          assigned_at?: string | null
+          assigned_teacher_id?: string | null
           claimed_by?: string | null
           created_at?: string
+          declined_by?: Json
           handling_teacher?: string | null
           helpful_count?: number
           id?: string
@@ -352,6 +359,7 @@ export type Database = {
           question: string
           question_image_url?: string | null
           question_image_url_2?: string | null
+          started_at?: string | null
           status?: string
           student_college: string
           student_department: string
@@ -367,8 +375,11 @@ export type Database = {
           answer_image_urls?: Json | null
           answered_at?: string | null
           answered_by?: string | null
+          assigned_at?: string | null
+          assigned_teacher_id?: string | null
           claimed_by?: string | null
           created_at?: string
+          declined_by?: Json
           handling_teacher?: string | null
           helpful_count?: number
           id?: string
@@ -377,6 +388,7 @@ export type Database = {
           question?: string
           question_image_url?: string | null
           question_image_url_2?: string | null
+          started_at?: string | null
           status?: string
           student_college?: string
           student_department?: string
@@ -803,7 +815,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      assign_doubts: { Args: never; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
