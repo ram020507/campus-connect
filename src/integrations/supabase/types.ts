@@ -55,8 +55,10 @@ export type Database = {
           accepted_by_name: string | null
           accepted_by_staff_id: string | null
           created_at: string | null
+          doubt_id: string | null
           doubt_text: string | null
           id: string
+          initiator: string
           mode: string
           question_image_url: string | null
           session_id: string | null
@@ -73,8 +75,10 @@ export type Database = {
           accepted_by_name?: string | null
           accepted_by_staff_id?: string | null
           created_at?: string | null
+          doubt_id?: string | null
           doubt_text?: string | null
           id?: string
+          initiator?: string
           mode?: string
           question_image_url?: string | null
           session_id?: string | null
@@ -91,8 +95,10 @@ export type Database = {
           accepted_by_name?: string | null
           accepted_by_staff_id?: string | null
           created_at?: string | null
+          doubt_id?: string | null
           doubt_text?: string | null
           id?: string
+          initiator?: string
           mode?: string
           question_image_url?: string | null
           session_id?: string | null
@@ -104,6 +110,163 @@ export type Database = {
           student_year?: number
           subject_name?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      campus_post_comments: {
+        Row: {
+          author_key: string
+          author_name: string
+          author_role: string
+          created_at: string
+          id: string
+          parent_comment_id: string | null
+          post_id: string
+          text: string
+        }
+        Insert: {
+          author_key: string
+          author_name: string
+          author_role: string
+          created_at?: string
+          id?: string
+          parent_comment_id?: string | null
+          post_id: string
+          text: string
+        }
+        Update: {
+          author_key?: string
+          author_name?: string
+          author_role?: string
+          created_at?: string
+          id?: string
+          parent_comment_id?: string | null
+          post_id?: string
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campus_post_comments_parent_comment_id_fkey"
+            columns: ["parent_comment_id"]
+            isOneToOne: false
+            referencedRelation: "campus_post_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campus_post_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "campus_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campus_post_likes: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_key: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_key: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campus_post_likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "campus_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campus_post_saves: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_key: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_key: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campus_post_saves_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "campus_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campus_posts: {
+        Row: {
+          author_id: string | null
+          author_name: string
+          author_role: string
+          college_name: string
+          created_at: string
+          department: string | null
+          description: string
+          file_name: string | null
+          file_url: string | null
+          id: string
+          image_url: string | null
+          student_year: number | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_id?: string | null
+          author_name: string
+          author_role: string
+          college_name: string
+          created_at?: string
+          department?: string | null
+          description: string
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          image_url?: string | null
+          student_year?: number | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string | null
+          author_name?: string
+          author_role?: string
+          college_name?: string
+          created_at?: string
+          department?: string | null
+          description?: string
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          image_url?: string | null
+          student_year?: number | null
+          title?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -160,10 +323,12 @@ export type Database = {
           code_content: string | null
           college_name: string
           department: string
+          doubt_id: string | null
           doubt_text: string | null
           ended_at: string | null
           id: string
           mode: string
+          question_image_url: string | null
           started_at: string | null
           status: string
           student_name: string
@@ -179,10 +344,12 @@ export type Database = {
           code_content?: string | null
           college_name: string
           department: string
+          doubt_id?: string | null
           doubt_text?: string | null
           ended_at?: string | null
           id?: string
           mode?: string
+          question_image_url?: string | null
           started_at?: string | null
           status?: string
           student_name: string
@@ -198,10 +365,12 @@ export type Database = {
           code_content?: string | null
           college_name?: string
           department?: string
+          doubt_id?: string | null
           doubt_text?: string | null
           ended_at?: string | null
           id?: string
           mode?: string
+          question_image_url?: string | null
           started_at?: string | null
           status?: string
           student_name?: string
