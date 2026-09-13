@@ -393,9 +393,16 @@ const TeacherDashboard = () => {
                           </a>
                         </div>
                       )}
-                      <Button size="sm" onClick={() => handleClaim(d.id)}>
-                        {d.status === "clarification_requested" ? "Claim & Respond" : "Claim & Solve"}
-                      </Button>
+                      <div className="flex flex-wrap gap-2">
+                        <Button size="sm" onClick={() => handleClaim(d.id)}>
+                          {d.status === "clarification_requested" ? "Claim & Respond" : "Claim"}
+                        </Button>
+                        {d.status !== "clarification_requested" && (
+                          <Button size="sm" variant="outline" onClick={() => store.passDoubtToOtherTeacher(d.id, teacher.staffId)}>
+                            Handle by Other Teacher
+                          </Button>
+                        )}
+                      </div>
                     </CardContent>
                   </Card>
                 ))
