@@ -327,7 +327,7 @@ const TeacherDashboard = () => {
               <Clock className="h-5 w-5 text-accent" />
               Claim & Solve
             </h2>
-            {unclaimedDoubts.length === 0 && inProgressDoubts.length === 0 ? (
+            {unclaimedDoubts.length === 0 && claimedNotStarted.length === 0 && inProgressDoubts.length === 0 ? (
               <Card>
                 <CardContent className="p-6 text-center text-muted-foreground">
                   No pending doubts. Great job!
