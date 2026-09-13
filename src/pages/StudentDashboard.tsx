@@ -1009,6 +1009,11 @@ const StudentDashboard = () => {
                                 </>
                               )}
                             </div>
+                            {!d.answer && !d.claimedBy && !d.assignedTeacherId && d.status !== "understood" && (
+                              <p className="text-[11px] text-orange-600 bg-orange-500/10 border border-orange-500/20 rounded px-2 py-1 mb-2">
+                                No teacher is currently available for this subject. Your doubt is waiting for a teacher.
+                              </p>
+                            )}
                             {editingDoubtId === d.id ? (
                               <div className="space-y-2 mt-1">
                                 <Select value={editDoubtSubject} onValueChange={setEditDoubtSubject}>
