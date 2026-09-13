@@ -244,7 +244,7 @@ const TeacherDashboard = () => {
   }
 
   const sectionTabs: { key: Section; label: string; count: number; icon: React.ReactNode }[] = [
-    { key: "unclaimed", label: "Claim & Solve", count: unclaimedDoubts.length + inProgressDoubts.length, icon: <Clock className="h-4 w-4" /> },
+    { key: "unclaimed", label: "Claim & Solve", count: unclaimedDoubts.length + claimedNotStarted.length + inProgressDoubts.length, icon: <Clock className="h-4 w-4" /> },
     { key: "claimed", label: "My Solutions", count: claimedDoubts.length, icon: <Lock className="h-4 w-4" /> },
     { key: "all", label: "All Solutions", count: allSolvedDoubts.length, icon: <Eye className="h-4 w-4" /> },
   ];
@@ -327,7 +327,7 @@ const TeacherDashboard = () => {
               <Clock className="h-5 w-5 text-accent" />
               Claim & Solve
             </h2>
-            {unclaimedDoubts.length === 0 && inProgressDoubts.length === 0 ? (
+            {unclaimedDoubts.length === 0 && claimedNotStarted.length === 0 && inProgressDoubts.length === 0 ? (
               <Card>
                 <CardContent className="p-6 text-center text-muted-foreground">
                   No pending doubts. Great job!
@@ -393,13 +393,62 @@ const TeacherDashboard = () => {
                           </a>
                         </div>
                       )}
-                      <Button size="sm" onClick={() => handleClaim(d.id)}>
-                        {d.status === "clarification_requested" ? "Claim & Respond" : "Claim & Solve"}
-                      </Button>
+                      <div className="flex flex-wrap gap-2">
+                        <Button size="sm" onClick={() => handleClaim(d.id)}>
+                          {d.status === "clarification_requested" ? "Claim & Respond" : "Claim"}
+                        </Button>
+                        {d.status !== "clarification_requested" && (
+                          <Button size="sm" variant="outline" onClick={() => store.passDoubtToOtherTeacher(d.id, teacher.staffId)}>
+                            Handle by Other Teacher
+                          </Button>
+                        )}
+                      </div>
                     </CardContent>
                   </Card>
                 ))
             )}
+          </div>
+        )}
+
+        {/* Claimed — Not Started (still reassignable by workload) */}
+        {activeSection === "unclaimed" && claimedNotStarted.length > 0 && (
+          <div className="space-y-3">
+            <h2 className="font-display font-semibold text-lg flex items-center gap-2 mt-6">
+              <Clock className="h-5 w-5 text-blue-500" />
+              Claimed — Not Started ({claimedNotStarted.length})
+            </h2>
+            {claimedNotStarted
+              .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+              .map((d) => (
+                <Card key={d.id} className="border-blue-500/30 animate-fade-in">
+                  <CardContent className="p-4 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <MessageCircle className="h-4 w-4 text-blue-500" />
+                      <span className="text-xs text-muted-foreground">
+                        From {d.studentName} · {d.studentCollege} · {d.studentDepartment} · Year {d.studentYear}
+                      </span>
+                      <span className="text-xs font-medium bg-primary/10 text-primary px-2 py-0.5 rounded ml-auto">{d.subjectName}</span>
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                      {d.questionImageUrl ? "Text + Images" : "Text"} · {new Date(d.createdAt).toLocaleString()}
+                    </div>
+                    <p className="text-sm font-medium">{d.question}</p>
+                    {d.questionImageUrl && <img src={d.questionImageUrl} alt="Question" className="max-h-40 rounded border" />}
+                    {d.questionImageUrl2 && <img src={d.questionImageUrl2} alt="Full problem" className="max-h-40 rounded border" />}
+                    <p className="text-[11px] text-muted-foreground">
+                      Claimed but not started — may be reassigned if a less-loaded teacher becomes available.
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      <Button size="sm" onClick={() => store.startSolving(d.id, teacher.staffId)}>
+                        Start Solving
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => store.passDoubtToOtherTeacher(d.id, teacher.staffId)}>
+                        Handle by Other Teacher
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
           </div>
         )}
 
