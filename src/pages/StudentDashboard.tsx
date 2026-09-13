@@ -970,36 +970,24 @@ const StudentDashboard = () => {
                           <div key={d.id} className={`border rounded-lg p-3 ${d.answer ? "border-success/30" : ""}`}>
                             <div className="flex items-center gap-2 mb-1">
                               {(() => {
-                                // Follow-up entries (someone else's discussion I'm
-                                // participating in) follow: Pending → Claimed → Solved → Completed
-                                const isFollowupEntry = d.studentRegNo !== student.registrationNumber;
+                                // Pending → Claimed → In Progress → Solved → Completed
                                 const base = "text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full";
-                                if (isFollowupEntry) {
-                                  if (d.status === "understood") {
-                                    return (
-                                      <span className={`${base} bg-green-500/15 text-green-600 border border-green-500/30 flex items-center gap-1`}>
-                                        <CheckCircle2 className="h-3 w-3" /> Completed
-                                      </span>
-                                    );
-                                  }
-                                  if (d.answer) {
-                                    return (
-                                      <span className={`${base} bg-green-500/15 text-green-600 border border-green-500/30 flex items-center gap-1`}>
-                                        <CheckCircle2 className="h-3 w-3" /> Solved
-                                      </span>
-                                    );
-                                  }
-                                  if (d.claimedBy) {
-                                    return <span className={`${base} bg-blue-500/15 text-blue-600 border border-blue-500/30`}>🔒 Claimed</span>;
-                                  }
-                                  return <span className={`${base} bg-orange-500/15 text-orange-600 border border-orange-500/30`}>● Pending</span>;
+                                if (d.status === "understood") {
+                                  return (
+                                    <span className={`${base} bg-green-500/15 text-green-600 border border-green-500/30 flex items-center gap-1`}>
+                                      <CheckCircle2 className="h-3 w-3" /> Completed
+                                    </span>
+                                  );
                                 }
                                 if (d.answer) {
                                   return (
                                     <span className={`${base} bg-green-500/15 text-green-600 border border-green-500/30 flex items-center gap-1`}>
-                                      <CheckCircle2 className="h-3 w-3" /> Answered
+                                      <CheckCircle2 className="h-3 w-3" /> Solved
                                     </span>
                                   );
+                                }
+                                if (d.status === "in_progress" || d.startedAt) {
+                                  return <span className={`${base} bg-purple-500/15 text-purple-600 border border-purple-500/30`}>⚡ In Progress</span>;
                                 }
                                 if (d.claimedBy) {
                                   return <span className={`${base} bg-blue-500/15 text-blue-600 border border-blue-500/30`}>🔒 Claimed</span>;
