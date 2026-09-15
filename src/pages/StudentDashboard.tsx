@@ -439,6 +439,12 @@ const StudentDashboard = () => {
                   <p className="font-semibold font-display text-sm">Digital Board</p>
                 </CardContent>
               </Card>
+              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setView("campus-hub")}>
+                <CardContent className="p-4 text-center">
+                  <Users className="h-7 w-7 mx-auto mb-2 text-success" />
+                  <p className="font-semibold font-display text-sm">Campus Hub</p>
+                </CardContent>
+              </Card>
             </div>
           </div>
         )}
