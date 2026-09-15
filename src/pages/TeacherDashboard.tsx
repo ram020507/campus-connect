@@ -956,6 +956,24 @@ const TeacherDashboard = () => {
             )}
           </div>
         )}
+
+        {activeSection === "campus" && (
+          <div className="space-y-3">
+            <h2 className="font-display font-semibold text-lg flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary" />
+              Campus Hub
+            </h2>
+            <CampusHub
+              viewer={{
+                role: "teacher",
+                key: teacher.staffId,
+                name: teacher.name,
+                collegeName: teacher.collegeName,
+                department: teacher.department || undefined,
+              }}
+            />
+          </div>
+        )}
       </div>
 
       {/* Claim conflict dialog */}
