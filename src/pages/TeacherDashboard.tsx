@@ -13,6 +13,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 import DigitalBoardTeacher from "@/components/DigitalBoardTeacher";
+import CampusHub from "@/components/CampusHub";
 import { verifySession, clearSession } from "@/lib/authGuard";
 import { supabase } from "@/integrations/supabase/client";
 
