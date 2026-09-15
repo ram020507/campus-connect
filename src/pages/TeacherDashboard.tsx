@@ -13,10 +13,11 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 import DigitalBoardTeacher from "@/components/DigitalBoardTeacher";
+import CampusHub from "@/components/CampusHub";
 import { verifySession, clearSession } from "@/lib/authGuard";
 import { supabase } from "@/integrations/supabase/client";
 
-type Section = "unclaimed" | "claimed" | "all";
+type Section = "unclaimed" | "claimed" | "all" | "campus";
 
 const TeacherDashboard = () => {
   const navigate = useNavigate();
@@ -953,6 +954,24 @@ const TeacherDashboard = () => {
                 });
               })()
             )}
+          </div>
+        )}
+
+        {activeSection === "campus" && (
+          <div className="space-y-3">
+            <h2 className="font-display font-semibold text-lg flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary" />
+              Campus Hub
+            </h2>
+            <CampusHub
+              viewer={{
+                role: "teacher",
+                key: teacher.staffId,
+                name: teacher.name,
+                collegeName: teacher.collegeName,
+                department: teacher.department || undefined,
+              }}
+            />
           </div>
         )}
       </div>

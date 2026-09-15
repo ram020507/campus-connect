@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  BookOpen, Video, LogOut, MessageCircle, ArrowLeft, Send, CheckCircle2, Play, Loader2, RefreshCw, ImagePlus, X, Download, FileText, Search, FolderOpen, ChevronDown, ChevronRight, Pencil, Trash2, Monitor, ThumbsUp, Bookmark, BookmarkCheck, Shuffle, ChevronUp, Type, Image, FileImage, Eye, BookMarked
+  BookOpen, Video, LogOut, MessageCircle, ArrowLeft, Send, CheckCircle2, Play, Loader2, RefreshCw, ImagePlus, X, Download, FileText, Search, FolderOpen, ChevronDown, ChevronRight, Pencil, Trash2, Monitor, ThumbsUp, Bookmark, BookmarkCheck, Shuffle, ChevronUp, Type, Image, FileImage, Eye, BookMarked, Users
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -16,9 +16,10 @@ import {
 
 import DigitalBoardStudent from "@/components/DigitalBoardStudent";
 import FollowupActions from "@/components/FollowupActions";
+import CampusHub from "@/components/CampusHub";
 import { verifySession, clearSession } from "@/lib/authGuard";
 
-type View = "dashboard" | "learning-resources" | "subjects" | "videos" | "video-player" | "doubts" | "digital-board" | "learning-feed" | "saved-doubts" | "exam-subjects" | "exam-content" | "feed-ask-doubt";
+type View = "dashboard" | "learning-resources" | "subjects" | "videos" | "video-player" | "doubts" | "digital-board" | "learning-feed" | "saved-doubts" | "exam-subjects" | "exam-content" | "feed-ask-doubt" | "campus-hub";
 type DoubtType = "text" | "text+image";
 
 
@@ -436,6 +437,12 @@ const StudentDashboard = () => {
                 <CardContent className="p-4 text-center">
                   <Monitor className="h-7 w-7 mx-auto mb-2 text-primary" />
                   <p className="font-semibold font-display text-sm">Digital Board</p>
+                </CardContent>
+              </Card>
+              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setView("campus-hub")}>
+                <CardContent className="p-4 text-center">
+                  <Users className="h-7 w-7 mx-auto mb-2 text-success" />
+                  <p className="font-semibold font-display text-sm">Campus Hub</p>
                 </CardContent>
               </Card>
             </div>
@@ -1560,6 +1567,27 @@ const StudentDashboard = () => {
             subjects={dept?.subjects.map((s) => s.name) || []}
             onBack={() => setView("dashboard")}
           />
+        )}
+
+        {view === "campus-hub" && (
+          <div className="space-y-4 animate-fade-in">
+            <Button variant="ghost" size="sm" onClick={() => setView("dashboard")}>
+              <ArrowLeft className="h-4 w-4 mr-1" /> Back
+            </Button>
+            <h2 className="font-display font-semibold text-lg flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary" /> Campus Hub
+            </h2>
+            <CampusHub
+              viewer={{
+                role: "student",
+                key: student.registrationNumber,
+                name: student.name,
+                collegeName: student.collegeName,
+                department: student.department,
+                year: student.year,
+              }}
+            />
+          </div>
         )}
       </div>
     </div>
