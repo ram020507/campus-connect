@@ -16,9 +16,10 @@ import {
 
 import DigitalBoardStudent from "@/components/DigitalBoardStudent";
 import FollowupActions from "@/components/FollowupActions";
+import CampusHub from "@/components/CampusHub";
 import { verifySession, clearSession } from "@/lib/authGuard";
 
-type View = "dashboard" | "learning-resources" | "subjects" | "videos" | "video-player" | "doubts" | "digital-board" | "learning-feed" | "saved-doubts" | "exam-subjects" | "exam-content" | "feed-ask-doubt";
+type View = "dashboard" | "learning-resources" | "subjects" | "videos" | "video-player" | "doubts" | "digital-board" | "learning-feed" | "saved-doubts" | "exam-subjects" | "exam-content" | "feed-ask-doubt" | "campus-hub";
 type DoubtType = "text" | "text+image";
 
 
