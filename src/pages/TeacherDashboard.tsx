@@ -16,7 +16,7 @@ import DigitalBoardTeacher from "@/components/DigitalBoardTeacher";
 import { verifySession, clearSession } from "@/lib/authGuard";
 import { supabase } from "@/integrations/supabase/client";
 
-type Section = "unclaimed" | "claimed" | "all";
+type Section = "unclaimed" | "claimed" | "all" | "campus";
 
 const TeacherDashboard = () => {
   const navigate = useNavigate();
