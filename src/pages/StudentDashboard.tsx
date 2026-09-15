@@ -1561,6 +1561,27 @@ const StudentDashboard = () => {
             onBack={() => setView("dashboard")}
           />
         )}
+
+        {view === "campus-hub" && (
+          <div className="space-y-4 animate-fade-in">
+            <Button variant="ghost" size="sm" onClick={() => setView("dashboard")}>
+              <ArrowLeft className="h-4 w-4 mr-1" /> Back
+            </Button>
+            <h2 className="font-display font-semibold text-lg flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary" /> Campus Hub
+            </h2>
+            <CampusHub
+              viewer={{
+                role: "student",
+                key: student.registrationNumber,
+                name: student.name,
+                collegeName: student.collegeName,
+                department: student.department,
+                year: student.year,
+              }}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
