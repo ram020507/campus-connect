@@ -248,6 +248,13 @@ const AdminDashboard = () => {
                 </button>
               </div>
             )}
+            <button
+              onClick={() => setTab("campus-hub")}
+              className={`w-full flex items-center gap-2 px-3 py-2 rounded-md font-medium mt-2 ${tab === "campus-hub" ? "bg-primary/10 text-primary" : "hover:bg-muted"}`}
+            >
+              <Users className="h-4 w-4" />
+              <span className="flex-1 text-left">Campus Hub</span>
+            </button>
           </nav>
         </aside>
 
