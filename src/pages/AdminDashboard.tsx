@@ -15,8 +15,9 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { verifySession, clearSession } from "@/lib/authGuard";
+import AdminCampusHub from "@/components/AdminCampusHub";
 
-type Tab = "" | "content" | "exam" | "students" | "teachers";
+type Tab = "" | "content" | "exam" | "students" | "teachers" | "campus-hub";
 type Group = "content" | "accounts" | null;
 
 const AdminDashboard = () => {
