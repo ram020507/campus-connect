@@ -317,7 +317,7 @@ const TeacherDashboard = () => {
               }`}
             >
               {tab.icon}
-              {tab.label} ({tab.count})
+              {tab.label}{tab.count !== undefined ? ` (${tab.count})` : ""}
             </button>
           ))}
         </div>
