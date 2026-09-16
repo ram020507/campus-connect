@@ -269,6 +269,11 @@ const AdminDashboard = () => {
               </Card>
             )}
 
+            {tab === "campus-hub" && (
+              <AdminCampusHub colleges={store.colleges.map((c) => ({ id: c.id, name: c.name }))} />
+            )}
+
+
 
         {/* ============================ CONTENT MANAGEMENT ============================ */}
         {tab === "content" && (
