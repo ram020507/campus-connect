@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  GraduationCap, LogOut, MessageCircle, Send, CheckCircle2, Clock, Loader2, ArrowLeft, RefreshCw, ImagePlus, X, Download, Pencil, Lock, Eye, FolderOpen, ChevronDown, ChevronRight
+  GraduationCap, LogOut, MessageCircle, Send, CheckCircle2, Clock, Loader2, ArrowLeft, RefreshCw, ImagePlus, X, Download, Pencil, Lock, Eye, FolderOpen, ChevronDown, ChevronRight, Users
 } from "lucide-react";
 import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
@@ -244,10 +244,11 @@ const TeacherDashboard = () => {
     );
   }
 
-  const sectionTabs: { key: Section; label: string; count: number; icon: React.ReactNode }[] = [
+  const sectionTabs: { key: Section; label: string; count?: number; icon: React.ReactNode }[] = [
     { key: "unclaimed", label: "Claim & Solve", count: unclaimedDoubts.length + claimedNotStarted.length + inProgressDoubts.length, icon: <Clock className="h-4 w-4" /> },
     { key: "claimed", label: "My Solutions", count: claimedDoubts.length, icon: <Lock className="h-4 w-4" /> },
     { key: "all", label: "All Solutions", count: allSolvedDoubts.length, icon: <Eye className="h-4 w-4" /> },
+    { key: "campus", label: "Campus Hub", icon: <Users className="h-4 w-4" /> },
   ];
 
   return (
@@ -316,7 +317,7 @@ const TeacherDashboard = () => {
               }`}
             >
               {tab.icon}
-              {tab.label} ({tab.count})
+              {tab.label}{tab.count !== undefined ? ` (${tab.count})` : ""}
             </button>
           ))}
         </div>
