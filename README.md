@@ -392,6 +392,24 @@ The platform organizes information such as:
 
 https://campus-connect-ram020507.vercel.app/
 
+
+Campus Connect – Login Credentials
+
+1. Admin Login
+Username: ram
+Password: ram020507
+
+2.Student Login
+Student Account
+Username: 241
+Password: 02-05-2007
+
+
+3.Teacher Login
+Teacher Account
+Username: 123
+Password: 02-05-2007
+
 ---
 
  🚀 Prototype Access
