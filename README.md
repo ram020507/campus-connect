@@ -393,10 +393,6 @@ The platform organizes information such as:
 
 https://campus-connect-ram020507.vercel.app/
 
-## 💻 GitHub Repository
-
-https://github.com/ram020507/campus-connect
-
 ---
 
  🚀 Prototype Access
