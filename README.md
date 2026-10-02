@@ -20,8 +20,7 @@ College students commonly face several problems:
 * Missing important lectures due to internships, hackathons, events, sports, or other activities.
 * Difficulty finding the correct lecture videos and study materials.
 * Difficulty getting quick support when they have doubts.
-* Repeated doubts consume teacher time.
-* Students may not know about other students' achievements, projects, workshops, and events.
+* Students may not know about other student's achievements, projects, workshops, and events.
 * Students may not have clear information about companies, job roles, and required skills for placements.
 * Academic learning, campus activities, and career information are often available through separate systems.
 
