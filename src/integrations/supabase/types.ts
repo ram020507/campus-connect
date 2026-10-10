@@ -113,6 +113,171 @@ export type Database = {
         }
         Relationships: []
       }
+      campus_job_companies: {
+        Row: {
+          company_name: string
+          created_at: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          company_name: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          company_name?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      campus_job_eligibility: {
+        Row: {
+          company_id: string
+          criteria: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          criteria: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          criteria?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campus_job_eligibility_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "campus_job_companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campus_job_roles: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          role_name: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          role_name: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          role_name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campus_job_roles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "campus_job_companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campus_job_selected_students: {
+        Row: {
+          academic_batch: string
+          company_id: string
+          created_at: string
+          department: string
+          id: string
+          job_role_id: string | null
+          linkedin_approved: boolean
+          linkedin_url: string | null
+          student_name: string
+          updated_at: string
+        }
+        Insert: {
+          academic_batch: string
+          company_id: string
+          created_at?: string
+          department: string
+          id?: string
+          job_role_id?: string | null
+          linkedin_approved?: boolean
+          linkedin_url?: string | null
+          student_name: string
+          updated_at?: string
+        }
+        Update: {
+          academic_batch?: string
+          company_id?: string
+          created_at?: string
+          department?: string
+          id?: string
+          job_role_id?: string | null
+          linkedin_approved?: boolean
+          linkedin_url?: string | null
+          student_name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campus_job_selected_students_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "campus_job_companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campus_job_selected_students_job_role_id_company_id_fkey"
+            columns: ["job_role_id", "company_id"]
+            isOneToOne: false
+            referencedRelation: "campus_job_roles"
+            referencedColumns: ["id", "company_id"]
+          },
+        ]
+      }
+      campus_job_skills: {
+        Row: {
+          created_at: string
+          id: string
+          role_id: string
+          skill_name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role_id: string
+          skill_name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role_id?: string
+          skill_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campus_job_skills_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "campus_job_roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campus_post_comments: {
         Row: {
           author_key: string
