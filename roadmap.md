@@ -1,4 +1,6 @@
-- [ ] Audit the current Campus Jobs implementation, database schema, auth boundary, and panel entry points; record what exists and what is missing.
-- [ ] Complete only missing Campus Jobs functionality from the approved brief for Admin and Student panels.
-- [ ] Remove Student Panel Digital Board access as specified in the approved brief, preserving teacher functionality.
-- [ ] Validate the Campus Jobs behavior and overall app health; close completed tasks here.
+- [x] Audit the existing Campus Jobs screens, data, signed-admin flow, and panel entry points.
+- [ ] Add Campus Jobs navigation and screens to the Admin and Student panels.
+- [ ] Remove the standalone Digital Board entry from the Student Panel while preserving other panels.
+- [ ] Deploy and verify the signed-admin Campus Jobs management function.
+- [ ] Enforce and verify read-only Campus Jobs access for student/browser clients.
+- [ ] Test creation, updates, refresh persistence, and student read-only access; confirm app health.

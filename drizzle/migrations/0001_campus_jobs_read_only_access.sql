@@ -1,0 +1,3 @@
+REVOKE ALL PRIVILEGES ON TABLE public.campus_job_companies, public.campus_job_eligibility, public.campus_job_roles, public.campus_job_skills, public.campus_job_selected_students FROM PUBLIC, anon, authenticated;
+GRANT SELECT ON TABLE public.campus_job_companies, public.campus_job_eligibility, public.campus_job_roles, public.campus_job_skills, public.campus_job_selected_students TO anon, authenticated;
+GRANT ALL PRIVILEGES ON TABLE public.campus_job_companies, public.campus_job_eligibility, public.campus_job_roles, public.campus_job_skills, public.campus_job_selected_students TO service_role;
