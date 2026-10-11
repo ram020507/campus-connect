@@ -125,6 +125,7 @@ Admin can publish college placement and job information including:
 * Job Role
 * Eligibility
 * Required Skills
+* Selected Students Detail
 
 ---
 
@@ -271,6 +272,8 @@ Students can view:
 * Job roles
 * Eligibility
 * Required skills
+* selected students
+  
 
 The feature helps students understand:
 
@@ -285,11 +288,6 @@ Learn Required Skills
    ↓
 Prepare for Placement
 ```
-
- Current Prototype Status
-
-**Campus Job is part of the current Campus Connect concept but is not implemented in the uploaded prototype version.**
-
 ---
 
 # 👨‍🏫 Teacher Panel
@@ -318,6 +316,8 @@ The prototype demonstrates the initial:
 * Student interface
 * Admin interface
 * Teacher-based doubt-solving workflow
+* campus hub
+* campus job
 * Basic Campus Connect functionality
 
  Updated Concept
@@ -329,9 +329,8 @@ The project has since been refined toward:
 * Gemini Embedding 2
 * Hybrid duplicate matching
 * RAG-based college resource retrieval
-* Learning Feed
-* Campus Hub
-* Campus Job
+
+
 
  Important
 
@@ -395,7 +394,7 @@ https://campus-connect-ram020507.vercel.app/
 
 Campus Connect – Login Credentials
 
-1. **Admin Login** Username: ram   Password: ram020507
+1.**Admin Login** Username: ram   Password: ram020507
 
 2.**Student Login** Student Account Username: 241 Password: 02-05-2007
 
