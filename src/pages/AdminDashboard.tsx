@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Building2, Plus, Trash2, LogOut, Users, GraduationCap,
+  Building2, Plus, Trash2, LogOut, Users, GraduationCap, BriefcaseBusiness,
   FolderOpen, Video, ArrowLeft, Loader2, RefreshCw, Pencil, X, Check, Upload, FileText, BookMarked
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -16,8 +16,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { verifySession, clearSession } from "@/lib/authGuard";
 import AdminCampusHub from "@/components/AdminCampusHub";
+import AdminCampusJobs from "@/components/AdminCampusJobs";
 
-type Tab = "" | "content" | "exam" | "students" | "teachers" | "campus-hub";
+type Tab = "" | "content" | "exam" | "students" | "teachers" | "campus-jobs" | "campus-hub";
 type Group = "content" | "accounts" | null;
 
 const AdminDashboard = () => {
@@ -249,6 +250,13 @@ const AdminDashboard = () => {
               </div>
             )}
             <button
+              onClick={() => setTab("campus-jobs")}
+              className={`w-full flex items-center gap-2 px-3 py-2 rounded-md font-medium mt-2 ${tab === "campus-jobs" ? "bg-primary/10 text-primary" : "hover:bg-muted"}`}
+            >
+              <BriefcaseBusiness className="h-4 w-4" />
+              <span className="flex-1 text-left">Campus Jobs</span>
+            </button>
+            <button
               onClick={() => setTab("campus-hub")}
               className={`w-full flex items-center gap-2 px-3 py-2 rounded-md font-medium mt-2 ${tab === "campus-hub" ? "bg-primary/10 text-primary" : "hover:bg-muted"}`}
             >
@@ -268,6 +276,8 @@ const AdminDashboard = () => {
                 </CardContent>
               </Card>
             )}
+
+            {tab === "campus-jobs" && <AdminCampusJobs />}
 
             {tab === "campus-hub" && (
               <AdminCampusHub colleges={store.colleges.map((c) => ({ id: c.id, name: c.name }))} />

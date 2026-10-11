@@ -7,19 +7,19 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  BookOpen, Video, LogOut, MessageCircle, ArrowLeft, Send, CheckCircle2, Play, Loader2, RefreshCw, ImagePlus, X, Download, FileText, Search, FolderOpen, ChevronDown, ChevronRight, Pencil, Trash2, Monitor, ThumbsUp, Bookmark, BookmarkCheck, Shuffle, ChevronUp, Type, Image, FileImage, Eye, BookMarked, Users
+  BookOpen, Video, LogOut, MessageCircle, ArrowLeft, Send, CheckCircle2, Play, Loader2, RefreshCw, ImagePlus, X, Download, FileText, Search, FolderOpen, ChevronDown, ChevronRight, Pencil, Trash2, ThumbsUp, Bookmark, BookmarkCheck, Shuffle, ChevronUp, Type, Image, FileImage, Eye, BookMarked, Users, BriefcaseBusiness
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 
-import DigitalBoardStudent from "@/components/DigitalBoardStudent";
 import FollowupActions from "@/components/FollowupActions";
 import CampusHub from "@/components/CampusHub";
+import StudentCampusJobs from "@/components/StudentCampusJobs";
 import { verifySession, clearSession } from "@/lib/authGuard";
 
-type View = "dashboard" | "learning-resources" | "subjects" | "videos" | "video-player" | "doubts" | "digital-board" | "learning-feed" | "saved-doubts" | "exam-subjects" | "exam-content" | "feed-ask-doubt" | "campus-hub";
+type View = "dashboard" | "learning-resources" | "subjects" | "videos" | "video-player" | "doubts" | "learning-feed" | "saved-doubts" | "exam-subjects" | "exam-content" | "feed-ask-doubt" | "campus-hub" | "campus-jobs";
 type DoubtType = "text" | "text+image";
 
 
@@ -414,7 +414,7 @@ const StudentDashboard = () => {
       <div className={`mx-auto p-4 ${view === "doubts" ? "max-w-6xl" : "max-w-4xl"}`}>
         {view === "dashboard" && (
           <div className="space-y-6 animate-fade-in">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setView("learning-resources")}>
                 <CardContent className="p-4 text-center">
                   <BookOpen className="h-7 w-7 mx-auto mb-2 text-primary" />
@@ -433,10 +433,10 @@ const StudentDashboard = () => {
                   <p className="font-semibold font-display text-sm">Learning Feed</p>
                 </CardContent>
               </Card>
-              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setView("digital-board")}>
+              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setView("campus-jobs")}>
                 <CardContent className="p-4 text-center">
-                  <Monitor className="h-7 w-7 mx-auto mb-2 text-primary" />
-                  <p className="font-semibold font-display text-sm">Digital Board</p>
+                  <BriefcaseBusiness className="h-7 w-7 mx-auto mb-2 text-primary" />
+                  <p className="font-semibold font-display text-sm">Campus Jobs</p>
                 </CardContent>
               </Card>
               <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setView("campus-hub")}>
@@ -1561,14 +1561,6 @@ const StudentDashboard = () => {
           </div>
         )}
 
-        {view === "digital-board" && (
-          <DigitalBoardStudent
-            student={student}
-            subjects={dept?.subjects.map((s) => s.name) || []}
-            onBack={() => setView("dashboard")}
-          />
-        )}
-
         {view === "campus-hub" && (
           <div className="space-y-4 animate-fade-in">
             <Button variant="ghost" size="sm" onClick={() => setView("dashboard")}>
@@ -1589,6 +1581,8 @@ const StudentDashboard = () => {
             />
           </div>
         )}
+
+        {view === "campus-jobs" && <StudentCampusJobs onBack={() => setView("dashboard")} />}
       </div>
     </div>
   );
