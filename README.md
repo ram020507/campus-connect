@@ -1,123 +1,112 @@
-Campus Connect – A Smart College Learning Ecosystem
+# Campus Connect – A Smart College Learning Ecosystem
 
 Campus Connect is a college-focused platform designed to bring academic learning, campus activities, and placement preparation together in one place.
 
- The Problems We’re Addressing
+---
 
-Missed Classes: Students may miss lectures due to internships, hackathons, college events, sports, or other reasons.
+## 🚩 The Problems We’re Addressing
 
-Limited Campus Awareness: Students may not be aware of other students’ achievements, internships, projects, hackathons, and college events.
+- **Missed Classes**: Students may miss lectures due to internships, hackathons, college events, sports, or other reasons.  
+- **Limited Campus Awareness**: Students may not be aware of peers’ achievements, internships, projects, hackathons, and college events.  
+- **Placement Information Gap**: Students lack visibility into companies, roles, eligibility, and required skills.  
+- **Learning–Career Disconnect**: Students may struggle to understand how academic knowledge connects with industry requirements.  
+- **Disconnected Information**: Learning resources, campus activities, and placement information exist separately.  
 
-Placement Information Gap: Students lack visibility into companies, roles, eligibility, and required skills.
+---
 
-Learning–Career Disconnect: Students may struggle to understand how academic knowledge connects with industry requirements.
+## 💡 Our Proposed Solution
 
-Disconnected Information: Learning resources, campus activities, and placement information exist separately.
+### Learning Resources
+Lecture videos, notes, PDFs, and PPTs uploaded by college staff help students access learning materials anytime.  
 
-💡 Our Proposed Solution
+### AI + College Resources
+An AI system will answer syllabus-related questions using relevant, college-approved learning resources.  
 
-Learning Resources  
-Lecture videos, notes, PDFs, and PPTs uploaded by college staff help students access learning materials whenever they need them.
+### Learning Feed
+AI-solved doubts become reusable learning content, allowing eligible students to learn from previously answered questions.  
 
-AI + College Resources  
-An AI system will answer syllabus-related questions using relevant, college-approved learning resources.
+### Campus Hub
+A professional college community where:  
+- Students share achievements, hackathons, projects, and internships.  
+- Teachers share academic and professional updates.  
+- Colleges share official events and announcements.  
 
-Learning Feed  
-AI-solved doubts will become reusable learning content, allowing eligible students to learn from previously answered questions.
+This helps students discover activities and opportunities within their own college.  
 
-Campus Hub  
-A professional college community where:
+### Campus Jobs
+- **All Students**: Access previous-year company recruitment information, selected-student details, LinkedIn profiles, job roles, eligibility criteria, and required skills.  
+- **Final-Year Students**: Explore upcoming company job roles, eligibility criteria, and required skills when available.  
 
-Students can share achievements, hackathons, projects, and internships.
+**Purpose:** Help students understand placement requirements, learn from selected students, and prepare more effectively for their careers.  
 
-Teachers can share their achievements and updates.
+---
 
-Colleges can share official events and announcements.
+## ✨ What Makes Campus Connect Different?
 
-This helps students discover activities and opportunities within their own college.
+- **Ask Once, Reuse Many**: AI checks previously solved doubts before generating a new answer.  
+- **Self-Growing Learning Feed**: Every completed AI-solved doubt becomes reusable learning content.  
+- **Doubt-to-Learning Cycle**: One student’s question becomes another student’s resource, helping knowledge reach more learners.  
 
-Campus Jobs
+---
 
-All Students: Access previous-year company recruitment information, selected-student details and LinkedIn profiles, job roles, eligibility criteria, and required skills.
+## 🛠️ Technology Stack
 
-Final-Year Students: Explore upcoming company job roles, eligibility criteria, and required skills when available.
+- TypeScript – Main programming language  
+- React – Interactive user interfaces  
+- Tailwind CSS – Responsive and modern UI  
+- Vite – Development and build tool  
+- SQL – Structured data management  
+- Supabase – Database, authentication, storage, and real-time updates  
 
-Purpose: Help students understand placement requirements, learn from selected students, and prepare more effectively for their careers.
+---
 
-✨ What Makes Campus Connect Different?
+## 🔗 Project Links
 
-Ask Once, Reuse Many: AI checks previously solved doubts before generating a new answer.
+- **Live Website**: [Campus Connect](https://campus-connect-ram020507.vercel.app)
 
-Self-Growing Learning Feed: Every completed AI-solved doubt becomes reusable learning content.
+### Demo Login Credentials
+- **Admin Login**  
+  Username: `ram`  
+  Password: `ram020507`  
 
-Doubt-to-Learning Cycle: One student’s question becomes another student’s resource, helping knowledge reach more learners
+- **Student Login**  
+  Username: `241`  
+  Password: `02-05-2007`  
 
+- **Teacher Login**  
+  Username: `123`  
+  Password: `02-05-2007`  
 
-🛠️ Technology Stack
+---
 
-TypeScript – Main programming language
+## 🚀 Planned Implementations
 
-React – Interactive user interfaces
+### 1. AI-Based Doubt Solving
+**Current Status**: Prototype includes teacher-based doubt solving, a college-level Campus Hub, and Campus Jobs. AI-based doubt solving and a multi-college Campus Hub are planned for the next phase.  
 
-Tailwind CSS – Responsive and modern UI
+**Planned Technologies**:  
+- Gemini 2.5 Flash – AI answer generation  
+- Gemini Multimodal (VLM) – Understanding image-based questions and diagrams  
+- Gemini Embedding 2 – Vector embeddings for similarity matching  
+- Hybrid Matching – Keyword and vector-based matching  
+- Retrieval-Augmented Generation (RAG) – Retrieving relevant college learning resources  
 
-Vite – Development and build tool
+**Workflow**:  
+Student submits a doubt → AI understands the question → Hybrid Matching checks previously solved doubts.  
+- If a match is found: Display the relevant previous question and answer.  
+- If no match is found: Retrieve relevant college learning resources using RAG and generate an answer using Gemini 2.5 Flash.  
 
-SQL – Structured data management
+---
 
-Supabase – Database, authentication, storage, and real-time updates
+### 2. Campus Hub – Multi-College Community
+**Current Status**: Extension into a multi-college community is planned.  
 
+**Purpose**: Allow students, teachers, and colleges to share achievements, projects, extracurricular activities, and opportunities across institutions.  
 
-Live Website
+**Features**:  
+- **My College**: View posts and activities from the user’s own college.  
+- **Other Colleges**: Discover posts and activities from other colleges registered on Campus Connect.  
 
-https://campus-connect-ram020507.vercel.app/
+**Expected Outcome**: Students will discover activities within their own college and explore opportunities and achievements across other colleges.  
 
-Demo Login Credentials
-
-1,Admin Login
-Username: ram   Password: ram020507
-
-2,Student Login
-Username: 241 Password: 02-05-2007
-
-3,Teacher Login
-Username: 123 Password: 02-05-2007
-
-Planned Implementations
-
-Current Status: Prototype includes teacher-based doubt solving, a college-level Campus Hub, and Campus Jobs. AI-based doubt solving and a multi-college Campus Hub are planned for the next phase.
-
-1. AI-Based Doubt Solving
-
-
-Planned Technologies: 
-• Gemini 2.5 Flash – AI answer generation
-• Gemini Multimodal (VLM) – Understanding image-based questions and diagrams
-• Gemini Embedding 2 – Vector embeddings for similarity matching
-• Hybrid Matching – Keyword and vector-based matching
-• Retrieval-Augmented Generation (RAG) – Retrieving relevant college learning resources
-
-Workflow:  
-
-Student submits a doubt → AI understands the question → Hybrid Matching checks previously solved doubts.
-
-If a match is found: Display the relevant previous question and answer.
-
-If no match is found: Retrieve relevant college learning resources using RAG and generate an answer using Gemini 2.5 Flash.
-
-2. Campus Hub – Multi-College Community
-
-Current Status: Extension into a multi-college community is planned.
-
-Purpose: Allow students, teachers, and colleges to share achievements, projects, extracurricular activities, and opportunities across institutions.
-
-Features:
-
-My College: View posts and activities from the user’s own college.
-
-Other Colleges: Discover posts and activities from other colleges registered on Campus Connect.
-
-Expected Outcome: Students will discover activities within their own college and explore opportunities and achievements across other colleges.
-
-
- 
+---
