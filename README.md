@@ -1,308 +1,129 @@
-
-Campus Connect
-
- A College-Centric Learning, Doubt Support, Campus Community & Career Platform
-
+Campus Connect 🎓
+A College-Centric Learning, Campus Community & Career Platform
 📌 Overview
 
-**Campus Connect** is a centralized digital platform designed for college students and college management.
+Campus Connect is a centralized digital platform that connects college learning resources, doubt support, campus activities, and career information in one ecosystem.
 
-The platform brings academic learning resources, doubt support, campus activities, and career-related information into one connected college ecosystem.
-
-The main goal is to help students continue learning even when they miss classes due to internships, hackathons, events, sports, medical leave, placements, or other activities.
-
----
+It helps students access learning materials when they miss classes, find support for academic doubts, discover campus activities, and prepare for placement opportunities.
 
 🎯 Problem Statement
 
-College students commonly face several problems:
+College students often face challenges such as:
 
-* Missing important lectures due to internships, hackathons, events, sports, or other activities.
-* Difficulty finding the correct lecture videos and study materials.
-* Difficulty getting quick support when they have doubts.
-* Students may not know about other student's achievements, projects, workshops, and events.
-* Students may not have clear information about companies, job roles, and required skills for placements.
-* Academic learning, campus activities, and career information are often available through separate systems.
-
-Campus Connect aims to bring these activities together into a single college-focused platform.
-
----
-
+Missing lectures due to internships, events, hackathons, sports, or other activities.
+Difficulty finding relevant lecture videos and study materials.
+Delays in getting academic doubts resolved.
+Limited awareness of student achievements and college activities.
+Difficulty finding placement information, job roles, eligibility criteria, and required skills.
+Academic learning, campus activities, and career information being spread across different platforms.
 💡 Solution
 
-Campus Connect provides:
+Campus Connect brings these needs together through five main modules:
 
-* Learning Resources
-* AI-based Doubt Support
-* Learning Feed
-* Campus Hub
-* Campus Job information
-
-The platform is designed around the idea of a **college organizational learning ecosystem**, where learning interactions can become reusable knowledge and students can also connect with campus activities and career opportunities.
-
----
-
+Learning Resources – Lecture videos, subject notes, PDFs, PPTs, and revision materials.
+Ask a Doubt – Academic doubt submission and resolution.
+Learning Feed – Reusable knowledge from completed and verified doubts.
+Campus Hub – A professional timeline for student achievements, teacher updates, and college events.
+Campus Jobs – College placement information, company details, job roles, eligibility, and required skills.
 🏗️ Platform Structure
-
-Campus Connect contains three major user types:
-
-```text
 Campus Connect
 │
-├── Admin
+├── Admin Panel
 │   ├── Content Management
 │   ├── Account Management
 │   ├── Campus Hub
 │   └── Campus Jobs
 │
-├── Student
+├── Student Panel
 │   ├── Learning Resources
 │   ├── Ask a Doubt
 │   ├── Learning Feed
 │   ├── Campus Hub
-│   └── Campus Job
+│   └── Campus Jobs
 │
-└── Teacher
+└── Teacher Panel
     └── Campus Hub
-```
-
----
-
 👨‍💼 Admin Panel
 
-The Admin manages the college platform.
+Administrators can:
 
-## Content Management
+Manage lecture videos, notes, PDFs, and other learning resources.
+Organize content by college, year, department, and subject.
+Create, edit, delete, and view student and teacher accounts.
+Assign subjects to teachers.
+Publish official college announcements, workshops, competitions, and events.
+Manage company and placement information.
 
-Admin can manage:
+🎓 Student Panel
+1. Learning Resources
+Browse lecture videos by semester and subject.
+Access subject notes and important revision materials.
+View PDFs and PPT files.
+Search lecture videos by title.
+2. Ask a Doubt
 
-* Lecture Videos
-* Notes
-* PDFs
-* Other learning resources
+Students can submit doubts using:
 
-Content can be organized based on:
+Text
+Text with images
 
-* College
-* Year
-* Department
-* Subject
+The current prototype uses teacher-based doubt solving. AI-based doubt solving is planned for a future development phase.
 
- Account Management
+3. Learning Feed
+View completed and verified doubt solutions.
+Learn from previously solved questions.
+Reuse existing knowledge for revision.
+4. Campus Hub
 
-Admin can manage:
+A professional college-community timeline where students can share:
 
- Student Accounts
+Projects and internships
+Hackathons and competitions
+Certifications and workshops
+Symposiums and academic achievements
 
-* Create
-* Edit
-* Delete
-* View student accounts
+Users can interact through likes, comments, replies, and saved posts.
 
- Teacher Accounts
+5. Campus Jobs
 
-* Create
-* Edit
-* Delete
-* Assign subjects
-* View teacher accounts
+Students can explore:
 
-## Campus Hub
+Companies visiting the college
+Job roles and eligibility criteria
+Required technical skills
+Selected-student information
 
-Admin can create official college posts such as:
+This helps students identify the skills they need to develop for placements.
 
-* College Events
-* Workshops
-* Competitions
-* Announcements
-* Official Updates
+👨‍🏫 Teacher Panel
 
- Campus Jobs
+Teachers can use Campus Hub to:
 
-Admin can publish college placement and job information including:
+Share achievements and professional updates.
+Post job-related information.
+View student achievements.
+Discover college events and updates.
 
-* Company
-* Job Role
-* Eligibility
-* Required Skills
-* Selected Students Detail
+## 🛠️ Technologies
 
----
+* TypeScript
+* React
+* Tailwind CSS
+* Vite
+* SQL
+* Supabase
 
- 🎓 Student Panel
+Planned AI integrations include Gemini models, Gemini Embedding 2, hybrid matching, and RAG.
 
- 1. Learning Resources
+## 🔗 Project Links
 
-Students can access:
+* **Live Website:** https://campus-connect-ram020507.vercel.app/
+* **GitHub Repository:** https://github.com/ram020507/campus-connect
 
- Lecture Videos
+## 🎯 Goal
 
-* Select semester
-* Select subject
-* Watch lecture videos
-* Access subject notes
-* Search videos by title
+Campus Connect aims to create a connected college ecosystem where students can access learning resources, resolve academic doubts, learn from previous solutions, participate in campus activities, and prepare for career opportunities through one centralized platform.
 
- Important Topics / Notes
-
-Students can access:
-
-* Important revision videos
-* Notes
-* PDFs
-* PPT files
-
----
-
-# 2. Ask a Doubt
-
-The latest system design uses an **AI-first doubt-solving approach**.
-
-Students can submit:
-
- Text Doubt
-
-Students enter their question using text.
-
- Text + Image Doubt
-
-Students can provide text and images when the question requires visual understanding.
-
----
-
-AI Doubt Processing
-
-The planned/current AI architecture uses:
-
-```text
-Student Doubt
-      ↓
-Gemini Multimodal Capability
-      ↓
-Gemini Embedding 2
-      ↓
-Hybrid Matching
-      ↓
-Match Found?
-   ┌───┴────┐
-  YES       NO
-   ↓         ↓
-Previous     RAG
-Doubt +      ↓
-Answer   College Resources
-             ↓
-       Gemini 2.5 Flash
-             ↓
-         AI Answer
-             ↓
-       Learning Feed
-```
-
-AI Technologies
-
-* **Gemini 2.5 Flash** – Generates answers for student doubts.
-* **Gemini Multimodal Capability** – Understands image-based questions, diagrams, and handwritten problems.
-* **Gemini Embedding 2** – Converts doubts into vectors for similarity matching.
-* **Hybrid Matching** – Combines keyword matching and vector similarity.
-* **RAG** – Retrieves relevant college learning resources to support AI-generated answers.
-
----
-
- 3. Learning Feed
-
-The Learning Feed stores completed and verified learning discussions.
-
-Students can:
-
-* View solved doubts
-* Learn from previous solutions
-* Scroll through learning content
-* Reuse previously solved knowledge
-
-The purpose is to transform individual doubt-solving interactions into reusable learning resources.
-
----
-
- 4. Campus Hub
-
-Campus Hub is a professional college-community timeline.
-
-Students can post:
-
-* Projects
-* Internships
-* Hackathons
-* Certifications
-* Workshops
-* Symposiums
-* Competitions
-* Academic achievements
-
-Students can also view relevant:
-
-* Student achievements
-* Teacher posts
-* College events
-* Professional updates
-
-Campus Hub Categories
-
-```text
-[ My Posts ] [ All ] [ Student ] [ College ]
-```
-
-Users can:
-
-* Like
-* Comment
-* Reply
-* Save
-
-Posts follow college-based visibility rules.
-
----
-
- 5. Campus Job
-
-Campus Job connects students with college placement information.
-
-Students can view:
-
-* Companies visiting the college
-* Job roles
-* Eligibility
-* Required skills
-* selected students
-  
-
-The feature helps students understand:
-
-```text
-Company
-   ↓
-Job Role
-   ↓
-Required Skills
-   ↓
-Learn Required Skills
-   ↓
-Prepare for Placement
-```
----
-
-# 👨‍🏫 Teacher Panel
-
-In the current Campus Connect architecture, teachers mainly participate through **Campus Hub**.
-
-Teachers can:
-
-* Post achievements
-* Share job information
-* Share professional updates
-* View student achievements
-* View college events
-
----
 
 🛠️ Technology Stack
 
