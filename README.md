@@ -304,154 +304,71 @@ Teachers can:
 
 ---
 
- 🧠 Current Prototype vs. Updated Concept
+🛠️ Technology Stack
 
-The available working prototype represents an **earlier version of Campus Connect**.
+TypeScript – Main programming language
 
- Earlier Prototype
+React – Interactive user interfaces
 
-The prototype demonstrates the initial:
+Tailwind CSS – Responsive and modern UI
 
-* Learning Resource system
-* Student interface
-* Admin interface
-* Teacher-based doubt-solving workflow
-* campus hub
-* campus job
-* Basic Campus Connect functionality
+Vite – Development and build tool
 
- Updated Concept
+SQL – Structured data management
 
-The project has since been refined toward:
-
-* AI-based doubt solving
-* Gemini Multimodal capability
-* Gemini Embedding 2
-* Hybrid duplicate matching
-* RAG-based college resource retrieval
+Supabase – Database, authentication, storage, and real-time updates
 
 
-
- Important
-
-The deployed prototype should **not be considered a complete implementation of the latest architecture**.
-
-The prototype is provided to demonstrate the earlier working implementation and project evolution.
-
----
-
- 🛠️ Technologies Used
-
- Software Technologies
-
-* **TypeScript** – Main programming language for reliable application development.
-* **React** – Builds interactive Student, Teacher, and Admin interfaces.
-* **Tailwind CSS** – Creates a responsive and modern UI.
-* **Vite** – Provides fast development and application builds.
-* **SQL** – Stores and retrieves structured project data.
-* **Supabase** – Provides database, authentication, storage, and real-time updates.
-
- AI Technologies
-
-* **Gemini 2.5 Flash**
-* **Gemini Multimodal Capability**
-* **Gemini Embedding 2**
-* **Hybrid Matching**
-* **Retrieval-Augmented Generation (RAG)**
-
----
-
- 🗄️ Backend & Database
-
-Campus Connect uses **Supabase** for:
-
-* Database
-* Authentication
-* Storage
-* Real-time updates
-
-The platform organizes information such as:
-
-* Students
-* Teachers
-* Colleges
-* Departments
-* Subjects
-* Learning resources
-* Doubts
-* Answers
-* Campus posts
-* Job information
-
----
-
-# 🔗 Project Links
-
-## 🌐 Live Prototype
+Live Website
 
 https://campus-connect-ram020507.vercel.app/
 
+Demo Login Credentials
 
-Campus Connect – Login Credentials
+Admin Login
+Username: ram
+Password: ram020507
+Student Login
+Username: 241
+Password: 02-05-2007
+Teacher Login
+Username: 123
+Password: 02-05-2007
 
-1.**Admin Login** Username: ram   Password: ram020507
+Planned Implementations
+Current Status: Prototype includes teacher-based doubt solving, a college-level Campus Hub, and Campus Jobs. AI-based doubt solving and a multi-college Campus Hub are planned for the next phase.
 
-2.**Student Login** Student Account Username: 241 Password: 02-05-2007
-
-3.**Teacher Login** Teacher Account Username: 123 Password: 02-05-2007
+1. AI-Based Doubt Solving
 
 
- 🚀 Prototype Access
+Planned Technologies: 
+• Gemini 2.5 Flash – AI answer generation
+• Gemini Multimodal (VLM) – Understanding image-based questions and diagrams
+• Gemini Embedding 2 – Vector embeddings for similarity matching
+• Hybrid Matching – Keyword and vector-based matching
+• Retrieval-Augmented Generation (RAG) – Retrieving relevant college learning resources
 
-The prototype is currently deployed using **Vercel**.
+Workflow:  
 
-The live prototype demonstrates the earlier working version of Campus Connect.
+Student submits a doubt → AI understands the question → Hybrid Matching checks previously solved doubts.
 
-For the latest AI-based architecture and additional modules, refer to the project description and updated system design.
+If a match is found: Display the relevant previous question and answer.
 
----
+If no match is found: Retrieve relevant college learning resources using RAG and generate an answer using Gemini 2.5 Flash.
 
- 🌱 Future Development
+2. Campus Hub – Multi-College Community
 
-Planned improvements include:
+Current Status: Extension into a multi-college community is planned.
 
-* Complete AI-based doubt-solving implementation
-* Advanced hybrid doubt matching
-* Improved RAG using college-specific resources
-* Campus Job implementation
-* More advanced Campus Hub features
-* Mobile application
-* Advanced analytics
-* College ERP integration
-* Notification system
-* Additional AI learning features
+Purpose: Allow students, teachers, and colleges to share achievements, projects, extracurricular activities, and opportunities across institutions.
 
----
+Features:
 
- 🎯 Project Goal
+My College: View posts and activities from the user’s own college.
 
-Campus Connect aims to create a connected college ecosystem where:
+Other Colleges: Discover posts and activities from other colleges registered on Campus Connect.
 
-**Missed Class → Learning Resources**
+Expected Outcome: Students will discover activities within their own college and explore opportunities and achievements across other colleges.
 
-**Student Doubt → AI Support**
 
-**Solved Doubt → Reusable Knowledge**
-
-**Learning Feed → Continuous Learning**
-
-**Campus Activities → Student Participation**
-
-**Job Information → Career Preparation**
-
-Ultimately, Campus Connect aims to connect **learning, knowledge sharing, campus participation, and career preparation** within a single college ecosystem.
-
----
-
-👥 Project
-
-**Campus Connect**
-
-**Category:** Smart Education / College Learning Ecosystem
-
-**Prototype:** Available through the live Vercel deployment and GitHub repository.
+ 
