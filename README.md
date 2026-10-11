@@ -79,10 +79,11 @@ This helps students discover activities and opportunities within their own colle
 
 ---
 
+**Current Status**: Prototype includes teacher-based doubt solving, a college-level Campus Hub, and Campus Jobs. AI-based doubt solving and a multi-college Campus Hub are planned for the next phase.  
+
 ## 🚀 Planned Implementations
 
 ### 1. AI-Based Doubt Solving
-**Current Status**: Prototype includes teacher-based doubt solving, a college-level Campus Hub, and Campus Jobs. AI-based doubt solving and a multi-college Campus Hub are planned for the next phase.  
 
 **Planned Technologies**:  
 - Gemini 2.5 Flash – AI answer generation  
