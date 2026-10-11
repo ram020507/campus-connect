@@ -325,15 +325,14 @@ https://campus-connect-ram020507.vercel.app/
 
 Demo Login Credentials
 
-Admin Login
-Username: ram
-Password: ram020507
-Student Login
-Username: 241
-Password: 02-05-2007
-Teacher Login
-Username: 123
-Password: 02-05-2007
+1,Admin Login
+Username: ram   Password: ram020507
+
+2,Student Login
+Username: 241 Password: 02-05-2007
+
+3,Teacher Login
+Username: 123 Password: 02-05-2007
 
 Planned Implementations
 Current Status: Prototype includes teacher-based doubt solving, a college-level Campus Hub, and Campus Jobs. AI-based doubt solving and a multi-college Campus Hub are planned for the next phase.
