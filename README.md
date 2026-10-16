@@ -4,7 +4,7 @@ Campus Connect is a college-focused platform designed to bring academic learning
 
 ---
 
-##💡Problems Campus Connect Addresses
+<h2>💡Problems Campus Connect Addresses</h2>
 
 - **Missed Classes**: Students may miss lectures due to internships, hackathons, college events, sports, or other reasons.  
 - **Limited Campus Awareness**: Students may not be aware of peers’ achievements, internships, projects, hackathons, and college events.  
@@ -14,7 +14,7 @@ Campus Connect is a college-focused platform designed to bring academic learning
 
 ---
 
-##💡 How Campus Connect Helps
+<h2>💡 How Campus Connect Helps</h2>
 
 ### Learning Resources
 Lecture videos, notes, PDFs, and PPTs uploaded by college staff help students access learning materials anytime.  
