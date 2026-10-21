@@ -1582,7 +1582,7 @@ const StudentDashboard = () => {
           </div>
         )}
 
-        {view === "campus-jobs" && <StudentCampusJobs onBack={() => setView("dashboard")} />}
+        {view === "campus-jobs" && <StudentCampusJobs onBack={() => setView("dashboard")} collegeId={store.colleges.find((c) => c.name === student.collegeName)?.id ?? ""} />}
       </div>
     </div>
   );
