@@ -115,24 +115,35 @@ export type Database = {
       }
       campus_job_companies: {
         Row: {
+          college_id: string | null
           company_name: string
           created_at: string
           id: string
           updated_at: string
         }
         Insert: {
+          college_id?: string | null
           company_name: string
           created_at?: string
           id?: string
           updated_at?: string
         }
         Update: {
+          college_id?: string | null
           company_name?: string
           created_at?: string
           id?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "campus_job_companies_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       campus_job_eligibility: {
         Row: {

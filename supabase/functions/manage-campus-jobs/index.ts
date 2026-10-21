@@ -97,7 +97,7 @@ serve(async (req) => {
 
     switch (body.action) {
       case "company.create": {
-        const { data, error } = await db.from("campus_job_companies").insert({ company_name: text(input.company_name, "Company name", 120) as string }).select("*").single();
+        const { data, error } = await db.from("campus_job_companies").insert({ company_name: text(input.company_name, "Company name", 120) as string, college_id: uuid(input.college_id, "College") }).select("*").single();
         responseError(error); result = data; break;
       }
       case "company.update": {
