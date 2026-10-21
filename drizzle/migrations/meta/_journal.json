@@ -15,6 +15,13 @@
       "when": 1791695903295,
       "tag": "0001_campus_jobs_read_only_access",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792598717460,
+      "tag": "0002_campus_jobs_college_scoping",
+      "breakpoints": true
     }
   ]
 }
