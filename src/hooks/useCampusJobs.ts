@@ -4,6 +4,7 @@ import { toast } from "sonner";
 
 export interface CampusJobCompany {
   id: string;
+  college_id: string | null;
   company_name: string;
   created_at: string;
   updated_at: string;
